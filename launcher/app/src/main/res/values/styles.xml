@@ -6,35 +6,6 @@
         <item name="android:windowAnimationStyle">@null</item>
     </style>
 
-    <!-- Frosted pill, tvOS style. -->
-    <style name="TopButtonBase">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">42dp</item>
-        <item name="android:layout_marginStart">10dp</item>
-        <item name="android:paddingStart">16dp</item>
-        <item name="android:paddingEnd">20dp</item>
-        <item name="android:gravity">center</item>
-        <item name="android:background">@drawable/pill_bg</item>
-        <item name="android:textColor">@drawable/pill_text</item>
-        <item name="android:textSize">15sp</item>
-        <item name="android:fontFamily">@font/outfit_medium</item>
-        <item name="android:letterSpacing">0.01</item>
-        <item name="android:drawablePadding">9dp</item>
-        <item name="android:drawableTint">@drawable/pill_text</item>
-        <item name="android:focusable">true</item>
-        <item name="android:clickable">true</item>
-    </style>
-    <style name="TopButton" parent="TopButtonBase" />
-
-    <!-- Icon-only pill: a 42dp circle (pill_bg's 21dp corners) with the 22dp icon centred by even padding. Give it a
-         contentDescription, since there is no text. -->
-    <style name="TopButtonIcon" parent="TopButtonBase">
-        <item name="android:layout_width">42dp</item>
-        <item name="android:paddingStart">10dp</item>
-        <item name="android:paddingEnd">10dp</item>
-        <item name="android:drawablePadding">0dp</item>
-    </style>
-
     <style name="SettingsRow">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">52dp</item>
@@ -52,5 +23,114 @@
         <item name="android:layout_weight">1</item>
         <item name="android:layout_marginEnd">10dp</item>
         <item name="android:gravity">center</item>
+    </style>
+    <!-- ==== Launcher component library ================================================================
+         Type, then widgets. Layouts use these styles rather than setting sizes, colours or fonts themselves;
+         the values they use are the tokens in colors.xml and dimens.xml. -->
+
+    <!-- Type -->
+    <style name="TextAppearance.Launcher.SectionTitle" parent="">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/outfit_semibold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+    <style name="TextAppearance.Launcher.Caption" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+    <style name="TextAppearance.Launcher.Control" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="android:textColor">@color/on_glass</item>
+    </style>
+    <style name="TextAppearance.Launcher.Overline" parent="">
+        <item name="android:textSize">10sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+    <style name="TextAppearance.Launcher.CardTitle" parent="">
+        <item name="android:textSize">17sp</item>
+        <item name="android:fontFamily">@font/outfit_semibold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+    <style name="TextAppearance.Launcher.Meta" parent="">
+        <item name="android:textSize">11sp</item>
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+    <style name="TextAppearance.Launcher.Clock" parent="">
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Glass button: the one control shape in the top bar. Pill with text, or a circle with an icon. -->
+    <style name="Widget.Launcher.GlassButton" parent="">
+        <item name="android:layout_height">@dimen/control_height</item>
+        <item name="android:background">@drawable/glass_button</item>
+        <item name="android:stateListAnimator">@animator/control_lift</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:gravity">center</item>
+    </style>
+    <style name="Widget.Launcher.GlassButton.Icon">
+        <item name="android:layout_width">@dimen/control_height</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:tint">@color/on_glass</item>
+    </style>
+    <style name="Widget.Launcher.GlassButton.Chip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">@dimen/control_inset</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
+    </style>
+
+    <!-- Tab bar (ui.SegmentedControl) and its tabs. The control draws the indicator and colours the tab text. -->
+    <style name="Widget.Launcher.TabBar" parent="">
+        <item name="android:layout_height">@dimen/control_height</item>
+        <item name="android:background">@drawable/glass_track</item>
+        <item name="android:padding">@dimen/control_inset</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+    <style name="Widget.Launcher.Tab" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:paddingStart">@dimen/tab_padding</item>
+        <item name="android:paddingEnd">@dimen/tab_padding</item>
+        <item name="android:gravity">center</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:background">@null</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+    </style>
+
+    <!-- Card: any focusable tile with artwork (app tiles, media cards). Its artwork is clipped to the rounded
+         corners by ui.AspectRatioFrameLayout (android:clipToOutline only works from Android 12 in XML). -->
+    <style name="Widget.Launcher.Card" parent="">
+        <item name="android:background">@drawable/card_surface</item>
+        <item name="android:foreground">@drawable/card_focus_ring</item>
+        <item name="android:stateListAnimator">@animator/card_lift</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+    </style>
+
+    <!-- A row of cards (horizontal) or a grid of them. Bleeds to the screen edges so cards scroll off the edge
+         rather than being cut at the margin; the padding keeps the first and last card on the margin line. -->
+    <style name="Widget.Launcher.Shelf" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:paddingStart">@dimen/screen_margin</item>
+        <item name="android:paddingEnd">@dimen/screen_margin</item>
+        <item name="android:clipToPadding">false</item>
+        <item name="android:clipChildren">false</item>
+        <item name="android:overScrollMode">never</item>
+        <item name="android:scrollbars">none</item>
+        <item name="android:descendantFocusability">afterDescendants</item>
     </style>
 </resources>

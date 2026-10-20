@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Design tokens: spacing, sizes and corner radii. One spacing scale for the whole launcher. -->
+<resources>
+    <dimen name="space_2xs">4dp</dimen>
+    <dimen name="space_xs">8dp</dimen>
+    <dimen name="space_sm">12dp</dimen>
+    <dimen name="space_md">16dp</dimen>
+    <dimen name="space_lg">24dp</dimen>
+    <dimen name="space_xl">32dp</dimen>
+    <dimen name="space_2xl">40dp</dimen>
+    <dimen name="space_3xl">48dp</dimen>
+
+    <!-- Left and right edge of all content, on every page. -->
+    <dimen name="screen_margin">48dp</dimen>
+    <dimen name="screen_margin_top">28dp</dimen>
+    <!-- Gap between tiles, the same across and down, wide enough that a focused tile never touches its neighbour. -->
+    <dimen name="gutter">20dp</dimen>
+    <!-- Between a section title and its row. -->
+    <dimen name="section_title_gap">12dp</dimen>
+    <!-- Between two sections on a page. -->
+    <dimen name="section_gap">36dp</dimen>
+
+    <!-- Everything in the top bar is this tall. -->
+    <dimen name="control_height">40dp</dimen>
+    <dimen name="control_inset">4dp</dimen>
+    <dimen name="control_gap">12dp</dimen>
+    <dimen name="avatar_size">30dp</dimen>
+    <dimen name="tab_padding">22dp</dimen>
+
+    <dimen name="radius_card">14dp</dimen>
+    <!-- radius_card less the focus ring, for anything drawn just inside it. -->
+    <dimen name="radius_card_inner">12dp</dimen>
+    <dimen name="focus_ring">2dp</dimen>
+    <dimen name="hairline">1dp</dimen>
+    <dimen name="progress_height">3dp</dimen>
+
+    <!-- Lift on focus: elevation of the shadow. The scale lives in res/animator. -->
+    <dimen name="lift_card">14dp</dimen>
+    <dimen name="lift_control">6dp</dimen>
+</resources>

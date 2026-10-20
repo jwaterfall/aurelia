@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Design tokens: colours. Everything on screen takes its colour from here, so the look changes in one place. -->
+<resources>
+    <!-- Text on glass and on the backdrop. -->
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#B8FFFFFF</color>
+    <color name="text_tertiary">#80FFFFFF</color>
+
+    <!-- Focus is always solid white, with dark content on it. Nothing else on screen is solid white. -->
+    <color name="focus">#FFFFFFFF</color>
+    <color name="on_focus">#FF0B0D14</color>
+
+    <!-- Frosted glass: a fill that is lighter at the top, and a rim that catches light along the top edge. -->
+    <color name="glass_fill_top">#2EFFFFFF</color>
+    <color name="glass_fill_bottom">#14FFFFFF</color>
+    <color name="glass_rim_top">#5CFFFFFF</color>
+    <color name="glass_rim_bottom">#12FFFFFF</color>
+    <!-- The tab indicator while focus is elsewhere: glass, a step brighter than the track under it. -->
+    <color name="glass_selected">#38FFFFFF</color>
+
+    <!-- Card surfaces before their artwork arrives, and the hairline that keeps dark artwork off the backdrop. -->
+    <color name="surface_card">#1AFFFFFF</color>
+    <color name="card_hairline">#1FFFFFFF</color>
+    <!-- Inside the white focus ring, so the ring reads on white artwork too. -->
+    <color name="focus_ring_inner">#59000000</color>
+
+    <color name="backdrop_base">#FF05070D</color>
+    <color name="avatar">#FF4F7BFF</color>
+    <color name="progress_track">#40FFFFFF</color>
+</resources>

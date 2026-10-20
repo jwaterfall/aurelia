@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text and icons on a glass control: white at rest, dark once the control turns white with focus. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/on_focus" android:state_focused="true" />
+    <item android:color="@color/text_primary" />
+</selector>

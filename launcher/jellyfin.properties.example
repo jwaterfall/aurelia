@@ -1,0 +1,9 @@
+# Jellyfin server for the Continue Watching row. Copy this file to jellyfin.properties (gitignored, never
+# committed) and fill it in; the values are built into the APK.
+#   apiKey: Jellyfin dashboard > API Keys > +
+#   userId: Jellyfin dashboard > Users > your user; it is the id in the page's address
+server=http://192.168.1.10:8096
+userId=
+apiKey=
+# Name on the profile button in the top bar (optional; the button is hidden without one).
+profileName=

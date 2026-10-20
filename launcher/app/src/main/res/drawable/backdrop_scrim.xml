@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Over the wallpaper and the ambient backdrop: light at the top so the colour shows, darker towards the bottom. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="#4005070D"
+        android:centerColor="#8C05070D"
+        android:centerY="0.55"
+        android:endColor="#D905070D" />
+</shape>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Frosted pill that turns solid white with focus. -->
+<com.gathin.tvhome.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:glassInteractive="true" />

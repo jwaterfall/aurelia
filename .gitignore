@@ -14,3 +14,15 @@ backup/
 *.aab
 launcher/hs_err_pid*.log
 launcher/replay_pid*.log
+
+# Local tooling: the Python venv and the bundled adb.
+.venv/
+bin/
+# Device backups (package lists, settings dumps) stay on this machine.
+backups/
+# Jellyfin server and API key for the launcher; see launcher/jellyfin.properties.example.
+launcher/jellyfin.properties
+# Screenshots and reference images from testing on the TV, at the repository root.
+/*.png
+/*.jpg
+/*.webp

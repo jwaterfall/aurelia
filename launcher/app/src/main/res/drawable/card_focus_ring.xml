@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Drawn over a card: with focus, a white ring with a thin dark line inside it, so the ring still reads on white
+     artwork; without, a faint hairline that keeps dark artwork off the backdrop. Fades between the two. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="160"
+    android:exitFadeDuration="160">
+    <item android:state_focused="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <stroke android:width="@dimen/focus_ring" android:color="@color/focus" />
+                    <corners android:radius="@dimen/radius_card" />
+                </shape>
+            </item>
+            <item
+                android:bottom="@dimen/focus_ring"
+                android:left="@dimen/focus_ring"
+                android:right="@dimen/focus_ring"
+                android:top="@dimen/focus_ring">
+                <shape android:shape="rectangle">
+                    <stroke android:width="@dimen/hairline" android:color="@color/focus_ring_inner" />
+                    <corners android:radius="@dimen/radius_card_inner" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <stroke android:width="@dimen/hairline" android:color="@color/card_hairline" />
+            <corners android:radius="@dimen/radius_card" />
+        </shape>
+    </item>
+</selector>

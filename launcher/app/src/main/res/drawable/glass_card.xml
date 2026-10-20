@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static frosted card, shown while a card waits for its artwork. -->
+<com.gathin.tvhome.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:glassRadius="@dimen/radius_card"
+    app:glassInteractive="false" />

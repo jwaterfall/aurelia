@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="GlassDrawable">
+        <!-- Corner radius; leave unset for a pill (half the height). -->
+        <attr name="glassRadius" format="dimension" />
+        <!-- true: turns solid white while its view has focus (buttons). false: a static surface (tracks, panels). -->
+        <attr name="glassInteractive" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="AspectRatioFrameLayout">
+        <!-- Width divided by height; the height follows the width. 16:9 by default. -->
+        <attr name="aspectRatio" format="float" />
+    </declare-styleable>
+</resources>

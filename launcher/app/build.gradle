@@ -2,6 +2,14 @@ plugins {
     id 'com.android.application'
 }
 
+// Jellyfin server and credentials for the Continue Watching row, from launcher/jellyfin.properties. That file is
+// gitignored so the API key never reaches the repository; copy jellyfin.properties.example to start one.
+// Without it the build still works and the row reports that Jellyfin is not set up.
+def jellyfin = new Properties()
+def jellyfinFile = rootProject.file('jellyfin.properties')
+if (jellyfinFile.exists()) jellyfinFile.withInputStream { jellyfin.load(it) }
+def jellyfinField = { String key -> '"' + jellyfin.getProperty(key, '').trim().replace('\\', '\\\\').replace('"', '\\"') + '"' }
+
 android {
     namespace 'com.gathin.tvhome'
     compileSdk 34
@@ -12,6 +20,16 @@ android {
         targetSdk 34
         versionCode 5
         versionName '2.4'
+
+        buildConfigField 'String', 'JELLYFIN_SERVER', jellyfinField('server')
+        buildConfigField 'String', 'JELLYFIN_USER_ID', jellyfinField('userId')
+        buildConfigField 'String', 'JELLYFIN_API_KEY', jellyfinField('apiKey')
+        // Name on the profile button in the top bar; the button is hidden without one.
+        buildConfigField 'String', 'PROFILE_NAME', jellyfinField('profileName')
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     buildTypes {
