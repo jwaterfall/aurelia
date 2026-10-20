@@ -93,6 +93,11 @@ public final class Api {
         return parse(request("GET", url, auth, null), url);
     }
 
+    /** A quick question to a server that may be gone: gives up after {@code timeoutMs} rather than the usual wait. */
+    public static JSONObject getJson(String url, String auth, int timeoutMs) throws IOException {
+        return parse(request("GET", url, auth, null, timeoutMs), url);
+    }
+
     public static JSONObject postJson(String url, String auth, JSONObject body) throws IOException {
         return parse(request("POST", url, auth, body), url);
     }
@@ -115,7 +120,14 @@ public final class Api {
     }
 
     private static String request(String method, String url, String auth, JSONObject body) throws IOException {
+        return request(method, url, auth, body, TIMEOUT_MS);
+    }
+
+    private static String request(String method, String url, String auth, JSONObject body, int timeoutMs)
+            throws IOException {
         HttpURLConnection conn = open(method, url, auth);
+        conn.setConnectTimeout(timeoutMs);
+        conn.setReadTimeout(timeoutMs);
         try {
             if (body != null || "POST".equals(method)) {
                 byte[] bytes = (body != null ? body.toString() : "{}").getBytes(StandardCharsets.UTF_8);

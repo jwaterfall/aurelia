@@ -18,7 +18,9 @@ import com.gathin.tvhome.ui.PanelStep;
 
 import org.json.JSONObject;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The Jellyfin account in a side panel. Signed out: pick a server (found on the network, or typed in), then sign
@@ -79,39 +81,72 @@ final class AccountPanel {
 
     // ---- choose a server -------------------------------------------------------------------------------
 
+    /**
+     * Servers to sign in to: those that answer Jellyfin's discovery broadcast, and those signed in to before that
+     * still answer when asked directly (a server in Docker does, though it never hears the broadcast). Each is
+     * listed once, as it answers, above "Enter an address".
+     */
     private void showServers() {
         PanelStep s = newStep(null);
         s.title(activity.getString(R.string.jellyfin_connect_title))
                 .body(activity.getString(R.string.jellyfin_connect_body))
                 .status(activity.getString(R.string.jellyfin_searching), true);
-        // The last server used is there at once, so there is nothing to wait for; the search only adds to it.
-        String last = account.server();
-        String lastName = account.serverName().isEmpty() ? last : account.serverName();
-        if (!last.isEmpty()) {
-            s.row(lastName, activity.getString(R.string.jellyfin_last_used, last), () -> showCode(last, lastName));
-        }
         View enterAddress = s.row(activity.getString(R.string.jellyfin_enter_address), null, () -> showAddress(""));
         show(s);
+
         int mine = step;
+        String last = account.server();
+        Set<String> listed = new HashSet<>();
+        List<Account.KnownServer> known = account.knownServers();
+        int[] waiting = {known.size() + 1};
+        Runnable done = () -> {
+            if (mine != step || --waiting[0] > 0) return;
+            int n = listed.size();
+            s.status(n == 0 ? activity.getString(R.string.jellyfin_none_found)
+                    : n == 1 ? activity.getString(R.string.jellyfin_found_one)
+                    : activity.getString(R.string.jellyfin_found_many, n), false);
+        };
+        for (Account.KnownServer k : known) {
+            Api.async(() -> Api.getJson(k.address + "/System/Info/Public", null, DISCOVERY_MS),
+                    new Api.Callback<JSONObject>() {
+                        @Override
+                        public void onResult(JSONObject info) {
+                            if (mine != step) return;
+                            String name = info.optString("ServerName", k.name);
+                            addServer(s, listed, enterAddress, k.address, name.isEmpty() ? k.address : name, last);
+                            done.run();
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            done.run();
+                        }
+                    });
+        }
         Api.async(() -> Discovery.find(DISCOVERY_MS), new Api.Callback<List<Discovery.Server>>() {
             @Override
             public void onResult(List<Discovery.Server> servers) {
                 if (mine != step) return;
-                s.status(servers.isEmpty() ? activity.getString(R.string.jellyfin_none_found)
-                        : servers.size() == 1 ? activity.getString(R.string.jellyfin_found_one)
-                        : activity.getString(R.string.jellyfin_found_many, servers.size()), false);
-                // New servers go in above "Enter an address"; the rows already there, and the focus, stay put.
-                for (Discovery.Server f : servers) {
-                    if (f.address.equals(last)) continue;
-                    s.row(f.name, f.address, () -> showCode(f.address, f.name), enterAddress);
-                }
+                for (Discovery.Server f : servers) addServer(s, listed, enterAddress, f.address, f.name, last);
+                done.run();
             }
 
             @Override
             public void onError(Exception e) {
-                if (mine == step) s.status(activity.getString(R.string.jellyfin_none_found), false);
+                done.run();
             }
         });
+    }
+
+    /**
+     * Lists a server that answered, once, above {@code before}. The first one takes focus if it is still on
+     * "Enter an address", where the step opened; a choice already made is left alone.
+     */
+    private void addServer(PanelStep s, Set<String> listed, View before, String address, String name, String last) {
+        if (!listed.add(address)) return;
+        String detail = address.equals(last) ? activity.getString(R.string.jellyfin_last_used, address) : address;
+        View row = s.row(name, detail, () -> showCode(address, name), before);
+        if (listed.size() == 1 && before.isFocused()) row.requestFocus();
     }
 
     private void showAddress(String typed) {

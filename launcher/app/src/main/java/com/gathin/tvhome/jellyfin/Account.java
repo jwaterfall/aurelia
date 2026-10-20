@@ -3,6 +3,7 @@ package com.gathin.tvhome.jellyfin;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -21,6 +22,20 @@ public final class Account {
     public interface Listener {
         void onAccountChanged();
     }
+
+    /** A server signed in to before. */
+    public static final class KnownServer {
+        public final String address;
+        public final String name;
+
+        KnownServer(String address, String name) {
+            this.address = address;
+            this.name = name;
+        }
+    }
+
+    /** Servers remembered at most; the oldest is forgotten first. */
+    private static final int MAX_SERVERS = 8;
 
     private static final String PREFS = "jellyfin_account";
     private static Account instance;
@@ -72,10 +87,43 @@ public final class Account {
         return prefs.getString("token", "");
     }
 
+    /** Every server signed in to on this TV, the most recent first. */
+    public List<KnownServer> knownServers() {
+        List<KnownServer> out = new ArrayList<>();
+        try {
+            JSONArray list = new JSONArray(prefs.getString("servers", "[]"));
+            for (int i = 0; i < list.length(); i++) {
+                JSONObject o = list.getJSONObject(i);
+                out.add(new KnownServer(o.getString("address"), o.optString("name", "")));
+            }
+        } catch (Exception ignored) {
+        }
+        // Signed in before servers were remembered as a list.
+        if (out.isEmpty() && !server().isEmpty()) out.add(new KnownServer(server(), serverName()));
+        return out;
+    }
+
+    private String rememberServer(String address, String name) throws org.json.JSONException {
+        JSONArray list = new JSONArray();
+        list.put(new JSONObject().put("address", address).put("name", name));
+        for (KnownServer k : knownServers()) {
+            if (list.length() >= MAX_SERVERS) break;
+            if (!k.address.equals(address)) list.put(new JSONObject().put("address", k.address).put("name", k.name));
+        }
+        return list.toString();
+    }
+
     /** Stores the answer of /Users/AuthenticateWithQuickConnect. */
     void signIn(String server, String serverName, JSONObject auth) {
         JSONObject user = auth.optJSONObject("User");
+        String servers;
+        try {
+            servers = rememberServer(server, serverName);
+        } catch (org.json.JSONException e) {
+            servers = prefs.getString("servers", "[]");
+        }
         prefs.edit()
+                .putString("servers", servers)
                 .putString("server", server)
                 .putString("serverName", serverName)
                 .putString("token", auth.optString("AccessToken", ""))
