@@ -65,6 +65,14 @@
             </intent-filter>
         </activity>
 
+        <!-- Jellyfin playback, opened from Continue Watching. -->
+        <activity
+            android:name=".PlayerActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode"
+            android:screenOrientation="landscape" />
+
         <activity
             android:name=".LauncherSettingsActivity"
             android:exported="false"

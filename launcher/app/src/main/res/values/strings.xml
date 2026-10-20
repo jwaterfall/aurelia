@@ -74,4 +74,12 @@
     <string name="cw_offline_body">Check the server is running, then try again.</string>
     <string name="cw_empty_title">You’re all caught up</string>
     <string name="cw_empty_body">Shows and films you start in Jellyfin show up here.</string>
+    <!-- Player -->
+    <string name="player_failed">Can’t play this here</string>
+    <string name="player_open_in_jellyfin">Open in Jellyfin</string>
+    <string name="player_back">Back</string>
+    <string name="player_direct_play">Direct play</string>
+    <string name="player_direct_stream">Direct stream</string>
+    <string name="player_transcode">Transcoding</string>
+    <string name="player_remaining">−%1$s</string>
 </resources>

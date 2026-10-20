@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PlayerActivity: the video, and over it the controls (title and a glass seek bar), shown on any key and hidden
+     again while playing. A glass card replaces them when something cannot be played. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true">
+
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/video"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="false"
+        app:resize_mode="fit"
+        app:shutter_background_color="@android:color/black"
+        app:surface_type="surface_view"
+        app:use_controller="false" />
+
+    <ProgressBar
+        android:id="@+id/buffering"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:indeterminateTint="@color/text_primary" />
+
+    <FrameLayout
+        android:id="@+id/chrome"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="280dp"
+            android:layout_gravity="bottom"
+            android:background="@drawable/player_scrim" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/screen_margin"
+            android:paddingEnd="@dimen/screen_margin"
+            android:paddingBottom="@dimen/space_xl">
+
+            <TextView
+                android:id="@+id/playerTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Launcher.Overline" />
+
+            <TextView
+                android:id="@+id/playerTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2xs"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.Launcher.PanelTitle"
+                android:textSize="28sp" />
+
+            <TextView
+                android:id="@+id/playerSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.Launcher.Body"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/control_height"
+                android:layout_marginTop="@dimen/space_md"
+                android:background="@drawable/glass_track"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/space_sm"
+                android:paddingEnd="@dimen/space_lg">
+
+                <ImageView
+                    android:id="@+id/playerState"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_pause"
+                    android:tint="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/playerElapsed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:fontFeatureSettings="tnum"
+                    android:textAppearance="@style/TextAppearance.Launcher.Control"
+                    android:textColor="@color/text_primary" />
+
+                <ProgressBar
+                    android:id="@+id/playerSeek"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="4dp"
+                    android:layout_marginStart="@dimen/space_md"
+                    android:layout_marginEnd="@dimen/space_md"
+                    android:layout_weight="1"
+                    android:max="1000"
+                    android:progressDrawable="@drawable/seek_bar" />
+
+                <TextView
+                    android:id="@+id/playerRemaining"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFeatureSettings="tnum"
+                    android:textAppearance="@style/TextAppearance.Launcher.Control"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/playerError"
+        android:layout_width="460dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/glass_card"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="@dimen/space_xl"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_offline"
+            android:tint="@color/text_secondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:text="@string/player_failed"
+            android:textAppearance="@style/TextAppearance.Launcher.CardTitle" />
+
+        <TextView
+            android:id="@+id/playerErrorBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.Launcher.Body" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/playerOpenApp"
+                style="@style/Widget.Launcher.GlassButton"
+                android:layout_width="wrap_content"
+                android:includeFontPadding="false"
+                android:paddingStart="@dimen/space_lg"
+                android:paddingEnd="@dimen/space_lg"
+                android:text="@string/player_open_in_jellyfin"
+                android:textAppearance="@style/TextAppearance.Launcher.Control" />
+
+            <TextView
+                android:id="@+id/playerClose"
+                style="@style/Widget.Launcher.GlassButton"
+                android:layout_width="wrap_content"
+                android:layout_marginStart="@dimen/control_gap"
+                android:includeFontPadding="false"
+                android:paddingStart="@dimen/space_lg"
+                android:paddingEnd="@dimen/space_lg"
+                android:text="@string/player_back"
+                android:textAppearance="@style/TextAppearance.Launcher.Control" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

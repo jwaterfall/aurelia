@@ -33,4 +33,5 @@
     <color name="backdrop_base">#FF05070D</color>
     <color name="avatar">#FF4F7BFF</color>
     <color name="progress_track">#40FFFFFF</color>
+    <color name="progress_buffered">#66FFFFFF</color>
 </resources>

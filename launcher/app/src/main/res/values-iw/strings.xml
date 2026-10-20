@@ -73,4 +73,12 @@
     <string name="cw_offline_body">יש לוודא שהשרת פועל ולנסות שוב.</string>
     <string name="cw_empty_title">אין מה להשלים</string>
     <string name="cw_empty_body">סדרות וסרטים שמתחילים ב־Jellyfin יופיעו כאן.</string>
+    <!-- Player -->
+    <string name="player_failed">אי אפשר לנגן את זה כאן</string>
+    <string name="player_open_in_jellyfin">פתיחה ב-Jellyfin</string>
+    <string name="player_back">חזרה</string>
+    <string name="player_direct_play">ניגון ישיר</string>
+    <string name="player_direct_stream">הזרמה ישירה</string>
+    <string name="player_transcode">המרה</string>
+    <string name="player_remaining">−%1$s</string>
 </resources>

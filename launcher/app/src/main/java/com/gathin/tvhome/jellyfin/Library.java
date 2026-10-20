@@ -16,7 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/** What the signed-in user is watching, and opening it in the Jellyfin app. */
+/** What the signed-in user is watching, and opening it in the Jellyfin app when the launcher cannot play it. */
 public final class Library {
 
     /** One card of Continue Watching. */
@@ -62,6 +62,8 @@ public final class Library {
         String user = account.userId();
         String auth = auth(account);
         Api.async(() -> {
+            // Just back from the player: let its last report land first, so the row shows where it stopped.
+            Playback.awaitReports();
             try {
                 List<MediaItem> out = new ArrayList<>();
                 Set<String> seen = new HashSet<>();

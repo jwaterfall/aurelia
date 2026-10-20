@@ -168,7 +168,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void onItemClicked(Library.MediaItem item) {
-                Library.open(MainActivity.this, item.id);
+                PlayerActivity.start(MainActivity.this, item.id);
             }
 
             @Override
