@@ -23,6 +23,7 @@ public final class PanelStep {
     private final View root;
     private final ImageView avatar;
     private final TextView title, body, code, status;
+    private final View statusRow, spinner;
     private final EditText field;
     private final LinearLayout rows;
 
@@ -34,6 +35,8 @@ public final class PanelStep {
         body = root.findViewById(R.id.stepBody);
         code = root.findViewById(R.id.stepCode);
         status = root.findViewById(R.id.stepStatus);
+        statusRow = root.findViewById(R.id.stepStatusRow);
+        spinner = root.findViewById(R.id.stepSpinner);
         field = root.findViewById(R.id.stepField);
         rows = root.findViewById(R.id.stepRows);
     }
@@ -77,8 +80,17 @@ public final class PanelStep {
 
     /** One line under everything else, for progress and errors; null hides it. */
     public PanelStep status(@Nullable CharSequence text) {
+        return status(text, false);
+    }
+
+    /**
+     * The status line with a spinner beside it while {@code busy}. Changing what it says, or the spinner, never
+     * moves anything else; only removing the line (null) does.
+     */
+    public PanelStep status(@Nullable CharSequence text, boolean busy) {
         status.setText(text);
-        status.setVisibility(text == null ? View.GONE : View.VISIBLE);
+        spinner.setVisibility(busy ? View.VISIBLE : View.GONE);
+        statusRow.setVisibility(text == null ? View.GONE : View.VISIBLE);
         return this;
     }
 
@@ -92,18 +104,19 @@ public final class PanelStep {
 
     /** Adds a choice under the others. */
     public View row(CharSequence label, @Nullable CharSequence detail, Runnable action) {
+        return row(label, detail, action, null);
+    }
+
+    /** Adds a choice just above {@code before}, or under the others when it is null. */
+    public View row(CharSequence label, @Nullable CharSequence detail, Runnable action, @Nullable View before) {
         View row = LayoutInflater.from(root.getContext()).inflate(R.layout.item_panel_row, rows, false);
         ((TextView) row.findViewById(R.id.rowTitle)).setText(label);
         TextView sub = row.findViewById(R.id.rowSubtitle);
         sub.setText(detail);
         sub.setVisibility(detail == null ? View.GONE : View.VISIBLE);
         row.setOnClickListener(v -> action.run());
-        rows.addView(row);
+        int at = before == null ? -1 : rows.indexOfChild(before);
+        rows.addView(row, at);
         return row;
-    }
-
-    /** Removes the choices; a text field, the first child of the controls, stays. */
-    public void clearRows() {
-        rows.removeViews(1, rows.getChildCount() - 1);
     }
 }

@@ -122,7 +122,7 @@ public class AmbientBackdrop extends FrameLayout {
         copy.draw(c);
         if (copy == art) art.setBounds(old);
         weightByColour(small);
-        boxBlur(small, 3, 3);
+        Blur.box(small, 3, 3);
         return small;
     }
 
@@ -142,40 +142,5 @@ public class AmbientBackdrop extends FrameLayout {
             px[i] = (Math.round(weight * 255) << 24) | (c & 0xFFFFFF);
         }
         bmp.setPixels(px, 0, w, 0, 0, w, h);
-    }
-
-    /** {@code passes} box blurs of {@code radius} pixels, which together approximate a gaussian. */
-    private static void boxBlur(Bitmap bmp, int radius, int passes) {
-        int w = bmp.getWidth(), h = bmp.getHeight();
-        int[] px = new int[w * h];
-        int[] tmp = new int[w * h];
-        bmp.getPixels(px, 0, w, 0, 0, w, h);
-        for (int p = 0; p < passes; p++) {
-            blurLine(px, tmp, w, h, radius, true);
-            blurLine(tmp, px, w, h, radius, false);
-        }
-        bmp.setPixels(px, 0, w, 0, 0, w, h);
-    }
-
-    private static void blurLine(int[] src, int[] dst, int w, int h, int r, boolean horizontal) {
-        int lines = horizontal ? h : w, len = horizontal ? w : h;
-        for (int line = 0; line < lines; line++) {
-            for (int i = 0; i < len; i++) {
-                // Colours are averaged weighted by alpha, so a transparent neighbour does not darken them.
-                int a = 0, rr = 0, g = 0, b = 0, n = 0;
-                for (int k = -r; k <= r; k++) {
-                    int j = Math.max(0, Math.min(len - 1, i + k));
-                    int c = src[horizontal ? line * w + j : j * w + line];
-                    int ca = c >>> 24;
-                    a += ca;
-                    rr += ((c >> 16) & 0xFF) * ca;
-                    g += ((c >> 8) & 0xFF) * ca;
-                    b += (c & 0xFF) * ca;
-                    n++;
-                }
-                int out = a == 0 ? 0 : ((a / n) << 24) | ((rr / a) << 16) | ((g / a) << 8) | (b / a);
-                dst[horizontal ? line * w + i : i * w + line] = out;
-            }
-        }
     }
 }

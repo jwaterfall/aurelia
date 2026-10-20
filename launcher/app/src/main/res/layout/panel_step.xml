@@ -8,28 +8,43 @@
     android:clipToPadding="false"
     android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/stepAvatar"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_marginBottom="@dimen/space_md"
-        android:background="@drawable/avatar"
-        android:importantForAccessibility="no"
-        android:scaleType="centerCrop"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/stepTitle"
+    <!-- Header: the title and explanation, with an avatar to their left when the step is about a person. -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="@style/TextAppearance.Launcher.PanelTitle" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-    <TextView
-        android:id="@+id/stepBody"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_xs"
-        android:textAppearance="@style/TextAppearance.Launcher.Body" />
+        <ImageView
+            android:id="@+id/stepAvatar"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="@dimen/space_md"
+            android:background="@drawable/avatar"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/stepTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Launcher.PanelTitle" />
+
+            <TextView
+                android:id="@+id/stepBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2xs"
+                android:textAppearance="@style/TextAppearance.Launcher.Body" />
+        </LinearLayout>
+    </LinearLayout>
 
     <TextView
         android:id="@+id/stepCode"
@@ -41,13 +56,32 @@
         android:visibility="gone" />
 
     <!-- Status: progress and errors, under the explanation. -->
-    <TextView
-        android:id="@+id/stepStatus"
+    <LinearLayout
+        android:id="@+id/stepStatusRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_sm"
-        android:textAppearance="@style/TextAppearance.Launcher.Caption"
-        android:visibility="gone" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <!-- While something is in progress; smaller than the line, so the line keeps its height without it. -->
+        <ProgressBar
+            android:id="@+id/stepSpinner"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginEnd="@dimen/space_xs"
+            android:indeterminateTint="@color/text_tertiary"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/stepStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textAppearance="@style/TextAppearance.Launcher.Caption" />
+    </LinearLayout>
 
     <!-- The controls: a text field if the step has one, then the choices, all control_stack_gap apart. -->
     <LinearLayout
@@ -57,6 +91,7 @@
         android:layout_marginTop="@dimen/space_lg"
         android:clipChildren="false"
         android:clipToPadding="false"
+        android:animateLayoutChanges="true"
         android:divider="@drawable/control_stack_gap"
         android:orientation="vertical"
         android:showDividers="middle">

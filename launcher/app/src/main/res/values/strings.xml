@@ -47,6 +47,9 @@
     <string name="jellyfin_connect_title">Connect Jellyfin</string>
     <string name="jellyfin_connect_body">Choose your Jellyfin server. Servers on this network show up here.</string>
     <string name="jellyfin_searching">Looking for servers on your network…</string>
+    <string name="jellyfin_last_used">Last used • %1$s</string>
+    <string name="jellyfin_found_one">Found 1 server</string>
+    <string name="jellyfin_found_many">Found %1$d servers</string>
     <string name="jellyfin_none_found">No servers found on this network.</string>
     <string name="jellyfin_enter_address">Enter an address</string>
     <string name="jellyfin_address_title">Server address</string>

@@ -15,9 +15,9 @@
     <color name="glass_fill_bottom">#14FFFFFF</color>
     <color name="glass_rim_top">#5CFFFFFF</color>
     <color name="glass_rim_bottom">#12FFFFFF</color>
-    <!-- Panel glass (ui.GlassSheet): dense enough that its text reads over any backdrop. -->
-    <color name="glass_panel_top">#FF232733</color>
-    <color name="glass_panel_bottom">#FF0E1017</color>
+    <!-- Panel glass (ui.GlassSheet): over the frosted screen, a little denser than Home's glass so its text reads. -->
+    <color name="glass_panel_top">#33FFFFFF</color>
+    <color name="glass_panel_bottom">#1AFFFFFF</color>
     <!-- Behind an open panel, over the rest of the screen. -->
     <color name="panel_scrim">#B3000000</color>
 

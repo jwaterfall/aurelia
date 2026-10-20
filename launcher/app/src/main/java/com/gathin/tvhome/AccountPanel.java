@@ -3,6 +3,7 @@ package com.gathin.tvhome;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
@@ -82,41 +83,35 @@ final class AccountPanel {
         PanelStep s = newStep(null);
         s.title(activity.getString(R.string.jellyfin_connect_title))
                 .body(activity.getString(R.string.jellyfin_connect_body))
-                .status(activity.getString(R.string.jellyfin_searching));
-        addServerRows(s, null);
+                .status(activity.getString(R.string.jellyfin_searching), true);
+        // The last server used is there at once, so there is nothing to wait for; the search only adds to it.
+        String last = account.server();
+        String lastName = account.serverName().isEmpty() ? last : account.serverName();
+        if (!last.isEmpty()) {
+            s.row(lastName, activity.getString(R.string.jellyfin_last_used, last), () -> showCode(last, lastName));
+        }
+        View enterAddress = s.row(activity.getString(R.string.jellyfin_enter_address), null, () -> showAddress(""));
         show(s);
         int mine = step;
         Api.async(() -> Discovery.find(DISCOVERY_MS), new Api.Callback<List<Discovery.Server>>() {
             @Override
             public void onResult(List<Discovery.Server> servers) {
                 if (mine != step) return;
-                // Nothing found is only worth saying when there is no server to offer at all.
-                boolean nothing = servers.isEmpty() && account.server().isEmpty();
-                s.status(nothing ? activity.getString(R.string.jellyfin_none_found) : null);
-                s.clearRows();
-                addServerRows(s, servers);
-                // The rows were replaced under the focus.
-                s.view().requestFocus();
+                s.status(servers.isEmpty() ? activity.getString(R.string.jellyfin_none_found)
+                        : servers.size() == 1 ? activity.getString(R.string.jellyfin_found_one)
+                        : activity.getString(R.string.jellyfin_found_many, servers.size()), false);
+                // New servers go in above "Enter an address"; the rows already there, and the focus, stay put.
+                for (Discovery.Server f : servers) {
+                    if (f.address.equals(last)) continue;
+                    s.row(f.name, f.address, () -> showCode(f.address, f.name), enterAddress);
+                }
             }
 
             @Override
             public void onError(Exception e) {
-                if (mine == step) s.status(account.server().isEmpty() ? activity.getString(R.string.jellyfin_none_found) : null);
+                if (mine == step) s.status(activity.getString(R.string.jellyfin_none_found), false);
             }
         });
-    }
-
-    /** The last server used first (if discovery did not find it), then those found, then typing an address. */
-    private void addServerRows(PanelStep s, List<Discovery.Server> found) {
-        String last = account.server();
-        boolean lastFound = false;
-        if (found != null) for (Discovery.Server f : found) lastFound |= f.address.equals(last);
-        if (!last.isEmpty() && !lastFound) {
-            String name = account.serverName().isEmpty() ? last : account.serverName();
-            s.row(name, last, () -> showCode(last, name));
-        }
-        if (found != null) for (Discovery.Server f : found) s.row(f.name, f.address, () -> showCode(f.address, f.name));
-        s.row(activity.getString(R.string.jellyfin_enter_address), null, () -> showAddress(""));
     }
 
     private void showAddress(String typed) {
@@ -140,7 +135,7 @@ final class AccountPanel {
     private void checkAddress(PanelStep s, String typed) {
         String address = Api.normalizeAddress(typed);
         if (address.isEmpty()) return;
-        s.status(activity.getString(R.string.jellyfin_checking));
+        s.status(activity.getString(R.string.jellyfin_checking), true);
         int mine = step;
         Api.async(() -> Api.getJson(address + "/System/Info/Public", null), new Api.Callback<JSONObject>() {
             @Override
@@ -164,13 +159,13 @@ final class AccountPanel {
         s.title(activity.getString(R.string.jellyfin_code_title, name))
                 .body(activity.getString(R.string.jellyfin_code_body))
                 .code("• • • • • •")
-                .status(activity.getString(R.string.jellyfin_checking));
+                .status(activity.getString(R.string.jellyfin_checking), true);
         s.row(activity.getString(R.string.jellyfin_other_server), null, this::showServers);
         show(s);
         signIn = new QuickConnect(account, server, name, new QuickConnect.Listener() {
             @Override
             public void onCode(String code) {
-                s.code(code).status(activity.getString(R.string.jellyfin_waiting));
+                s.code(code).status(activity.getString(R.string.jellyfin_waiting), true);
             }
 
             @Override

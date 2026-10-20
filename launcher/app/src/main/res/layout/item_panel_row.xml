@@ -10,8 +10,7 @@
         android:duplicateParentState="true"
         android:ellipsize="end"
         android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.Launcher.Control"
-        android:textSize="16sp" />
+        android:textAppearance="@style/TextAppearance.Launcher.Control" />
 
     <TextView
         android:id="@+id/rowSubtitle"

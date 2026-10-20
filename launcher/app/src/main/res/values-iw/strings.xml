@@ -46,6 +46,9 @@
     <string name="jellyfin_connect_title">חיבור ל־Jellyfin</string>
     <string name="jellyfin_connect_body">יש לבחור את שרת ה־Jellyfin. שרתים ברשת הזו מופיעים כאן.</string>
     <string name="jellyfin_searching">מחפש שרתים ברשת…</string>
+    <string name="jellyfin_last_used">שימוש אחרון • %1$s</string>
+    <string name="jellyfin_found_one">נמצא שרת אחד</string>
+    <string name="jellyfin_found_many">נמצאו %1$d שרתים</string>
     <string name="jellyfin_none_found">לא נמצאו שרתים ברשת הזו.</string>
     <string name="jellyfin_enter_address">הזנת כתובת</string>
     <string name="jellyfin_address_title">כתובת השרת</string>

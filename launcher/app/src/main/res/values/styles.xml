@@ -129,12 +129,12 @@
     </style>
     <!-- Panels (ui.GlassSheet) and what goes in them. -->
     <style name="TextAppearance.Launcher.PanelTitle" parent="">
-        <item name="android:textSize">24sp</item>
+        <item name="android:textSize">20sp</item>
         <item name="android:fontFamily">@font/outfit_semibold</item>
         <item name="android:textColor">@color/text_primary</item>
     </style>
     <style name="TextAppearance.Launcher.Body" parent="">
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">13sp</item>
         <item name="android:fontFamily">@font/outfit_regular</item>
         <item name="android:textColor">@color/text_secondary</item>
         <item name="android:lineSpacingMultiplier">1.25</item>
@@ -162,8 +162,8 @@
         <item name="android:clickable">true</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:orientation">vertical</item>
-        <item name="android:paddingStart">@dimen/space_md</item>
-        <item name="android:paddingEnd">@dimen/space_md</item>
+        <item name="android:paddingStart">@dimen/space_lg</item>
+        <item name="android:paddingEnd">@dimen/space_lg</item>
         <item name="android:paddingTop">@dimen/space_xs</item>
         <item name="android:paddingBottom">@dimen/space_xs</item>
     </style>
@@ -173,10 +173,10 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/row_height</item>
         <item name="android:background">@drawable/glass_row</item>
-        <item name="android:paddingStart">@dimen/space_md</item>
-        <item name="android:paddingEnd">@dimen/space_md</item>
+        <item name="android:paddingStart">@dimen/space_lg</item>
+        <item name="android:paddingEnd">@dimen/space_lg</item>
         <item name="android:singleLine">true</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:fontFamily">@font/outfit_medium</item>
         <item name="android:textColor">@color/on_glass</item>
         <item name="android:textColorHint">@color/on_glass_secondary</item>
