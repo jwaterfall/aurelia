@@ -68,7 +68,7 @@
         <item name="android:textColor">@color/text_primary</item>
     </style>
 
-    <!-- Glass button: the one control shape in the top bar. Pill with text, or a circle with an icon. -->
+    <!-- Glass button: the one control shape in the top bar and in empty rows. Pill with text, or a circle. -->
     <style name="Widget.Launcher.GlassButton" parent="">
         <item name="android:layout_height">@dimen/control_height</item>
         <item name="android:background">@drawable/glass_button</item>
@@ -82,12 +82,6 @@
         <item name="android:padding">10dp</item>
         <item name="android:scaleType">fitCenter</item>
         <item name="android:tint">@color/on_glass</item>
-    </style>
-    <style name="Widget.Launcher.GlassButton.Chip">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:orientation">horizontal</item>
-        <item name="android:paddingStart">@dimen/control_inset</item>
-        <item name="android:paddingEnd">@dimen/space_md</item>
     </style>
 
     <!-- Tab bar (ui.SegmentedControl) and its tabs. The control draws the indicator and colours the tab text. -->
@@ -132,5 +126,60 @@
         <item name="android:overScrollMode">never</item>
         <item name="android:scrollbars">none</item>
         <item name="android:descendantFocusability">afterDescendants</item>
+    </style>
+    <!-- Panels (ui.GlassSheet) and what goes in them. -->
+    <style name="TextAppearance.Launcher.PanelTitle" parent="">
+        <item name="android:textSize">24sp</item>
+        <item name="android:fontFamily">@font/outfit_semibold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+    <style name="TextAppearance.Launcher.Body" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:lineSpacingMultiplier">1.25</item>
+    </style>
+    <style name="TextAppearance.Launcher.Code" parent="">
+        <item name="android:textSize">44sp</item>
+        <item name="android:fontFamily">@font/outfit_semibold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0.22</item>
+    </style>
+    <style name="TextAppearance.Launcher.RowSubtitle" parent="">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="android:textColor">@color/on_glass_secondary</item>
+    </style>
+
+    <!-- A choice in a panel: full width, glass that turns white with focus. item_panel_row.xml uses it. -->
+    <style name="Widget.Launcher.PanelRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">@dimen/row_height</item>
+        <item name="android:background">@drawable/glass_row</item>
+        <item name="android:stateListAnimator">@animator/row_lift</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
+        <item name="android:paddingTop">@dimen/space_xs</item>
+        <item name="android:paddingBottom">@dimen/space_xs</item>
+    </style>
+
+    <!-- Text entry in a panel: glass at rest, white while typing. -->
+    <style name="Widget.Launcher.TextField" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/row_height</item>
+        <item name="android:background">@drawable/glass_row</item>
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="android:textColor">@color/on_glass</item>
+        <item name="android:textColorHint">@color/on_glass_secondary</item>
+        <item name="android:textCursorDrawable">@null</item>
     </style>
 </resources>

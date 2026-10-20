@@ -14,26 +14,30 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.PathInterpolator;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.gathin.tvhome.jellyfin.Account;
+import com.gathin.tvhome.jellyfin.Api;
+import com.gathin.tvhome.jellyfin.Library;
 import com.gathin.tvhome.ui.AmbientBackdrop;
+import com.gathin.tvhome.ui.GlassSheet;
 import com.gathin.tvhome.ui.GridShelfLayoutManager;
 import com.gathin.tvhome.ui.GridSpacing;
 import com.gathin.tvhome.ui.SegmentedControl;
 import com.gathin.tvhome.ui.ShelfLayoutManager;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
  * The launcher: a top bar (profile, Settings, Search, the Home / Apps tabs, the clock) over two pages.
  * Home has the Jellyfin Continue Watching row and the pinned apps; Apps has every app on the same columns.
  *
- * Focus moves the platform's way inside a row or grid; this class only routes it between the top bar and the
- * pages (see {@link #routeKey}), and remembers where it was in each row so it returns there.
+ * Focus in the top bar moves the platform's way. Between rows and inside them this class moves it itself (see
+ * {@link #routeKey}): one card at a time, and back to where it last was in each row.
  */
 public class MainActivity extends Activity {
 
@@ -56,15 +60,18 @@ public class MainActivity extends Activity {
     private View topBar;
     private SegmentedControl tabs;
     private View pageHome, pageApps;
-    private View cwSection;
     private RecyclerView cwRow, pinnedRow, appsGrid;
     private TextView cwCaption, appsCaption;
     private ContinueWatchingAdapter cwAdapter;
     private AppTileAdapter pinnedAdapter, appsAdapter;
+    private GlassSheet sheet;
+    private Account account;
+    private AccountPanel accountPanel;
+    private final Account.Listener accountListener = this::onAccountChanged;
     private final PathInterpolator ease = new PathInterpolator(0.2f, 0f, 0f, 1f);
 
-    /** Where focus was in each row, so coming back down from the top bar lands there again. */
-    private int cwFocus, appsFocus;
+    /** Where focus was in each row, so coming back to a row lands there again. */
+    private int cwFocus, pinnedFocus, appsFocus;
 
     private final BroadcastReceiver packageReceiver = new BroadcastReceiver() {
         @Override
@@ -91,12 +98,18 @@ public class MainActivity extends Activity {
         ambient = findViewById(R.id.ambient);
         ambient.setAnimationsEnabled(animations);
 
+        account = Account.get(this);
+        sheet = findViewById(R.id.sheet);
+        sheet.setAnimationsEnabled(animations);
+        accountPanel = new AccountPanel(this, sheet, findViewById(R.id.content));
         setUpTopBar();
         setUpHome();
         setUpApps();
+        account.addListener(accountListener);
+        updateProfile();
         loadApps();
         showPage(PAGE_HOME, false);
-        cwRow.post(this::focusHome);
+        cwRow.post(() -> focusRow(cwRow, 0));
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -114,12 +127,8 @@ public class MainActivity extends Activity {
 
     private void setUpTopBar() {
         topBar = findViewById(R.id.topBar);
-        String name = BuildConfig.PROFILE_NAME;
-        View profile = findViewById(R.id.btnProfile);
-        profile.setVisibility(name.isEmpty() ? View.GONE : View.VISIBLE);
-        ((TextView) findViewById(R.id.profileName)).setText(name);
-        ((TextView) findViewById(R.id.avatar)).setText(name.isEmpty() ? "" : name.substring(0, 1).toUpperCase());
-        profile.setOnClickListener(v -> toast(name));
+        findViewById(R.id.avatar).setClipToOutline(true);
+        findViewById(R.id.btnProfile).setOnClickListener(v -> accountPanel.open());
 
         View settings = findViewById(R.id.btnSettings);
         settings.setOnClickListener(v -> open(new Intent(Settings.ACTION_SETTINGS)));
@@ -148,23 +157,22 @@ public class MainActivity extends Activity {
         int gutter = getResources().getDimensionPixelSize(R.dimen.gutter);
         pageHome = findViewById(R.id.pageHome);
 
-        cwSection = findViewById(R.id.cwSection);
         View cwHeader = findViewById(R.id.cwHeader);
         ((TextView) cwHeader.findViewById(R.id.sectionTitle)).setText(R.string.continue_watching);
         cwCaption = cwHeader.findViewById(R.id.sectionCaption);
         cwAdapter = new ContinueWatchingAdapter(MEDIA_COLUMNS, gutter, new ContinueWatchingAdapter.Listener() {
             @Override
-            public void onItemFocused(ContinueWatchingAdapter.Item item, Drawable art) {
+            public void onItemFocused(Library.MediaItem item, Drawable art) {
                 ambient.show(item.id, art);
             }
 
             @Override
-            public void onItemClicked(ContinueWatchingAdapter.Item item) {
-                JellyfinManager.launchItem(MainActivity.this, item.id);
+            public void onItemClicked(Library.MediaItem item) {
+                Library.open(MainActivity.this, item.id);
             }
 
             @Override
-            public void onPlaceholderFocused() {
+            public void onNothingFocused() {
                 ambient.clear();
             }
         });
@@ -220,44 +228,106 @@ public class MainActivity extends Activity {
         appsCaption.setText(getString(R.string.app_count, apps.size()));
     }
 
-    private void refreshJellyfin() {
-        JellyfinManager.fetchContinueWatching(new JellyfinManager.Callback<List<ContinueWatchingAdapter.Item>>() {
+    // ---- Jellyfin ------------------------------------------------------------------------------------
+
+    /** The profile button: the signed-in user's picture, or their initial until it loads; a person icon when signed out. */
+    private void updateProfile() {
+        View button = findViewById(R.id.btnProfile);
+        TextView initial = findViewById(R.id.avatarInitial);
+        ImageView picture = findViewById(R.id.avatarImage);
+        picture.animate().cancel();
+        if (!account.isSignedIn()) {
+            button.setContentDescription(getString(R.string.sign_in));
+            initial.setText("");
+            int pad = getResources().getDimensionPixelSize(R.dimen.space_2xs) + 2;
+            picture.setPadding(pad, pad, pad, pad);
+            picture.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            picture.setImageResource(R.drawable.ic_person);
+            picture.setAlpha(1f);
+            return;
+        }
+        String name = account.userName();
+        button.setContentDescription(name);
+        initial.setText(name.isEmpty() ? "" : name.substring(0, 1).toUpperCase());
+        picture.setImageDrawable(null);
+        String user = account.userId();
+        Api.async(() -> Library.avatar(account), new Api.Callback<android.graphics.Bitmap>() {
             @Override
-            public void onSuccess(List<ContinueWatchingAdapter.Item> result) {
-                cwAdapter.setItems(result);
-                cwCaption.setText(getString(R.string.jellyfin_items, result.size()));
-                showContinueWatching(!result.isEmpty());
+            public void onResult(android.graphics.Bitmap bmp) {
+                if (bmp == null || !user.equals(account.userId())) return;
+                picture.setPadding(0, 0, 0, 0);
+                picture.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                picture.setImageBitmap(bmp);
+                picture.setAlpha(0f);
+                picture.animate().alpha(1f).setDuration(animations ? PAGE_IN_MS : 0).start();
             }
 
             @Override
             public void onError(Exception e) {
-                // Cards from an earlier answer stay up; the caption says they may be out of date.
-                if (cwAdapter.hasItems()) {
-                    cwCaption.setText(R.string.jellyfin_unavailable);
-                    return;
-                }
-                cwAdapter.setItems(Collections.emptyList());
-                showContinueWatching(false);
             }
         });
     }
 
+    private void onAccountChanged() {
+        updateProfile();
+        updateRow(cwAdapter::showLoading);
+        refreshJellyfin();
+    }
+
     /**
-     * Shows or hides the Continue Watching section. Hidden, the pinned apps are the first row: focus that was in it
-     * moves there, and Up and Down route around it.
+     * Fills Continue Watching. It always has a card to focus: what is in progress, or a card that says why
+     * there is nothing (signed out, server unreachable, all caught up) and does the obvious thing when selected.
      */
-    private void showContinueWatching(boolean show) {
-        if ((cwSection.getVisibility() == View.VISIBLE) == show) return;
-        boolean hadFocus = cwSection.hasFocus();
-        cwSection.animate().cancel();
-        if (show) {
-            cwSection.setVisibility(View.VISIBLE);
-            cwSection.setAlpha(0f);
-            cwSection.animate().alpha(1f).setDuration(animations ? PAGE_IN_MS : 0).setInterpolator(ease).start();
-        } else {
-            cwSection.setVisibility(View.GONE);
-            if (hadFocus) pinnedRow.post(() -> focusRow(pinnedRow, 0));
+    private void refreshJellyfin() {
+        if (!account.isSignedIn()) {
+            cwCaption.setText(null);
+            updateRow(() -> cwAdapter.showMessage(new ContinueWatchingAdapter.Message(R.drawable.ic_link,
+                    getString(R.string.cw_connect_title), getString(R.string.cw_connect_body),
+                    getString(R.string.jellyfin_connect_title), accountPanel::open)));
+            return;
         }
+        Library.continueWatching(account, new Api.Callback<List<Library.MediaItem>>() {
+            @Override
+            public void onResult(List<Library.MediaItem> items) {
+                if (items.isEmpty()) {
+                    cwCaption.setText(null);
+                    updateRow(() -> cwAdapter.showMessage(new ContinueWatchingAdapter.Message(R.drawable.ic_check,
+                            getString(R.string.cw_empty_title), getString(R.string.cw_empty_body),
+                            getString(R.string.jellyfin_open_app), () -> Library.openApp(MainActivity.this))));
+                    return;
+                }
+                cwCaption.setText(getString(R.string.jellyfin_items, items.size()));
+                updateRow(() -> cwAdapter.showItems(items, Library.auth(account)));
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // A token the server no longer accepts has signed the launcher out, which refilled the row.
+                if (e instanceof Library.NotSignedIn) return;
+                String server = account.serverName().isEmpty() ? account.server() : account.serverName();
+                String offline = getString(R.string.cw_offline_title, server);
+                // Cards from an earlier answer stay up; the caption says they may be out of date.
+                if (cwAdapter.hasItems()) {
+                    cwCaption.setText(offline);
+                    return;
+                }
+                cwCaption.setText(null);
+                updateRow(() -> cwAdapter.showMessage(new ContinueWatchingAdapter.Message(R.drawable.ic_offline,
+                        offline, getString(R.string.cw_offline_body), getString(R.string.jellyfin_try_again), () -> {
+                            updateRow(cwAdapter::showLoading);
+                            refreshJellyfin();
+                        })));
+            }
+        });
+    }
+
+    /** Changes Continue Watching; if that rebuilds the card that had focus, focus goes back into the row. */
+    private void updateRow(Runnable change) {
+        boolean hadFocus = cwRow.hasFocus();
+        change.run();
+        if (hadFocus) cwRow.post(() -> {
+            if (!cwRow.hasFocus() && !sheet.isShowing()) focusRow(cwRow, cwFocus);
+        });
     }
 
     // ---- pages ---------------------------------------------------------------------------------------
@@ -303,63 +373,62 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Moves focus between the top bar and the page where the platform's focus search would guess: Up from the
-     * first row goes to the tabs (not to whichever top-bar button is nearest), Down from the top bar goes back
-     * to the card focus left. Nothing is above the top bar or below the last row, so those keys stop there.
+     * Moves focus where the platform's focus search would guess wrong. Up from Home's first row or the Apps grid's
+     * goes to the tabs, not to the nearest top-bar button; Down from the top bar returns to the card focus left.
+     * Inside a row or the grid, focus moves one card per key here too: the platform searches only among cards
+     * already laid out, so a key held down outruns the scrolling and focus escaped to the top bar.
      */
     private boolean routeKey(int keyCode) {
         View focus = getCurrentFocus();
-        if (focus == null) return false;
-        if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-            if (isIn(focus, topBar)) return true;
-            if (isIn(focus, firstHomeRow()) || (isIn(focus, appsGrid) && positionIn(appsGrid, focus) < APP_COLUMNS)) {
-                tabs.requestFocus();
-                return true;
-            }
-        } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-            if (isIn(focus, topBar)) {
-                if (currentPage() == PAGE_HOME) focusHome();
-                else focusRow(appsGrid, appsFocus);
-                return true;
-            }
-            if (isIn(focus, pinnedRow)) return true;
-        } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-            return atRowEnd(focus, keyCode == KeyEvent.KEYCODE_DPAD_RIGHT);
+        if (focus == null || sheet.isShowing()) return false;
+        boolean right = keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_UP:
+                if (isIn(focus, topBar)) return true;
+                if (isIn(focus, cwRow)) return tabs.requestFocus();
+                if (isIn(focus, pinnedRow)) return focusRow(cwRow, cwFocus);
+                if (isIn(focus, appsGrid)) {
+                    int pos = positionIn(appsGrid, focus);
+                    return pos < APP_COLUMNS ? tabs.requestFocus() : focusRow(appsGrid, pos - APP_COLUMNS);
+                }
+                return false;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                if (isIn(focus, topBar)) {
+                    return currentPage() == PAGE_HOME ? focusRow(cwRow, cwFocus) : focusRow(appsGrid, appsFocus);
+                }
+                if (isIn(focus, cwRow)) return focusRow(pinnedRow, pinnedFocus);
+                if (isIn(focus, pinnedRow)) return true;
+                if (isIn(focus, appsGrid)) {
+                    int pos = positionIn(appsGrid, focus), last = appsAdapter.getItemCount() - 1;
+                    // From the last full row, Down goes to the last app when the row below is shorter.
+                    if (pos / APP_COLUMNS == last / APP_COLUMNS) return true;
+                    return focusRow(appsGrid, Math.min(pos + APP_COLUMNS, last));
+                }
+                return false;
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                for (RecyclerView row : new RecyclerView[]{cwRow, pinnedRow}) {
+                    if (!isIn(focus, row)) continue;
+                    int pos = positionIn(row, focus) + (right ? 1 : -1);
+                    if (pos >= 0 && row.getAdapter() != null && pos < row.getAdapter().getItemCount()) focusRow(row, pos);
+                    return true;   // the ends of a row stop focus rather than letting it jump rows
+                }
+                if (isIn(focus, appsGrid)) {
+                    int pos = positionIn(appsGrid, focus), col = pos % APP_COLUMNS;
+                    boolean end = right ? col == APP_COLUMNS - 1 || pos == appsAdapter.getItemCount() - 1 : col == 0;
+                    if (!end) focusRow(appsGrid, pos + (right ? 1 : -1));
+                    return true;
+                }
+                return false;
+            default:
+                return false;
         }
-        return false;
-    }
-
-    /**
-     * Left on the first card of a row, or Right on the last, stops there. Otherwise the focus search finds the
-     * nearest card in a neighbouring row, and focus jumps rows sideways.
-     */
-    private boolean atRowEnd(View focus, boolean right) {
-        for (RecyclerView row : new RecyclerView[]{cwRow, pinnedRow, appsGrid}) {
-            if (!isIn(focus, row) || row.getAdapter() == null) continue;
-            int pos = positionIn(row, focus);
-            if (pos == RecyclerView.NO_POSITION) return false;
-            int last = row.getAdapter().getItemCount() - 1;
-            int columns = row == appsGrid ? APP_COLUMNS : Integer.MAX_VALUE;
-            int col = row == appsGrid ? pos % APP_COLUMNS : pos;
-            return right ? pos == last || col == columns - 1 : col == 0;
-        }
-        return false;
     }
 
     private void remember(View focus) {
         if (isIn(focus, cwRow)) cwFocus = Math.max(0, positionIn(cwRow, focus));
+        else if (isIn(focus, pinnedRow)) pinnedFocus = Math.max(0, positionIn(pinnedRow, focus));
         else if (isIn(focus, appsGrid)) appsFocus = Math.max(0, positionIn(appsGrid, focus));
-    }
-
-    /** Continue Watching, or the pinned apps while it is hidden. */
-    private RecyclerView firstHomeRow() {
-        return cwSection.getVisibility() == View.VISIBLE ? cwRow : pinnedRow;
-    }
-
-    /** Focus onto Home's first row, where it was last. */
-    private void focusHome() {
-        RecyclerView row = firstHomeRow();
-        focusRow(row, row == cwRow ? cwFocus : 0);
     }
 
     private static boolean isIn(View view, View ancestor) {
@@ -374,36 +443,41 @@ public class MainActivity extends Activity {
         return item == null ? RecyclerView.NO_POSITION : list.getChildAdapterPosition(item);
     }
 
-    /** Focuses item {@code position} of {@code list}, scrolling it on screen first if needed. */
-    private void focusRow(RecyclerView list, int position) {
+    /**
+     * Focuses item {@code position} of {@code list}, scrolling it on screen first if needed. Always true: the key
+     * that asked for it is handled either way.
+     */
+    private boolean focusRow(RecyclerView list, int position) {
         RecyclerView.Adapter<?> adapter = list.getAdapter();
-        if (adapter == null || adapter.getItemCount() == 0) return;
+        if (adapter == null || adapter.getItemCount() == 0) return true;
         int pos = Math.max(0, Math.min(position, adapter.getItemCount() - 1));
         RecyclerView.ViewHolder holder = list.findViewHolderForAdapterPosition(pos);
         if (holder != null) {
             holder.itemView.requestFocus();
-            return;
+            return true;
         }
         list.scrollToPosition(pos);
         list.post(() -> {
             RecyclerView.ViewHolder h = list.findViewHolderForAdapterPosition(pos);
             if (h != null) h.itemView.requestFocus();
         });
+        return true;
     }
 
     /** Home and Back both lead back to the start: the Home page, its first card, rows scrolled to the start. */
     private void goHome() {
         showPage(PAGE_HOME, animations);
-        cwFocus = 0;
+        cwFocus = pinnedFocus = 0;
         cwRow.scrollToPosition(0);
         pinnedRow.scrollToPosition(0);
-        cwRow.post(this::focusHome);
+        cwRow.post(() -> focusRow(cwRow, 0));
     }
 
     @Override
     public void onBackPressed() {
-        // A launcher never closes; Back only returns to the start.
-        goHome();
+        // A launcher never closes; Back steps back through a panel, and otherwise returns to the start.
+        if (accountPanel.isOpen()) accountPanel.back();
+        else goHome();
     }
 
     // ---- lifecycle -----------------------------------------------------------------------------------
@@ -432,6 +506,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        account.removeListener(accountListener);
+        accountPanel.close();
         unregisterReceiver(packageReceiver);
         wallpaperPlayer.close();
     }

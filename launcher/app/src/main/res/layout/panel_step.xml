@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One step of a panel: a title, a few lines of explanation, an optional large code, and choices below.
+     PanelStep fills it in; anything it does not use stays gone. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/stepAvatar"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="@dimen/space_md"
+        android:background="@drawable/avatar"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/stepTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.Launcher.PanelTitle" />
+
+    <TextView
+        android:id="@+id/stepBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xs"
+        android:textAppearance="@style/TextAppearance.Launcher.Body" />
+
+    <TextView
+        android:id="@+id/stepCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_lg"
+        android:includeFontPadding="false"
+        android:textAppearance="@style/TextAppearance.Launcher.Code"
+        android:visibility="gone" />
+
+    <!-- Status: progress and errors, under the explanation. -->
+    <TextView
+        android:id="@+id/stepStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_sm"
+        android:textAppearance="@style/TextAppearance.Launcher.Caption"
+        android:visibility="gone" />
+
+    <!-- The controls: a text field if the step has one, then the choices, all control_stack_gap apart. -->
+    <LinearLayout
+        android:id="@+id/stepRows"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_lg"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:divider="@drawable/control_stack_gap"
+        android:orientation="vertical"
+        android:showDividers="middle">
+
+        <EditText
+            android:id="@+id/stepField"
+            style="@style/Widget.Launcher.TextField"
+            android:imeOptions="actionGo"
+            android:importantForAutofill="no"
+            android:inputType="textUri"
+            android:visibility="gone" />
+    </LinearLayout>
+</LinearLayout>

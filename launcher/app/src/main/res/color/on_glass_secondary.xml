@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Secondary text on a glass control: dimmed white at rest, dimmed dark once the control turns white. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="#990B0D14" android:state_focused="true" />
+    <item android:color="@color/text_tertiary" />
+</selector>

@@ -5,6 +5,10 @@
         <attr name="glassRadius" format="dimension" />
         <!-- true: turns solid white while its view has focus (buttons). false: a static surface (tracks, panels). -->
         <attr name="glassInteractive" format="boolean" />
+        <!-- true: the dense, darker glass of a panel that holds text over anything (ui.GlassSheet). -->
+        <attr name="glassPanel" format="boolean" />
+        <!-- true: attached to the right edge of the screen; only the corners facing the screen are rounded. -->
+        <attr name="glassAttachedEnd" format="boolean" />
     </declare-styleable>
     <declare-styleable name="AspectRatioFrameLayout">
         <!-- Width divided by height; the height follows the width. 16:9 by default. -->

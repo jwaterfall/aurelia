@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The surface of a side panel (ui.GlassSheet): attached to the right edge of the screen. -->
+<com.gathin.tvhome.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:glassAttachedEnd="true"
+    app:glassPanel="true"
+    app:glassRadius="@dimen/radius_panel" />

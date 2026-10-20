@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stands in for a media row with nothing to show (signed out, unreachable, caught up): a glass band the width of
+     the row and the height of its cards, with a short message and one button. The band does not take focus;
+     its button does. ContinueWatchingAdapter sizes it. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/glass_card"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="@dimen/space_xs">
+
+        <ImageView
+            android:id="@+id/messageIcon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:importantForAccessibility="no"
+            android:tint="@color/text_secondary" />
+
+        <TextView
+            android:id="@+id/messageTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:gravity="center"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Launcher.CardTitle" />
+
+        <TextView
+            android:id="@+id/messageBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="center"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Launcher.Body"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/messageAction"
+            style="@style/Widget.Launcher.GlassButton"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            android:includeFontPadding="false"
+            android:paddingStart="@dimen/space_lg"
+            android:paddingEnd="@dimen/space_lg"
+            android:textAppearance="@style/TextAppearance.Launcher.Control" />
+    </LinearLayout>
+</FrameLayout>

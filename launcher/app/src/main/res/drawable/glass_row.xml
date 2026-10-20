@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A choice in a panel: glass that turns white with focus, with the panel's smaller corners. -->
+<com.gathin.tvhome.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:glassInteractive="true"
+    app:glassRadius="@dimen/radius_row" />

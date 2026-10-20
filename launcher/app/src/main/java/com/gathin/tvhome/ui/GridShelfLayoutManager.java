@@ -26,6 +26,13 @@ public class GridShelfLayoutManager extends GridLayoutManager {
         animate = enabled;
     }
 
+    /** A screen's height of rows laid out beyond each edge; see {@link ShelfLayoutManager}. */
+    @Override
+    protected void calculateExtraLayoutSpace(@NonNull RecyclerView.State state, @NonNull int[] extra) {
+        extra[0] = getHeight();
+        extra[1] = getHeight();
+    }
+
     @Override
     public boolean requestChildRectangleOnScreen(@NonNull RecyclerView parent, @NonNull View child,
                                                  @NonNull Rect rect, boolean immediate, boolean focusedChildVisible) {

@@ -24,15 +24,25 @@
     <dimen name="control_height">40dp</dimen>
     <dimen name="control_inset">4dp</dimen>
     <dimen name="control_gap">12dp</dimen>
-    <dimen name="avatar_size">30dp</dimen>
     <dimen name="tab_padding">22dp</dimen>
 
     <dimen name="radius_card">14dp</dimen>
     <!-- radius_card less the focus ring, for anything drawn just inside it. -->
     <dimen name="radius_card_inner">12dp</dimen>
+    <!-- Panels share the cards' corners, so everything on screen is one family of shapes. -->
+    <dimen name="radius_panel">@dimen/radius_card</dimen>
+    <dimen name="radius_row">12dp</dimen>
     <dimen name="focus_ring">2dp</dimen>
     <dimen name="hairline">1dp</dimen>
     <dimen name="progress_height">3dp</dimen>
+
+    <!-- Side panel (ui.GlassSheet). -->
+    <dimen name="panel_width">420dp</dimen>
+    <dimen name="panel_padding">40dp</dimen>
+    <dimen name="lift_panel">24dp</dimen>
+    <dimen name="row_height">56dp</dimen>
+    <!-- Between stacked controls in a panel (rows, fields), whatever they are. -->
+    <dimen name="control_stack_gap">@dimen/space_sm</dimen>
 
     <!-- Lift on focus: elevation of the shadow. The scale lives in res/animator. -->
     <dimen name="lift_card">14dp</dimen>

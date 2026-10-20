@@ -28,6 +28,16 @@ public class ShelfLayoutManager extends LinearLayoutManager {
         animate = enabled;
     }
 
+    /**
+     * Keeps a screen's width of cards laid out beyond each edge, so the card a key moves to always exists, even
+     * while the row is still scrolling from the key before.
+     */
+    @Override
+    protected void calculateExtraLayoutSpace(@NonNull RecyclerView.State state, @NonNull int[] extra) {
+        extra[0] = getWidth();
+        extra[1] = getWidth();
+    }
+
     @Override
     public boolean requestChildRectangleOnScreen(@NonNull RecyclerView parent, @NonNull View child,
                                                  @NonNull Rect rect, boolean immediate, boolean focusedChildVisible) {

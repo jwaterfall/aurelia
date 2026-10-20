@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The gap between stacked controls in a panel, as a divider: LinearLayout skips it beside hidden children. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <size android:height="@dimen/control_stack_gap" />
+    <solid android:color="@android:color/transparent" />
+</shape>

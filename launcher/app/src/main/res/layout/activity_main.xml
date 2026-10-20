@@ -29,6 +29,7 @@
         android:background="@drawable/backdrop_scrim" />
 
     <LinearLayout
+        android:id="@+id/content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipChildren="false"
@@ -53,32 +54,38 @@
                 android:clipChildren="false"
                 android:orientation="horizontal">
 
-                <LinearLayout
+                <!-- Profile: the signed-in user's picture (or initial), a person icon while signed out. A round glass
+                     button like Settings; with focus its white shows as a ring around the picture. -->
+                <FrameLayout
                     android:id="@+id/btnProfile"
-                    style="@style/Widget.Launcher.GlassButton.Chip">
+                    style="@style/Widget.Launcher.GlassButton"
+                    android:layout_width="@dimen/control_height"
+                    android:contentDescription="@string/sign_in"
+                    android:padding="3dp">
 
-                    <TextView
+                    <FrameLayout
                         android:id="@+id/avatar"
-                        android:layout_width="@dimen/avatar_size"
-                        android:layout_height="@dimen/avatar_size"
-                        android:layout_gravity="center_vertical"
-                        android:background="@drawable/avatar"
-                        android:fontFamily="@font/outfit_semibold"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/avatar">
 
-                    <TextView
-                        android:id="@+id/profileName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginStart="10dp"
-                        android:duplicateParentState="true"
-                        android:includeFontPadding="false"
-                        android:textAppearance="@style/TextAppearance.Launcher.Control" />
-                </LinearLayout>
+                        <TextView
+                            android:id="@+id/avatarInitial"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:fontFamily="@font/outfit_semibold"
+                            android:gravity="center"
+                            android:includeFontPadding="false"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp" />
+
+                        <ImageView
+                            android:id="@+id/avatarImage"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:importantForAccessibility="no" />
+                    </FrameLayout>
+                </FrameLayout>
 
                 <ImageView
                     android:id="@+id/btnSettings"
@@ -162,7 +169,6 @@
                     android:layout_height="0dp"
                     android:layout_weight="1" />
 
-                <!-- Hidden while Jellyfin has nothing in progress or cannot be reached. -->
                 <LinearLayout
                     android:id="@+id/cwSection"
                     android:layout_width="match_parent"
@@ -221,4 +227,10 @@
             </LinearLayout>
         </FrameLayout>
     </LinearLayout>
+
+    <!-- Side panels (sign-in, account) open over everything else. -->
+    <com.gathin.tvhome.ui.GlassSheet
+        android:id="@+id/sheet"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </FrameLayout>

@@ -43,6 +43,8 @@ public class GlassDrawable extends Drawable {
     /** Negative: a pill, half the height. */
     private float radius = -1f;
     private boolean interactive;
+    /** Runs off the right edge of its bounds, so only the corners facing the screen are rounded. */
+    private boolean attachedEnd;
     private float hairline = 1f;
     private int fillTop, fillBottom, rimTop, rimBottom, focusColor;
 
@@ -64,9 +66,11 @@ public class GlassDrawable extends Drawable {
                 : r.obtainAttributes(attrs, R.styleable.GlassDrawable);
         radius = a.getDimension(R.styleable.GlassDrawable_glassRadius, -1f);
         interactive = a.getBoolean(R.styleable.GlassDrawable_glassInteractive, false);
+        boolean panel = a.getBoolean(R.styleable.GlassDrawable_glassPanel, false);
+        attachedEnd = a.getBoolean(R.styleable.GlassDrawable_glassAttachedEnd, false);
         a.recycle();
-        fillTop = r.getColor(R.color.glass_fill_top, theme);
-        fillBottom = r.getColor(R.color.glass_fill_bottom, theme);
+        fillTop = r.getColor(panel ? R.color.glass_panel_top : R.color.glass_fill_top, theme);
+        fillBottom = r.getColor(panel ? R.color.glass_panel_bottom : R.color.glass_fill_bottom, theme);
         rimTop = r.getColor(R.color.glass_rim_top, theme);
         rimBottom = r.getColor(R.color.glass_rim_bottom, theme);
         focusColor = r.getColor(R.color.focus, theme);
@@ -78,6 +82,8 @@ public class GlassDrawable extends Drawable {
     @Override
     protected void onBoundsChange(@NonNull android.graphics.Rect bounds) {
         rect.set(bounds);
+        // Attached to the screen's edge: draw past it, so the right-hand corners and rim fall outside the bounds.
+        if (attachedEnd) rect.right += radius < 0 ? rect.height() / 2f : radius;
         rimRect.set(rect);
         rimRect.inset(hairline / 2f, hairline / 2f);
         updateShaders();
@@ -102,8 +108,11 @@ public class GlassDrawable extends Drawable {
     public void draw(@NonNull Canvas canvas) {
         if (rect.isEmpty()) return;
         float r = cornerRadius();
+        int saved = canvas.save();
+        canvas.clipRect(getBounds());
         canvas.drawRoundRect(rect, r, r, fill);
         if (focus < 1f) canvas.drawRoundRect(rimRect, r, r, rim);
+        canvas.restoreToCount(saved);
     }
 
     @Override
@@ -154,7 +163,8 @@ public class GlassDrawable extends Drawable {
     public void getOutline(@NonNull Outline outline) {
         if (rect.isEmpty()) return;
         // A shadow only shows while the view is lifted (res/animator), which is while the glass is white.
-        outline.setRoundRect(getBounds(), cornerRadius());
+        android.graphics.Rect b = getBounds();
+        outline.setRoundRect(b.left, b.top, Math.round(rect.right), b.bottom, cornerRadius());
         outline.setAlpha(1f);
     }
 

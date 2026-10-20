@@ -1,10 +1,7 @@
 package com.gathin.tvhome;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,48 +14,49 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.gathin.tvhome.jellyfin.Api;
+import com.gathin.tvhome.jellyfin.Library;
 import com.gathin.tvhome.ui.GridSpacing;
 
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
- * Media cards (item_media_card.xml) for the Continue Watching row. Until Jellyfin answers, the row shows empty
- * glass cards of the same size, so nothing jumps when the real ones arrive.
+ * The Continue Watching row. It is never empty, so Home always has a first row to move to. It shows one of:
+ * - placeholders: empty glass cards the size of real ones, while Jellyfin answers;
+ * - items: media cards (item_media_card.xml);
+ * - a message: a glass band the width of the row (item_row_message.xml), for signed out, unreachable or nothing
+ *   in progress, with one button that does the obvious thing.
  */
-final class ContinueWatchingAdapter extends RecyclerView.Adapter<ContinueWatchingAdapter.Holder> {
+final class ContinueWatchingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    static final class Item {
-        final String id;
-        final String title;
-        final String subtitle;
-        final String tag;
-        final String imageUrl;
-        /** Percent watched; 0 hides the bar. */
-        final int progress;
+    /** What a message says, and its button. */
+    static final class Message {
+        final int icon;
+        final CharSequence title;
+        final CharSequence body;
+        final CharSequence actionLabel;
+        final Runnable action;
 
-        Item(String id, String title, String subtitle, String tag, String imageUrl, int progress) {
-            this.id = id;
+        Message(int icon, CharSequence title, CharSequence body, CharSequence actionLabel, Runnable action) {
+            this.icon = icon;
             this.title = title;
-            this.subtitle = subtitle;
-            this.tag = tag;
-            this.imageUrl = imageUrl;
-            this.progress = progress;
+            this.body = body;
+            this.actionLabel = actionLabel;
+            this.action = action;
         }
     }
 
     interface Listener {
         /** {@code art} is the card's artwork, or null while it is still loading. */
-        void onItemFocused(Item item, Drawable art);
-        void onItemClicked(Item item);
-        void onPlaceholderFocused();
+        void onItemFocused(Library.MediaItem item, Drawable art);
+        void onItemClicked(Library.MediaItem item);
+        /** Focus on a placeholder or a message: nothing to show behind it. */
+        void onNothingFocused();
     }
 
+    private static final int TYPE_CARD = 0;
+    private static final int TYPE_MESSAGE = 1;
     private static final int PLACEHOLDERS = 3;
     private static final long FADE_MS = 280;
     private static final LruCache<String, Bitmap> cache = new LruCache<String, Bitmap>(
@@ -72,10 +70,10 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<ContinueWatchin
     private final int columns;
     private final int gutter;
     private final Listener listener;
-    private final List<Item> items = new ArrayList<>();
-    private final ExecutorService loader = Executors.newFixedThreadPool(3);
-    private final Handler main = new Handler(Looper.getMainLooper());
-    private boolean loaded;
+    private final List<Library.MediaItem> items = new ArrayList<>();
+    private Message message;
+    private boolean loading = true;
+    private String imageAuth;
 
     ContinueWatchingAdapter(int columns, int gutter, Listener listener) {
         this.columns = columns;
@@ -83,53 +81,121 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<ContinueWatchin
         this.listener = listener;
     }
 
+    /** Back to placeholders, for a new sign-in. */
+    void showLoading() {
+        replace(() -> {
+            loading = true;
+            message = null;
+            items.clear();
+        });
+    }
+
+    /** {@code auth} is the header artwork is fetched with. */
+    void showItems(List<Library.MediaItem> fresh, String auth) {
+        imageAuth = auth;
+        replace(() -> {
+            loading = false;
+            message = null;
+            items.clear();
+            items.addAll(fresh);
+        });
+    }
+
+    void showMessage(Message m) {
+        replace(() -> {
+            loading = false;
+            message = m;
+            items.clear();
+        });
+    }
+
+    boolean hasItems() {
+        return !loading && message == null && !items.isEmpty();
+    }
+
     /**
-     * Replaces the cards. Positions that exist before and after are rebound in place rather than rebuilt, so the
+     * Swaps the contents. Positions that keep their kind of card are rebound in place rather than rebuilt, so the
      * card that has focus (a placeholder, while the first answer is on its way) keeps it.
      */
-    void setItems(List<Item> fresh) {
+    private void replace(Runnable change) {
         int before = getItemCount();
-        items.clear();
-        items.addAll(fresh);
-        loaded = true;
+        int typeBefore = before > 0 ? getItemViewType(0) : -1;
+        change.run();
         int after = getItemCount();
+        if (after == 0 || getItemViewType(0) != typeBefore) {
+            notifyDataSetChanged();
+            return;
+        }
         int kept = Math.min(before, after);
         notifyItemRangeChanged(0, kept);
         if (after > kept) notifyItemRangeInserted(kept, after - kept);
         else if (before > kept) notifyItemRangeRemoved(kept, before - kept);
     }
 
-    /** Real cards are showing, not placeholders. */
-    boolean hasItems() {
-        return loaded && !items.isEmpty();
+    @Override
+    public int getItemCount() {
+        if (loading) return PLACEHOLDERS;
+        return message != null ? 1 : items.size();
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return message != null ? TYPE_MESSAGE : TYPE_CARD;
     }
 
     @NonNull
     @Override
-    public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_media_card, parent, false);
-        v.getLayoutParams().width = GridSpacing.itemWidth(parent, columns, gutter);
-        return new Holder(v);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        int width = GridSpacing.itemWidth(parent, columns, gutter);
+        if (viewType == TYPE_MESSAGE) {
+            View v = inflater.inflate(R.layout.item_row_message, parent, false);
+            v.getLayoutParams().width = width * columns + gutter * (columns - 1);
+            v.getLayoutParams().height = Math.round(width * 9f / 16f);
+            return new MessageHolder(v);
+        }
+        View v = inflater.inflate(R.layout.item_media_card, parent, false);
+        v.getLayoutParams().width = width;
+        return new CardHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull Holder h, int position) {
-        h.backdrop.animate().cancel();
-        h.backdrop.setImageDrawable(null);
-        h.backdrop.setTag(null);
-        if (!loaded) {
-            h.text.setVisibility(View.INVISIBLE);
-            h.scrim.setVisibility(View.INVISIBLE);
-            h.itemView.setBackgroundResource(R.drawable.glass_card);
-            // No shadow under see-through glass: it would show through as a smudge when the card lifts.
-            h.itemView.setOutlineProvider(null);
-            h.itemView.setOnFocusChangeListener((v, focused) -> {
-                if (focused) listener.onPlaceholderFocused();
-            });
-            h.itemView.setOnClickListener(null);
-            return;
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof MessageHolder) {
+            bindMessage((MessageHolder) holder);
+        } else if (loading) {
+            bindPlaceholder((CardHolder) holder);
+        } else {
+            bindItem((CardHolder) holder, items.get(position));
         }
-        Item item = items.get(position);
+    }
+
+    private void bindMessage(MessageHolder h) {
+        Message m = message;
+        h.icon.setImageResource(m.icon);
+        h.title.setText(m.title);
+        h.body.setText(m.body);
+        h.action.setText(m.actionLabel);
+        h.action.setOnClickListener(v -> m.action.run());
+        h.action.setOnFocusChangeListener((v, focused) -> {
+            if (focused) listener.onNothingFocused();
+        });
+    }
+
+    private void bindPlaceholder(CardHolder h) {
+        h.reset();
+        h.text.setVisibility(View.INVISIBLE);
+        h.scrim.setVisibility(View.INVISIBLE);
+        h.itemView.setBackgroundResource(R.drawable.glass_card);
+        h.itemView.setOutlineProvider(null);
+        h.itemView.setOnClickListener(null);
+        h.itemView.setOnFocusChangeListener((v, focused) -> {
+            if (focused) listener.onNothingFocused();
+        });
+    }
+
+    private void bindItem(CardHolder h, Library.MediaItem item) {
+        h.reset();
         h.itemView.setBackgroundResource(R.drawable.card_surface);
         h.itemView.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
         h.text.setVisibility(View.VISIBLE);
@@ -149,7 +215,7 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<ContinueWatchin
         if (h.itemView.isFocused()) listener.onItemFocused(item, h.backdrop.getDrawable());
     }
 
-    private void loadImage(Holder h, Item item) {
+    private void loadImage(CardHolder h, Library.MediaItem item) {
         String url = item.imageUrl;
         if (url == null || url.isEmpty()) return;
         Bitmap cached = cache.get(url);
@@ -160,44 +226,26 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<ContinueWatchin
         }
         h.backdrop.setTag(url);
         h.backdrop.setAlpha(0f);
-        loader.execute(() -> {
-            Bitmap bmp = download(url);
-            if (bmp == null) return;
-            cache.put(url, bmp);
-            main.post(() -> {
+        String auth = imageAuth;
+        Api.async(() -> Api.getImage(url, auth), new Api.Callback<Bitmap>() {
+            @Override
+            public void onResult(Bitmap bmp) {
+                if (bmp == null) return;
+                cache.put(url, bmp);
                 if (!url.equals(h.backdrop.getTag())) return;   // recycled for another item meanwhile
                 h.backdrop.setImageBitmap(bmp);
                 h.backdrop.animate().alpha(1f).setDuration(FADE_MS).start();
                 // Artwork that arrives while its card has focus still reaches the ambient backdrop.
                 if (h.itemView.hasFocus()) listener.onItemFocused(item, h.backdrop.getDrawable());
-            });
+            }
+
+            @Override
+            public void onError(Exception e) {
+            }
         });
     }
 
-    private static Bitmap download(String url) {
-        HttpURLConnection conn = null;
-        try {
-            conn = (HttpURLConnection) new URL(url).openConnection();
-            conn.setRequestProperty("Authorization", "MediaBrowser Token=\"" + JellyfinManager.API_KEY + "\"");
-            conn.setConnectTimeout(5000);
-            conn.setReadTimeout(5000);
-            if (conn.getResponseCode() != 200) return null;
-            try (InputStream in = conn.getInputStream()) {
-                return BitmapFactory.decodeStream(in);
-            }
-        } catch (Exception e) {
-            return null;
-        } finally {
-            if (conn != null) conn.disconnect();
-        }
-    }
-
-    @Override
-    public int getItemCount() {
-        return loaded ? items.size() : PLACEHOLDERS;
-    }
-
-    static final class Holder extends RecyclerView.ViewHolder {
+    static final class CardHolder extends RecyclerView.ViewHolder {
         final ImageView backdrop;
         final View scrim;
         final View text;
@@ -206,7 +254,7 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<ContinueWatchin
         final TextView subtitle;
         final ProgressBar progress;
 
-        Holder(View v) {
+        CardHolder(View v) {
             super(v);
             backdrop = v.findViewById(R.id.backdrop);
             scrim = v.findViewById(R.id.scrim);
@@ -215,6 +263,27 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<ContinueWatchin
             title = v.findViewById(R.id.title);
             subtitle = v.findViewById(R.id.subtitle);
             progress = v.findViewById(R.id.progress);
+        }
+
+        void reset() {
+            backdrop.animate().cancel();
+            backdrop.setImageDrawable(null);
+            backdrop.setTag(null);
+        }
+    }
+
+    static final class MessageHolder extends RecyclerView.ViewHolder {
+        final ImageView icon;
+        final TextView title;
+        final TextView body;
+        final TextView action;
+
+        MessageHolder(View v) {
+            super(v);
+            icon = v.findViewById(R.id.messageIcon);
+            title = v.findViewById(R.id.messageTitle);
+            body = v.findViewById(R.id.messageBody);
+            action = v.findViewById(R.id.messageAction);
         }
     }
 }
