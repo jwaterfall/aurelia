@@ -84,6 +84,16 @@
         <item name="android:tint">@color/on_glass</item>
     </style>
 
+    <!-- A text pill in the player (options under the seek bar, skip intro): a glass button sized to its label. -->
+    <style name="Widget.Launcher.PlayerButton" parent="Widget.Launcher.GlassButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:paddingStart">@dimen/space_lg</item>
+        <item name="android:paddingEnd">@dimen/space_lg</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textAppearance">@style/TextAppearance.Launcher.Control</item>
+    </style>
+
     <!-- Tab bar (ui.SegmentedControl) and its tabs. The control draws the indicator and colours the tab text. -->
     <style name="Widget.Launcher.TabBar" parent="">
         <item name="android:layout_height">@dimen/control_height</item>

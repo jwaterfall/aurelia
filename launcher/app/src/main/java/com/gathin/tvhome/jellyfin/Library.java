@@ -141,7 +141,8 @@ public final class Library {
 
         int progress = 0;
         if (resume && runtime > 0 && position > 0) progress = (int) Math.round(100.0 * position / runtime);
-        String left = remaining(runtime - position);
+        // Started: how much is left. Next up (not started): how long it is.
+        String left = resume ? remaining(runtime - position) : length(runtime);
 
         if ("Episode".equals(it.optString("Type"))) {
             String series = it.optString("SeriesName", "");
@@ -155,7 +156,7 @@ public final class Library {
                     ? server + "/Items/" + backdropOf + "/Images/Backdrop/0?maxWidth=720&quality=85"
                     : server + "/Items/" + id + "/Images/Primary?maxWidth=720&quality=85";
             return new MediaItem(id, series.isEmpty() ? name : series, sub.toString(),
-                    "TV Series • Season " + season, image, progress);
+                    (resume ? "TV Series" : "Next up") + " • Season " + season, image, progress);
         }
         int year = it.optInt("ProductionYear", 0);
         String rating = it.optString("OfficialRating", "");
@@ -168,9 +169,15 @@ public final class Library {
 
     /** "1h 4m left", "49m left", or empty under a minute. One tick is 100 ns. */
     static String remaining(long ticks) {
+        String l = length(ticks);
+        return l.isEmpty() ? "" : l + " left";
+    }
+
+    /** "1h 4m", "49m", or empty under a minute. */
+    static String length(long ticks) {
         long minutes = ticks / 600_000_000L;
         if (minutes <= 0) return "";
-        if (minutes < 60) return minutes + "m left";
-        return minutes / 60 + "h" + (minutes % 60 > 0 ? " " + minutes % 60 + "m" : "") + " left";
+        if (minutes < 60) return minutes + "m";
+        return minutes / 60 + "h" + (minutes % 60 > 0 ? " " + minutes % 60 + "m" : "");
     }
 }

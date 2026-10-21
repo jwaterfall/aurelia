@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- PlayerActivity: the video, and over it the controls (title and a glass seek bar), shown on any key and hidden
-     again while playing. A glass card replaces them when something cannot be played. -->
+<!-- PlayerActivity: the video, and over it the controls: title, a glass seek bar and a row of option pills
+     (subtitles, audio, speed, quality, next episode), shown on any key and hidden again while playing. A skip
+     button or the next episode rises in the corner when there is something to skip to. A glass card replaces it
+     all when something cannot be played. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clipChildren="false"
     android:keepScreenOn="true">
 
     <androidx.media3.ui.PlayerView
@@ -28,18 +31,22 @@
         android:id="@+id/chrome"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:alpha="0">
+        android:alpha="0"
+        android:clipChildren="false">
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="280dp"
+            android:layout_height="340dp"
             android:layout_gravity="bottom"
             android:background="@drawable/player_scrim" />
 
         <LinearLayout
+            android:id="@+id/controls"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
+            android:clipChildren="false"
+            android:clipToPadding="false"
             android:orientation="vertical"
             android:paddingStart="@dimen/screen_margin"
             android:paddingEnd="@dimen/screen_margin"
@@ -51,28 +58,55 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.Launcher.Overline" />
 
-            <TextView
-                android:id="@+id/playerTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_2xs"
-                android:singleLine="true"
-                android:textAppearance="@style/TextAppearance.Launcher.PanelTitle"
-                android:textSize="28sp" />
-
-            <TextView
-                android:id="@+id/playerSubtitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:textAppearance="@style/TextAppearance.Launcher.Body"
-                android:textSize="15sp" />
-
+            <!-- Title and episode, with when it ends at the far side. -->
             <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="bottom"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/playerTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_2xs"
+                        android:singleLine="true"
+                        android:textAppearance="@style/TextAppearance.Launcher.PanelTitle"
+                        android:textSize="28sp" />
+
+                    <TextView
+                        android:id="@+id/playerSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:textAppearance="@style/TextAppearance.Launcher.Body"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/playerEnds"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_md"
+                    android:fontFeatureSettings="tnum"
+                    android:textAppearance="@style/TextAppearance.Launcher.Caption"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+
+            <!-- The seek bar. It takes focus: Left and Right scrub, OK pauses. -->
+            <LinearLayout
+                android:id="@+id/playerTrack"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/control_height"
                 android:layout_marginTop="@dimen/space_md"
                 android:background="@drawable/glass_track"
+                android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingStart="@dimen/space_sm"
@@ -95,16 +129,33 @@
                     android:textAppearance="@style/TextAppearance.Launcher.Control"
                     android:textColor="@color/text_primary" />
 
-                <ProgressBar
-                    android:id="@+id/playerSeek"
-                    style="@android:style/Widget.ProgressBar.Horizontal"
+                <FrameLayout
+                    android:id="@+id/playerBar"
                     android:layout_width="0dp"
-                    android:layout_height="4dp"
+                    android:layout_height="match_parent"
                     android:layout_marginStart="@dimen/space_md"
                     android:layout_marginEnd="@dimen/space_md"
                     android:layout_weight="1"
-                    android:max="1000"
-                    android:progressDrawable="@drawable/seek_bar" />
+                    android:clipChildren="false">
+
+                    <ProgressBar
+                        android:id="@+id/playerSeek"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="4dp"
+                        android:layout_gravity="center_vertical"
+                        android:max="1000"
+                        android:progressDrawable="@drawable/seek_bar" />
+
+                    <!-- Where playback is, while the bar has focus. -->
+                    <View
+                        android:id="@+id/playerThumb"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@drawable/seek_thumb"
+                        android:visibility="invisible" />
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/playerRemaining"
@@ -114,8 +165,100 @@
                     android:textAppearance="@style/TextAppearance.Launcher.Control"
                     android:textColor="@color/text_secondary" />
             </LinearLayout>
+
+            <!-- Options. PlayerActivity hides the ones that do not apply. -->
+            <LinearLayout
+                android:id="@+id/playerButtons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/buttonSubtitles"
+                    style="@style/Widget.Launcher.PlayerButton"
+                    android:text="@string/player_subtitles" />
+
+                <TextView
+                    android:id="@+id/buttonAudio"
+                    style="@style/Widget.Launcher.PlayerButton"
+                    android:layout_marginStart="@dimen/control_gap"
+                    android:text="@string/player_audio" />
+
+                <TextView
+                    android:id="@+id/buttonSpeed"
+                    style="@style/Widget.Launcher.PlayerButton"
+                    android:layout_marginStart="@dimen/control_gap"
+                    android:text="@string/player_speed" />
+
+                <TextView
+                    android:id="@+id/buttonQuality"
+                    style="@style/Widget.Launcher.PlayerButton"
+                    android:layout_marginStart="@dimen/control_gap"
+                    android:text="@string/player_quality" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/buttonNext"
+                    style="@style/Widget.Launcher.PlayerButton"
+                    android:text="@string/player_next_episode"
+                    android:visibility="gone" />
+            </LinearLayout>
         </LinearLayout>
     </FrameLayout>
+
+    <!-- Skip intro, recap or credits: rises in the corner while that part plays. -->
+    <TextView
+        android:id="@+id/playerSkip"
+        style="@style/Widget.Launcher.PlayerButton"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="@dimen/screen_margin"
+        android:layout_marginBottom="@dimen/space_3xl"
+        android:alpha="0"
+        android:visibility="gone" />
+
+    <!-- The next episode, counting down to playing it, over the credits. -->
+    <LinearLayout
+        android:id="@+id/playerUpNext"
+        style="@style/Widget.Launcher.PanelRow"
+        android:layout_width="360dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="@dimen/screen_margin"
+        android:layout_marginBottom="@dimen/space_3xl"
+        android:alpha="0"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/upNextTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:duplicateParentState="true"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:text="@string/player_next_episode"
+            android:textAppearance="@style/TextAppearance.Launcher.Control" />
+
+        <TextView
+            android:id="@+id/upNextDetail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:duplicateParentState="true"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Launcher.RowSubtitle" />
+    </LinearLayout>
+
+    <com.gathin.tvhome.ui.GlassSheet
+        android:id="@+id/playerSheet"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <LinearLayout
         android:id="@+id/playerError"
@@ -162,24 +305,14 @@
 
             <TextView
                 android:id="@+id/playerOpenApp"
-                style="@style/Widget.Launcher.GlassButton"
-                android:layout_width="wrap_content"
-                android:includeFontPadding="false"
-                android:paddingStart="@dimen/space_lg"
-                android:paddingEnd="@dimen/space_lg"
-                android:text="@string/player_open_in_jellyfin"
-                android:textAppearance="@style/TextAppearance.Launcher.Control" />
+                style="@style/Widget.Launcher.PlayerButton"
+                android:text="@string/player_open_in_jellyfin" />
 
             <TextView
                 android:id="@+id/playerClose"
-                style="@style/Widget.Launcher.GlassButton"
-                android:layout_width="wrap_content"
+                style="@style/Widget.Launcher.PlayerButton"
                 android:layout_marginStart="@dimen/control_gap"
-                android:includeFontPadding="false"
-                android:paddingStart="@dimen/space_lg"
-                android:paddingEnd="@dimen/space_lg"
-                android:text="@string/player_back"
-                android:textAppearance="@style/TextAppearance.Launcher.Control" />
+                android:text="@string/player_back" />
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>

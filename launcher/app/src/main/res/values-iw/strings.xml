@@ -81,4 +81,26 @@
     <string name="player_direct_stream">הזרמה ישירה</string>
     <string name="player_transcode">המרה</string>
     <string name="player_remaining">−%1$s</string>
+    <string name="player_subtitles">כתוביות</string>
+    <string name="player_audio">שמע</string>
+    <string name="player_speed">מהירות</string>
+    <string name="player_speed_value">מהירות %1$s×</string>
+    <string name="player_speed_normal">רגילה</string>
+    <string name="player_quality">איכות</string>
+    <string name="player_quality_value">%1$s Mb/s</string>
+    <string name="player_original">מקורית</string>
+    <string name="player_original_detail">כפי שהיא בשרת, מומרת רק אם הטלוויזיה צריכה</string>
+    <string name="player_next_episode">הפרק הבא</string>
+    <string name="player_up_next">%1$s • בעוד %2$d שנ׳</string>
+    <string name="player_off">כבויות</string>
+    <string name="player_burned_in">השרת מצייר אותן על התמונה</string>
+    <string name="player_skip_intro">דילוג על הפתיח</string>
+    <string name="player_skip_recap">דילוג על התקציר</string>
+    <string name="player_skip_credits">דילוג על הקרדיטים</string>
+    <string name="player_skip_preview">דילוג על התצוגה המקדימה</string>
+    <string name="player_ends_at">מסתיים ב-%1$s</string>
+    <string name="player_level_volume">איזון עוצמה</string>
+    <string name="player_level_volume_detail">דיאלוג שקט חזק יותר, סצנות רועשות רכות יותר</string>
+    <string name="player_on">מופעל</string>
+    <string name="player_tracks">רצועות</string>
 </resources>

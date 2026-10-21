@@ -14,37 +14,63 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
- * Playing an item from the server: what to stream (PlaybackInfo, with the {@link DeviceProfile}), and telling the
- * server how far playback got, which is what keeps Continue Watching and watched marks right on every client.
+ * Playing an item from the server: what to stream (PlaybackInfo, with the {@link DeviceProfile}), what comes next,
+ * where the intro and credits are, and telling the server how far playback got, which is what keeps Continue
+ * Watching and watched marks right on every client.
  */
 public final class Playback {
 
     /** How the server is sending it, as Jellyfin names it in its playback reports. */
     public enum Method { DirectPlay, DirectStream, Transcode }
 
-    /** A subtitle file the server serves next to the video. */
-    public static final class Sidecar {
-        public final int index;
-        public final String url;
-        /** "vtt", "srt" or "ass". */
-        public final String format;
-        public final String language;
-        public final String label;
+    /** No subtitles. */
+    public static final int OFF = -1;
+    /** Let the server choose, from the user's language settings. */
+    public static final int DEFAULT = -2;
 
-        Sidecar(int index, String url, String format, String language, String label) {
+    /** An audio or subtitle track of the item, as the server numbers it. */
+    public static final class Track {
+        public final int index;
+        public final String title;
+        public final String language;
+        public final String codec;
+        /** "Embed", "External", "Encode" (burned into the video) or "Hls"; empty for audio. */
+        public final String delivery;
+        /** A separate file next to the video, rather than inside it. */
+        public final boolean external;
+        /** The subtitle file's address, when it is sent alongside the video. */
+        public final String url;
+
+        Track(int index, String title, String language, String codec, String delivery, boolean external, String url) {
             this.index = index;
-            this.url = url;
-            this.format = format;
+            this.title = title;
             this.language = language;
-            this.label = label;
+            this.codec = codec;
+            this.delivery = delivery;
+            this.external = external;
+            this.url = url;
         }
+    }
+
+    /** What to ask for when opening, beyond "from where it was left off". */
+    public static final class Options {
+        /** Start here instead of the saved position; negative for the saved position. */
+        public long startMs = -1;
+        public int audioIndex = DEFAULT;
+        public int subtitleIndex = DEFAULT;
+        public int maxBitrate = DeviceProfile.MAX_BITRATE;
+        /** Only audio the TV decodes itself (no Dolby or DTS passthrough), which any playback speed works with. */
+        public boolean compatibleAudio;
     }
 
     /** Everything needed to play one item and report on it. */
     public static final class Stream {
         public final String itemId;
+        public final String type;
+        public final String seriesId;
         public final String title;
         public final String subtitle;
         public final long startMs;
@@ -55,14 +81,26 @@ public final class Playback {
         public final String reasons;
         public final String mediaSourceId;
         public final String playSessionId;
-        public final int audioIndex;
-        public final int subtitleIndex;
-        public final List<Sidecar> sidecars;
+        /** The file's own bitrate, for which quality choices are lower. */
+        public final int sourceBitrate;
+        public final int maxBitrate;
+        public final boolean compatibleAudio;
+        public final List<Track> audio;
+        public final List<Track> subtitles;
+        /** Chapters (start in ms, and name), for finding the intro when the server has no segments. */
+        final List<Long> chapterStarts;
+        final List<String> chapterNames;
+        /** What is playing now; the player changes them as the user chooses. */
+        public int audioIndex;
+        public int subtitleIndex;
 
-        Stream(String itemId, String title, String subtitle, long startMs, long durationMs, String url,
-               Method method, String reasons, String mediaSourceId, String playSessionId, int audioIndex,
-               int subtitleIndex, List<Sidecar> sidecars) {
+        Stream(String itemId, String type, String seriesId, String title, String subtitle, long startMs,
+               long durationMs, String url, Method method, String reasons, String mediaSourceId, String playSessionId,
+               int sourceBitrate, Options options, List<Track> audio, List<Track> subtitles, int audioIndex,
+               int subtitleIndex, List<Long> chapterStarts, List<String> chapterNames) {
             this.itemId = itemId;
+            this.type = type;
+            this.seriesId = seriesId;
             this.title = title;
             this.subtitle = subtitle;
             this.startMs = startMs;
@@ -72,9 +110,59 @@ public final class Playback {
             this.reasons = reasons;
             this.mediaSourceId = mediaSourceId;
             this.playSessionId = playSessionId;
+            this.sourceBitrate = sourceBitrate;
+            this.maxBitrate = options.maxBitrate;
+            this.compatibleAudio = options.compatibleAudio;
+            this.audio = audio;
+            this.subtitles = subtitles;
             this.audioIndex = audioIndex;
             this.subtitleIndex = subtitleIndex;
-            this.sidecars = sidecars;
+            this.chapterStarts = chapterStarts;
+            this.chapterNames = chapterNames;
+        }
+
+        public boolean isEpisode() {
+            return "Episode".equals(type);
+        }
+
+        public Track subtitle(int index) {
+            for (Track t : subtitles) if (t.index == index) return t;
+            return null;
+        }
+
+        public Track audioTrack(int index) {
+            for (Track t : audio) if (t.index == index) return t;
+            return null;
+        }
+    }
+
+    /** The episode after this one. */
+    public static final class Next {
+        public final String itemId;
+        public final String title;
+
+        Next(String itemId, String title) {
+            this.itemId = itemId;
+            this.title = title;
+        }
+    }
+
+    /** A part of the item to offer skipping: an intro, a recap, the credits. */
+    public static final class Segment {
+        public enum Kind { Intro, Recap, Credits, Preview }
+
+        public final Kind kind;
+        public final long startMs;
+        public final long endMs;
+
+        Segment(Kind kind, long startMs, long endMs) {
+            this.kind = kind;
+            this.startMs = startMs;
+            this.endMs = endMs;
+        }
+
+        public boolean contains(long ms) {
+            return ms >= startMs && ms < endMs;
         }
     }
 
@@ -86,30 +174,33 @@ public final class Playback {
     private Playback() { }
 
     /**
-     * Asks the server how to play {@code itemId} on this TV, from where the user left off. Blocks; call it in the
-     * background.
+     * Asks the server how to play {@code itemId} on this TV. {@code profile} is the {@link DeviceProfile} to match
+     * the options' {@link Options#compatibleAudio}. Blocks; call it in the background.
      */
-    public static Stream open(Account account, String itemId, JSONObject profile) throws IOException {
+    public static Stream open(Account account, String itemId, JSONObject profile, Options options) throws IOException {
         String server = account.server();
         String user = account.userId();
         String auth = Library.auth(account);
         try {
-            JSONObject item = Api.getJson(server + "/Users/" + user + "/Items/" + itemId, auth);
+            JSONObject item = Api.getJson(server + "/Users/" + user + "/Items/" + itemId + "?fields=Chapters", auth);
             JSONObject userData = item.optJSONObject("UserData");
-            long startTicks = userData != null ? userData.optLong("PlaybackPositionTicks", 0) : 0;
+            long startTicks = options.startMs >= 0 ? options.startMs * TICKS_PER_MS
+                    : userData != null ? userData.optLong("PlaybackPositionTicks", 0) : 0;
 
             JSONObject body = new JSONObject()
                     .put("UserId", user)
                     .put("StartTimeTicks", startTicks)
                     .put("IsPlayback", true)
                     .put("AutoOpenLiveStream", true)
-                    .put("MaxStreamingBitrate", DeviceProfile.MAX_BITRATE)
+                    .put("MaxStreamingBitrate", options.maxBitrate)
                     .put("EnableDirectPlay", true)
                     .put("EnableDirectStream", true)
                     .put("EnableTranscoding", true)
                     .put("AllowVideoStreamCopy", true)
                     .put("AllowAudioStreamCopy", true)
                     .put("DeviceProfile", profile);
+            if (options.audioIndex >= 0) body.put("AudioStreamIndex", options.audioIndex);
+            if (options.subtitleIndex != DEFAULT) body.put("SubtitleStreamIndex", options.subtitleIndex);
             JSONObject info = Api.postJson(server + "/Items/" + itemId + "/PlaybackInfo?userId=" + user, auth, body);
             JSONArray sources = info.optJSONArray("MediaSources");
             if (sources == null || sources.length() == 0) {
@@ -138,10 +229,27 @@ public final class Playback {
                 throw new IOException("The server offered no stream for " + itemId);
             }
 
-            return new Stream(itemId, title(item), subtitle(item), startTicks / TICKS_PER_MS,
-                    item.optLong("RunTimeTicks", 0) / TICKS_PER_MS, url, method, reasons, sourceId, session,
-                    source.optInt("DefaultAudioStreamIndex", -1), source.optInt("DefaultSubtitleStreamIndex", -1),
-                    sidecars(server, source));
+            List<Track> audio = new ArrayList<>();
+            List<Track> subtitles = new ArrayList<>();
+            tracks(server, source, audio, subtitles);
+            int audioIndex = options.audioIndex >= 0 ? options.audioIndex : source.optInt("DefaultAudioStreamIndex", -1);
+            int subtitleIndex = options.subtitleIndex != DEFAULT ? options.subtitleIndex
+                    : source.optInt("DefaultSubtitleStreamIndex", OFF);
+            if (subtitleIndex < 0) subtitleIndex = OFF;
+
+            List<Long> chapterStarts = new ArrayList<>();
+            List<String> chapterNames = new ArrayList<>();
+            JSONArray chapters = item.optJSONArray("Chapters");
+            for (int i = 0; chapters != null && i < chapters.length(); i++) {
+                JSONObject c = chapters.getJSONObject(i);
+                chapterStarts.add(c.optLong("StartPositionTicks", 0) / TICKS_PER_MS);
+                chapterNames.add(c.optString("Name", ""));
+            }
+
+            return new Stream(itemId, item.optString("Type", ""), item.optString("SeriesId", ""), title(item),
+                    subtitle(item), startTicks / TICKS_PER_MS, item.optLong("RunTimeTicks", 0) / TICKS_PER_MS, url,
+                    method, reasons, sourceId, session, source.optInt("Bitrate", 0), options, audio, subtitles,
+                    audioIndex, subtitleIndex, chapterStarts, chapterNames);
         } catch (JSONException e) {
             throw new IOException("Unexpected answer from the server", e);
         }
@@ -158,23 +266,32 @@ public final class Playback {
         return r == null ? "" : r.replace(",", ", ");
     }
 
-    private static List<Sidecar> sidecars(String server, JSONObject source) {
-        List<Sidecar> out = new ArrayList<>();
+    private static void tracks(String server, JSONObject source, List<Track> audio, List<Track> subtitles) {
         JSONArray streams = source.optJSONArray("MediaStreams");
-        if (streams == null) return out;
+        if (streams == null) return;
         for (int i = 0; i < streams.length(); i++) {
             JSONObject s = streams.optJSONObject(i);
-            if (s == null || !"Subtitle".equals(s.optString("Type"))) continue;
-            if (!"External".equals(s.optString("DeliveryMethod"))) continue;
-            String path = s.optString("DeliveryUrl", "");
-            if (path.isEmpty()) continue;
-            String format = Uri.parse("http://x" + path).getLastPathSegment();
-            format = format == null || !format.contains(".") ? s.optString("Codec", "")
-                    : format.substring(format.lastIndexOf('.') + 1);
-            out.add(new Sidecar(s.optInt("Index", -1), server + path, format.toLowerCase(Locale.ROOT),
-                    s.optString("Language", ""), s.optString("DisplayTitle", "")));
+            if (s == null) continue;
+            String type = s.optString("Type");
+            String title = s.optString("DisplayTitle", s.optString("Title", ""));
+            if ("Audio".equals(type)) {
+                audio.add(new Track(s.optInt("Index", -1), title, s.optString("Language", ""),
+                        s.optString("Codec", ""), "", s.optBoolean("IsExternal", false), ""));
+            } else if ("Subtitle".equals(type)) {
+                String path = s.optString("DeliveryUrl", "");
+                subtitles.add(new Track(s.optInt("Index", -1), title, s.optString("Language", ""),
+                        subtitleFormat(s, path), s.optString("DeliveryMethod", ""), s.optBoolean("IsExternal", false),
+                        path.isEmpty() ? "" : server + path));
+            }
         }
-        return out;
+    }
+
+    /** The format a subtitle arrives in: the delivery file's extension when it is converted for sending. */
+    private static String subtitleFormat(JSONObject s, String path) {
+        String last = path.isEmpty() ? null : Uri.parse("http://x" + path).getLastPathSegment();
+        String format = last == null || !last.contains(".") ? s.optString("Codec", "")
+                : last.substring(last.lastIndexOf('.') + 1);
+        return format.toLowerCase(Locale.ROOT);
     }
 
     private static String title(JSONObject item) {
@@ -187,9 +304,84 @@ public final class Playback {
             int year = item.optInt("ProductionYear", 0);
             return year > 0 ? String.valueOf(year) : "";
         }
+        return episodeName(item);
+    }
+
+    /** "S2:E5 • Name". */
+    private static String episodeName(JSONObject item) {
         String s = "S" + item.optInt("ParentIndexNumber", 1) + ":E" + item.optInt("IndexNumber", 1);
         String name = item.optString("Name", "");
         return name.isEmpty() ? s : s + " • " + name;
+    }
+
+    // ---- what comes next, and what to skip -------------------------------------------------------------
+
+    /** The episode after {@code s} in its series, or null for the last one (or a film). Blocks. */
+    public static Next next(Account account, Stream s) throws IOException {
+        if (!s.isEpisode() || s.seriesId.isEmpty()) return null;
+        JSONObject page = Api.getJson(account.server() + "/Shows/" + s.seriesId + "/Episodes?userId="
+                + account.userId() + "&startItemId=" + s.itemId + "&limit=2", Library.auth(account));
+        JSONArray items = page.optJSONArray("Items");
+        if (items == null) return null;
+        for (int i = 0; i < items.length(); i++) {
+            JSONObject it = items.optJSONObject(i);
+            if (it == null || it.optString("Id").equals(s.itemId)) continue;
+            return new Next(it.optString("Id"), episodeName(it));
+        }
+        return null;
+    }
+
+    /**
+     * The parts of {@code s} to offer skipping. From the server's media segments (which Intro Skipper and similar
+     * plugins fill in), or else from chapters named like an intro or the credits. Blocks.
+     */
+    public static List<Segment> segments(Account account, Stream s) {
+        List<Segment> out = new ArrayList<>();
+        try {
+            JSONObject page = Api.getJson(account.server() + "/MediaSegments/" + s.itemId, Library.auth(account));
+            JSONArray items = page.optJSONArray("Items");
+            for (int i = 0; items != null && i < items.length(); i++) {
+                JSONObject it = items.getJSONObject(i);
+                Segment.Kind kind = segmentKind(it.optString("Type"));
+                long start = it.optLong("StartTicks", 0) / TICKS_PER_MS;
+                long end = it.optLong("EndTicks", 0) / TICKS_PER_MS;
+                if (kind != null && end > start) out.add(new Segment(kind, start, end));
+            }
+        } catch (IOException | JSONException e) {
+            // A server before 10.10 has no segments; chapters may still say.
+        }
+        if (out.isEmpty()) out.addAll(fromChapters(s.chapterStarts, s.chapterNames, s.durationMs));
+        return out;
+    }
+
+    private static Segment.Kind segmentKind(String type) {
+        switch (type) {
+            case "Intro": return Segment.Kind.Intro;
+            case "Recap": return Segment.Kind.Recap;
+            case "Outro": return Segment.Kind.Credits;
+            case "Preview": return Segment.Kind.Preview;
+            default: return null;
+        }
+    }
+
+    private static final Pattern INTRO = Pattern.compile("(?i)^(intro|opening|op|opening credits|title sequence|theme)\\b.*");
+    private static final Pattern RECAP = Pattern.compile("(?i)^(recap|previously)\\b.*");
+    private static final Pattern CREDITS = Pattern.compile("(?i)^(credits|end credits|outro|ending|ed|closing credits)\\b.*");
+
+    /** A chapter named like an intro, recap or the credits runs to the start of the next chapter (or the end). */
+    static List<Segment> fromChapters(List<Long> starts, List<String> names, long durationMs) {
+        List<Segment> out = new ArrayList<>();
+        for (int i = 0; i < names.size(); i++) {
+            String name = names.get(i).trim();
+            Segment.Kind kind = INTRO.matcher(name).matches() ? Segment.Kind.Intro
+                    : RECAP.matcher(name).matches() ? Segment.Kind.Recap
+                    : CREDITS.matcher(name).matches() ? Segment.Kind.Credits : null;
+            if (kind == null) continue;
+            long start = starts.get(i);
+            long end = i + 1 < starts.size() ? starts.get(i + 1) : durationMs;
+            if (end > start) out.add(new Segment(kind, start, end));
+        }
+        return out;
     }
 
     // ---- reports ---------------------------------------------------------------------------------------

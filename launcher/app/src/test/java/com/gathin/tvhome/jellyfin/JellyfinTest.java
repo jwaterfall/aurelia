@@ -22,5 +22,6 @@ public class JellyfinTest {
         assertEquals("49m left", Library.remaining(49 * minute));
         assertEquals("1h left", Library.remaining(60 * minute));
         assertEquals("1h 4m left", Library.remaining(64 * minute));
+        assertEquals("43m", Library.length(43 * minute));
     }
 }

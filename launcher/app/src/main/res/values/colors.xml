@@ -34,4 +34,6 @@
     <color name="avatar">#FF4F7BFF</color>
     <color name="progress_track">#40FFFFFF</color>
     <color name="progress_buffered">#66FFFFFF</color>
+    <!-- Under the glass of a panel over video. -->
+    <color name="glass_video_tint">#B30B0D14</color>
 </resources>

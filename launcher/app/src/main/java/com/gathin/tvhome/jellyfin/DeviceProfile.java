@@ -18,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -33,6 +34,9 @@ public final class DeviceProfile {
 
     /** Fast enough for anything on a home network; the server lowers it only when converting. */
     public static final int MAX_BITRATE = 120_000_000;
+
+    /** Surround formats the TV may only pass through to an amplifier rather than decode. */
+    private static final List<String> PASSTHROUGH = Arrays.asList("ac3", "eac3", "dts", "truehd");
 
     /** Containers ExoPlayer reads. */
     private static final String CONTAINERS = "mp4,m4v,mov,mkv,webm,ts,mpegts,m2ts";
@@ -54,9 +58,15 @@ public final class DeviceProfile {
         }
     }
 
-    public static JSONObject build(Context context) {
+    /**
+     * {@code compatibleAudio}: leave out the surround formats the TV only passes through to the speakers, so the
+     * server converts them. Passed-through audio cannot change speed.
+     */
+    public static JSONObject build(Context context, boolean compatibleAudio) {
         try {
-            return build(videoCodecs(), audioCodecs(context), hdrRanges(context));
+            List<String> audio = audioCodecs(context);
+            if (compatibleAudio) audio.removeAll(PASSTHROUGH);
+            return build(videoCodecs(), audio, hdrRanges(context));
         } catch (JSONException e) {
             throw new IllegalStateException(e);
         }

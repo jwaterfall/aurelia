@@ -82,4 +82,26 @@
     <string name="player_direct_stream">Direct stream</string>
     <string name="player_transcode">Transcoding</string>
     <string name="player_remaining">−%1$s</string>
+    <string name="player_subtitles">Subtitles</string>
+    <string name="player_audio">Audio</string>
+    <string name="player_speed">Speed</string>
+    <string name="player_speed_value">Speed %1$s×</string>
+    <string name="player_speed_normal">Normal</string>
+    <string name="player_quality">Quality</string>
+    <string name="player_quality_value">%1$s Mbps</string>
+    <string name="player_original">Original</string>
+    <string name="player_original_detail">As it is on the server, converted only if this TV needs it</string>
+    <string name="player_next_episode">Next episode</string>
+    <string name="player_up_next">%1$s • in %2$d s</string>
+    <string name="player_off">Off</string>
+    <string name="player_burned_in">The server draws these onto the picture</string>
+    <string name="player_skip_intro">Skip intro</string>
+    <string name="player_skip_recap">Skip recap</string>
+    <string name="player_skip_credits">Skip credits</string>
+    <string name="player_skip_preview">Skip preview</string>
+    <string name="player_ends_at">Ends at %1$s</string>
+    <string name="player_level_volume">Level volume</string>
+    <string name="player_level_volume_detail">Quiet dialogue louder, loud scenes softer</string>
+    <string name="player_on">On</string>
+    <string name="player_tracks">Tracks</string>
 </resources>

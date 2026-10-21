@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.gathin.tvhome.jellyfin.Account;
 import com.gathin.tvhome.jellyfin.Api;
 import com.gathin.tvhome.jellyfin.Library;
+import com.gathin.tvhome.player.PlayerActivity;
 import com.gathin.tvhome.ui.AmbientBackdrop;
 import com.gathin.tvhome.ui.GlassSheet;
 import com.gathin.tvhome.ui.GridShelfLayoutManager;

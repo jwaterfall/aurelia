@@ -107,6 +107,19 @@ public final class PanelStep {
         return row(label, detail, action, null);
     }
 
+    /** Adds one of several options, with a tick when it is the {@code chosen} one. */
+    public View choice(CharSequence label, @Nullable CharSequence detail, boolean chosen, Runnable action) {
+        View row = LayoutInflater.from(root.getContext()).inflate(R.layout.item_panel_choice, rows, false);
+        ((TextView) row.findViewById(R.id.rowTitle)).setText(label);
+        TextView sub = row.findViewById(R.id.rowSubtitle);
+        sub.setText(detail);
+        sub.setVisibility(detail == null ? View.GONE : View.VISIBLE);
+        row.findViewById(R.id.rowCheck).setVisibility(chosen ? View.VISIBLE : View.INVISIBLE);
+        row.setOnClickListener(v -> action.run());
+        rows.addView(row);
+        return row;
+    }
+
     /** Adds a choice just above {@code before}, or under the others when it is null. */
     public View row(CharSequence label, @Nullable CharSequence detail, Runnable action, @Nullable View before) {
         View row = LayoutInflater.from(root.getContext()).inflate(R.layout.item_panel_row, rows, false);

@@ -67,7 +67,7 @@
 
         <!-- Jellyfin playback, opened from Continue Watching. -->
         <activity
-            android:name=".PlayerActivity"
+            android:name=".player.PlayerActivity"
             android:exported="false"
             android:excludeFromRecents="true"
             android:configChanges="orientation|screenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode"
