@@ -35,6 +35,8 @@
     <dimen name="radius_card">14dp</dimen>
     <!-- radius_card less the focus ring, for anything drawn just inside it. -->
     <dimen name="radius_card_inner">12dp</dimen>
+    <!-- radius_card less space_xs, for a picture inset in a glass tile. -->
+    <dimen name="radius_tile_inner">6dp</dimen>
     <!-- Panels share the cards' corners, so everything on screen is one family of shapes. -->
     <dimen name="radius_panel">@dimen/radius_card</dimen>
     <dimen name="focus_ring">2dp</dimen>

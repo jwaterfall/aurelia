@@ -39,7 +39,7 @@ public final class Api {
     }
 
     private static final int TIMEOUT_MS = 5000;
-    private static final String CLIENT = "TvHome";
+    private static final String CLIENT = "Aurelia";
     private static final ExecutorService io = Executors.newFixedThreadPool(4);
     private static Handler main;
 

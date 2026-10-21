@@ -11,6 +11,7 @@ import androidx.annotation.OptIn;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.util.UnstableApi;
+import androidx.media3.decoder.ffmpeg.FfmpegLibrary;
 import androidx.media3.exoplayer.audio.AudioCapabilities;
 
 import org.json.JSONArray;
@@ -35,8 +36,8 @@ public final class DeviceProfile {
     /** Fast enough for anything on a home network; the server lowers it only when converting. */
     public static final int MAX_BITRATE = 120_000_000;
 
-    /** Surround formats the TV may only pass through to an amplifier rather than decode. */
-    private static final List<String> PASSTHROUGH = Arrays.asList("ac3", "eac3", "dts", "truehd");
+    /** Surround formats the TV may only pass through to an amplifier, and FFmpeg decodes when it cannot. */
+    private static final List<String> SURROUND = Arrays.asList("ac3", "eac3", "dts", "truehd");
 
     /** Containers ExoPlayer reads. */
     private static final String CONTAINERS = "mp4,m4v,mov,mkv,webm,ts,mpegts,m2ts";
@@ -59,15 +60,12 @@ public final class DeviceProfile {
     }
 
     /**
-     * {@code compatibleAudio}: leave out the surround formats the TV only passes through to the speakers, so the
-     * server converts them. Passed-through audio cannot change speed. {@code sidecars}: text subtitles may come
-     * as files alongside a converted stream; without, they are burned into it.
+     * {@code sidecars}: text subtitles may come as files alongside a converted stream; without, they are burned
+     * into it.
      */
-    public static JSONObject build(Context context, boolean compatibleAudio, boolean sidecars) {
+    public static JSONObject build(Context context, boolean sidecars) {
         try {
-            List<String> audio = audioCodecs(context);
-            if (compatibleAudio) audio.removeAll(PASSTHROUGH);
-            return build(videoCodecs(), audio, hdrRanges(context), sidecars);
+            return build(videoCodecs(), audioCodecs(context), hdrRanges(context), sidecars);
         } catch (JSONException e) {
             throw new IllegalStateException(e);
         }
@@ -213,8 +211,8 @@ public final class DeviceProfile {
     }
 
     /**
-     * Audio the TV plays: the common formats it decodes itself, plus Dolby and DTS when it decodes them or the
-     * HDMI connection carries them to a receiver or TV that does.
+     * Audio the TV plays: the common formats it decodes itself, plus Dolby and DTS, which the player's FFmpeg
+     * decoder takes when the TV has no decoder for them and the HDMI connection does not carry them to one.
      */
     @OptIn(markerClass = UnstableApi.class)
     private static List<String> audioCodecs(Context context) {
@@ -229,6 +227,9 @@ public final class DeviceProfile {
                 || decodes(list, "audio/eac3")) out.add("eac3");
         if (caps.supportsEncoding(C.ENCODING_DTS) || decodes(list, "audio/vnd.dts")) out.add("dts");
         if (caps.supportsEncoding(C.ENCODING_DOLBY_TRUEHD)) out.add("truehd");
+        if (FfmpegLibrary.isAvailable()) {
+            for (String a : SURROUND) if (!out.contains(a)) out.add(a);
+        }
         return out;
     }
 

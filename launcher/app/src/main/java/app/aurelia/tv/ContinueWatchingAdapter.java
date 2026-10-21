@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import app.aurelia.tv.jellyfin.Api;
 import app.aurelia.tv.jellyfin.Library;
 import app.aurelia.tv.ui.GridSpacing;
+import app.aurelia.tv.ui.ImageDisk;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -225,7 +226,7 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         h.backdrop.setTag(url);
         h.backdrop.setAlpha(0f);
         String auth = imageAuth;
-        Api.async(() -> Api.getImage(url, auth), new Api.Callback<Bitmap>() {
+        Api.async(() -> ImageDisk.get(url, auth), new Api.Callback<Bitmap>() {
             @Override
             public void onResult(Bitmap bmp) {
                 if (bmp == null) return;

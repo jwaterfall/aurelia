@@ -299,36 +299,59 @@
         android:alpha="0"
         android:visibility="gone" />
 
-    <!-- The next episode, counting down to playing it, over the credits. -->
+    <!-- The next episode, counting down to playing it, over the credits: its picture (when it has one) beside
+         what it is and how long until it plays. -->
     <LinearLayout
         android:id="@+id/playerUpNext"
         style="@style/Widget.Launcher.PanelRow"
-        android:layout_width="360dp"
+        android:layout_width="400dp"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="@dimen/screen_margin"
         android:layout_marginBottom="@dimen/space_3xl"
         android:alpha="0"
+        android:background="@drawable/glass_tile"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_xs"
+        android:paddingEnd="@dimen/space_lg"
         android:visibility="gone">
 
-        <TextView
-            android:id="@+id/upNextTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:duplicateParentState="true"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:text="@string/player_next_episode"
-            android:textAppearance="@style/TextAppearance.Launcher.Label" />
+        <ImageView
+            android:id="@+id/upNextStill"
+            android:layout_width="128dp"
+            android:layout_height="72dp"
+            android:background="@drawable/still_surface"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/upNextDetail"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginStart="@dimen/space_md"
+            android:layout_weight="1"
             android:duplicateParentState="true"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.Launcher.Meta.OnGlass" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/upNextTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:duplicateParentState="true"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="@string/player_next_episode"
+                android:textAppearance="@style/TextAppearance.Launcher.Label" />
+
+            <TextView
+                android:id="@+id/upNextDetail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:duplicateParentState="true"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.Launcher.Meta.OnGlass" />
+        </LinearLayout>
     </LinearLayout>
 
     <app.aurelia.tv.ui.GlassMenu

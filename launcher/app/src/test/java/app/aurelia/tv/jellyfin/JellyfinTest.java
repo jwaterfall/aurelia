@@ -24,4 +24,12 @@ public class JellyfinTest {
         assertEquals("1h 4m left", Library.remaining(64 * minute));
         assertEquals("43m", Library.length(43 * minute));
     }
+
+    @Test
+    public void frameRateIsTheVideoStreams() throws Exception {
+        org.json.JSONObject source = new org.json.JSONObject("{\"MediaStreams\":["
+                + "{\"Type\":\"Audio\"},{\"Type\":\"Video\",\"AverageFrameRate\":23.98,\"RealFrameRate\":23.976}]}");
+        assertEquals(23.976f, Playback.frameRate(source), 0.0001f);
+        assertEquals(0f, Playback.frameRate(new org.json.JSONObject("{}")), 0f);
+    }
 }

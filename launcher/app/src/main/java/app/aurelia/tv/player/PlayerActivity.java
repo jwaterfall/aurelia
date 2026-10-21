@@ -30,9 +30,13 @@ import androidx.media3.common.Tracks;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.datasource.DefaultDataSource;
 import androidx.media3.datasource.DefaultHttpDataSource;
+import androidx.media3.datasource.HttpDataSource;
 import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlaybackException;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.audio.AudioCapabilities;
+import androidx.media3.exoplayer.audio.AudioSink;
+import androidx.media3.exoplayer.audio.DefaultAudioSink;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.ui.AspectRatioFrameLayout;
 import androidx.media3.ui.CaptionStyleCompat;
@@ -87,12 +91,17 @@ public final class PlayerActivity extends Activity {
     /** Without credits marked, the next episode is offered this long before the end. */
     private static final long UP_NEXT_BEFORE_END_MS = 25_000;
     private static final int UP_NEXT_SECONDS = 10;
+    /** Waits before each try to pick up again after the network drops: about 40 seconds in all. */
+    private static final long[] RECONNECT_MS = {1_000, 2_000, 4_000, 8_000, 8_000, 8_000, 8_000};
     private static final float[] SPEEDS = {0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f};
     private static final int[] BITRATES_MBPS = {60, 40, 20, 15, 10, 8, 6, 4, 3, 2};
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final PathInterpolator ease = new PathInterpolator(0.2f, 0f, 0f, 1f);
     private final VolumeLeveler leveler = new VolumeLeveler();
+    /** Tries so far to pick up again after the network dropped, and where it was then (-1 when it has not). */
+    private int reconnects;
+    private long reconnectAt = -1;
     private Account account;
     private SharedPreferences prefs;
     private ExoPlayer player;
@@ -141,6 +150,7 @@ public final class PlayerActivity extends Activity {
     private TextView skip;
     private View upNext;
     private TextView upNextDetail;
+    private ImageView upNextStill;
     private GlassMenu menu;
     private PlayerView video;
     private View error;
@@ -200,6 +210,8 @@ public final class PlayerActivity extends Activity {
         skip = findViewById(R.id.playerSkip);
         upNext = findViewById(R.id.playerUpNext);
         upNextDetail = findViewById(R.id.upNextDetail);
+        upNextStill = findViewById(R.id.upNextStill);
+        upNextStill.setClipToOutline(true);
         menu = findViewById(R.id.playerMenu);
         error = findViewById(R.id.playerError);
         errorBody = findViewById(R.id.playerErrorBody);
@@ -257,7 +269,7 @@ public final class PlayerActivity extends Activity {
         });
     }
 
-    /** Levelling needs audio the TV decodes, so with it on, Dolby and DTS are converted from the start. */
+    /** Levelling needs audio the TV decodes, so with it on, Dolby and DTS are decoded here from the start. */
     private Playback.Options firstOptions() {
         Playback.Options o = new Playback.Options();
         o.compatibleAudio = prefs.getBoolean(PREF_LEVEL, false);
@@ -272,7 +284,7 @@ public final class PlayerActivity extends Activity {
         itemId = id;
         buffering.show(true);
         Context app = getApplicationContext();
-        Api.async(() -> Playback.open(account, id, DeviceProfile.build(app, options.compatibleAudio, !options.noSidecars), options),
+        Api.async(() -> Playback.open(account, id, DeviceProfile.build(app, !options.noSidecars), options),
                 new Api.Callback<Playback.Stream>() {
                     @Override
                     public void onResult(Playback.Stream s) {
@@ -283,9 +295,44 @@ public final class PlayerActivity extends Activity {
                     @Override
                     public void onError(Exception e) {
                         Log.w(TAG, "Could not start " + id, e);
-                        if (mine == generation && !isFinishing()) fail(e.getMessage());
+                        if (mine != generation || isFinishing()) return;
+                        // Still no network while picking up again: wait a little longer.
+                        if (reconnectAt >= 0 && e instanceof java.io.IOException && reconnect()) return;
+                        fail(e.getMessage());
                     }
                 });
+    }
+
+    /**
+     * The network dropped (Wi-Fi blinked, the server restarted): waits, then opens the stream again where it was,
+     * a few times over, the pulse showing meanwhile. False once it has tried long enough, to give up.
+     */
+    private boolean reconnect() {
+        if (stream == null || reconnects >= RECONNECT_MS.length) return false;
+        if (reconnectAt < 0) reconnectAt = player != null ? player.getCurrentPosition() : stream.startMs;
+        long at = reconnectAt;
+        Log.i(TAG, "Lost the stream; trying again (" + (reconnects + 1) + ")");
+        buffering.show(true);
+        handler.postDelayed(() -> reopen(o -> o.startMs = at), RECONNECT_MS[reconnects++]);
+        return true;
+    }
+
+    /** A failure of the connection rather than of the video: worth trying again. */
+    static boolean isNetworkFailure(PlaybackException e) {
+        switch (e.errorCode) {
+            case PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED:
+            case PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT:
+            case PlaybackException.ERROR_CODE_IO_UNSPECIFIED:
+            case PlaybackException.ERROR_CODE_TIMEOUT:
+                return true;
+            case PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS:
+                // The server answering, but not well (restarting, overloaded); not a file that is not there.
+                Throwable cause = e.getCause();
+                return cause instanceof HttpDataSource.InvalidResponseCodeException
+                        && ((HttpDataSource.InvalidResponseCodeException) cause).responseCode >= 500;
+            default:
+                return false;
+        }
     }
 
     /** The stream again, from where it is now, with {@code change} made to how it was opened. */
@@ -327,10 +374,10 @@ public final class PlayerActivity extends Activity {
         findViewById(R.id.buttonChapters).setVisibility(s.chapterStarts.size() > 1 ? View.VISIBLE : View.GONE);
 
         DefaultHttpDataSource.Factory http = new DefaultHttpDataSource.Factory()
-                .setUserAgent("TvHome/" + BuildConfig.VERSION_NAME)
+                .setUserAgent("Aurelia/" + BuildConfig.VERSION_NAME)
                 .setAllowCrossProtocolRedirects(true)
                 .setDefaultRequestProperties(Collections.singletonMap("Authorization", Library.auth(account)));
-        player = new ExoPlayer.Builder(this, new DefaultRenderersFactory(this).setEnableDecoderFallback(true))
+        player = new ExoPlayer.Builder(this, renderers(s.compatibleAudio))
                 .setMediaSourceFactory(new DefaultMediaSourceFactory(new DefaultDataSource.Factory(this, http)))
                 .setAudioAttributes(new androidx.media3.common.AudioAttributes.Builder()
                         .setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(), true)
@@ -348,8 +395,13 @@ public final class PlayerActivity extends Activity {
             public void onIsPlayingChanged(boolean isPlaying) {
                 playButton.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
                 // Paused: the controls stay, so it is clear why nothing moves.
-                if (isPlaying) scheduleHide();
-                else if (player.getPlaybackState() == Player.STATE_READY) showChrome(true);
+                if (isPlaying) {
+                    scheduleHide();
+                    reconnects = 0;
+                    reconnectAt = -1;
+                } else if (player.getPlaybackState() == Player.STATE_READY) {
+                    showChrome(true);
+                }
             }
 
             @Override
@@ -368,11 +420,12 @@ public final class PlayerActivity extends Activity {
             @Override
             public void onPlayerError(@NonNull PlaybackException e) {
                 Log.w(TAG, "Playback failed for " + itemId + " (" + stream.method + ")", e);
-                // Audio the TV turned down (Dolby it cannot pass through after all): once more, converted.
+                // Audio the TV turned down (Dolby it cannot pass through after all): once more, decoded here.
                 if (isAudioFailure(e) && !stream.compatibleAudio) {
                     reopen(o -> o.compatibleAudio = true);
                     return;
                 }
+                if (isNetworkFailure(e) && reconnect()) return;
                 // A subtitle file the server could not make (it answers 404 for some videos): once more, with
                 // subtitles off and any chosen later burned into the picture, rather than not at all.
                 if (hasSidecars && isSourceFailure(e) && !stream.noSidecars) {
@@ -401,16 +454,62 @@ public final class PlayerActivity extends Activity {
         }
         item.setSubtitleConfigurations(subs);
         hasSidecars = !subs.isEmpty();
+        // The TV switches as the stream opens, so the moment it blanks is lost in the wait to start.
+        FrameRateMatch.apply(getWindow(), s.frameRate);
         player.setMediaItem(item.build(), s.startMs);
         player.setPlaybackSpeed(speed);
         player.setPlayWhenReady(true);
         player.prepare();
 
+        Log.i(TAG, "Playing " + s.itemId + " (" + s.method + (s.reasons.isEmpty() ? "" : ": " + s.reasons)
+                + ", " + s.frameRate + "fps)");
         Playback.started(account, s, s.startMs, false);
         lastReport = System.currentTimeMillis();
         handler.removeCallbacks(tick);
         handler.post(tick);
         if (!sameItem) showChrome(true);
+    }
+
+    /**
+     * The decoders: the TV's own, then FFmpeg for audio it has none for (Dolby and DTS on a Chromecast). With
+     * {@code decodeAudio}, nothing passes through to an amplifier, so all audio reaches the leveller and can change
+     * speed.
+     */
+    private DefaultRenderersFactory renderers(boolean decodeAudio) {
+        DefaultRenderersFactory factory = new DefaultRenderersFactory(this) {
+            @Override
+            protected AudioSink buildAudioSink(@NonNull Context context, boolean floatOutput,
+                                               boolean playbackParams) {
+                if (!decodeAudio) return super.buildAudioSink(context, floatOutput, playbackParams);
+                return new DefaultAudioSink.Builder(context)
+                        .setAudioCapabilities(AudioCapabilities.DEFAULT_AUDIO_CAPABILITIES)
+                        .setEnableFloatOutput(floatOutput)
+                        .setEnableAudioTrackPlaybackParams(playbackParams)
+                        .build();
+            }
+        };
+        return factory.setEnableDecoderFallback(true)
+                .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON);
+    }
+
+    /** The next episode's picture for its card, long before the card shows; the card goes without if none. */
+    private void loadNextStill(Playback.Next n) {
+        upNextStill.setImageDrawable(null);
+        upNextStill.setVisibility(View.GONE);
+        if (n == null || n.imageUrl.isEmpty()) return;
+        String auth = Library.auth(account);
+        Api.async(() -> Api.getImage(n.imageUrl, auth), new Api.Callback<android.graphics.Bitmap>() {
+            @Override
+            public void onResult(android.graphics.Bitmap picture) {
+                if (picture == null || next != n) return;
+                upNextStill.setImageBitmap(picture);
+                upNextStill.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onError(Exception e) {
+            }
+        });
     }
 
     /** The next episode and the parts to skip, which arrive while it starts playing. */
@@ -421,6 +520,7 @@ public final class PlayerActivity extends Activity {
                 if (stream == null || !stream.itemId.equals(s.itemId)) return;
                 next = n;
                 nextButton.setVisibility(n != null ? View.VISIBLE : View.GONE);
+                loadNextStill(n);
             }
 
             @Override
@@ -630,9 +730,10 @@ public final class PlayerActivity extends Activity {
         }
     }
 
-    /** With the controls showing, the corner sits above them rather than over them. */
+    /** With the controls showing, the corner sits clear above them, not resting on the seek bar. */
     private float cornerLift() {
-        return chromeShowing() ? -(controls.getHeight() - getResources().getDimension(R.dimen.space_3xl)) : 0f;
+        return chromeShowing() ? -(controls.getHeight() - getResources().getDimension(R.dimen.space_3xl)
+                + getResources().getDimension(R.dimen.space_xl)) : 0f;
     }
 
     // ---- menus -----------------------------------------------------------------------------------------
@@ -698,8 +799,8 @@ public final class PlayerActivity extends Activity {
     }
 
     /**
-     * Levelling works on audio the TV decodes, so turning it on converts Dolby or DTS that was being passed
-     * through to an amplifier. Turning it off leaves the stream as it is.
+     * Levelling works on audio the TV decodes, so turning it on reopens Dolby or DTS that was being passed
+     * through to an amplifier, to be decoded here instead. Turning it off leaves the stream as it is.
      */
     private void setLevelling(boolean on) {
         scheduleHide();
@@ -720,7 +821,7 @@ public final class PlayerActivity extends Activity {
         showMenu(from, m);
     }
 
-    /** Dolby passed through to an amplifier plays at one speed only, so it is converted for any other. */
+    /** Dolby passed through to an amplifier plays at one speed only, so it is decoded here for any other. */
     private void chooseSpeed(float s) {
         scheduleHide();
         speed = s;

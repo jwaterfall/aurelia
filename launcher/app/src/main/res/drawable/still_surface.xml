@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Behind a picture set just inside a glass tile: its corners follow the tile's, less the inset. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/surface_card" />
+    <corners android:radius="@dimen/radius_tile_inner" />
+</shape>

@@ -7,8 +7,8 @@ import android.widget.ImageView;
 import app.aurelia.tv.jellyfin.Api;
 
 /**
- * Artwork from the server into image views: kept in memory once fetched, faded in when it arrives, and never put
- * into a view that has since been reused for something else.
+ * Artwork from the server into image views: kept in memory once fetched (and on disk, {@link ImageDisk}), faded in
+ * when it arrives, and never put into a view that has since been reused for something else.
  */
 public final class Images {
 
@@ -48,7 +48,7 @@ public final class Images {
         }
         view.setImageDrawable(null);
         view.setAlpha(0f);
-        Api.async(() -> Api.getImage(url, auth), new Api.Callback<Bitmap>() {
+        Api.async(() -> ImageDisk.get(url, auth), new Api.Callback<Bitmap>() {
             @Override
             public void onResult(Bitmap bmp) {
                 if (bmp == null) {

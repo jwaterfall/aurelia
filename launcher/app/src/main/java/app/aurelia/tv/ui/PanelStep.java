@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
+import app.aurelia.tv.BuildConfig;
 import app.aurelia.tv.R;
 
 /**
@@ -47,6 +48,16 @@ public final class PanelStep {
 
     public PanelStep title(CharSequence text) {
         title.setText(text);
+        return this;
+    }
+
+    /** The launcher's icon, name and version at the foot of the panel. */
+    public PanelStep about() {
+        View about = root.findViewById(R.id.stepAbout);
+        about.findViewById(R.id.stepAboutIcon).setClipToOutline(true);
+        TextView version = about.findViewById(R.id.stepAboutVersion);
+        version.setText(root.getContext().getString(R.string.about_version, BuildConfig.VERSION_NAME));
+        about.setVisibility(View.VISIBLE);
         return this;
     }
 
@@ -102,19 +113,20 @@ public final class PanelStep {
         return field;
     }
 
-    /** Adds a choice under the others. */
-    public View row(CharSequence label, @Nullable CharSequence detail, Runnable action) {
+    /** Adds a choice under the others; a null action leaves the caller to set one. */
+    public View row(CharSequence label, @Nullable CharSequence detail, @Nullable Runnable action) {
         return row(label, detail, action, null);
     }
 
     /** Adds a choice just above {@code before}, or under the others when it is null. */
-    public View row(CharSequence label, @Nullable CharSequence detail, Runnable action, @Nullable View before) {
+    public View row(CharSequence label, @Nullable CharSequence detail, @Nullable Runnable action,
+                    @Nullable View before) {
         View row = LayoutInflater.from(root.getContext()).inflate(R.layout.item_panel_row, rows, false);
         ((TextView) row.findViewById(R.id.rowTitle)).setText(label);
         TextView sub = row.findViewById(R.id.rowSubtitle);
         sub.setText(detail);
         sub.setVisibility(detail == null ? View.GONE : View.VISIBLE);
-        row.setOnClickListener(v -> action.run());
+        if (action != null) row.setOnClickListener(v -> action.run());
         int at = before == null ? -1 : rows.indexOfChild(before);
         rows.addView(row, at);
         return row;

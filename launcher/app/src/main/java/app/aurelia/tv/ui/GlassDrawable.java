@@ -27,7 +27,8 @@ import java.io.IOException;
 
 /**
  * Frosted glass surface: a fill that is lighter at the top, and a rim that catches light along the top edge and
- * fades out down the sides. Interactive glass fades to solid white while its view has focus.
+ * fades out down the sides. Interactive glass fades to solid white while its view has focus, and rests a step
+ * brighter while its view is activated: a toggle that is on (watched, a favourite).
  *
  * Used from XML as {@code <app.aurelia.tv.ui.GlassDrawable app:glassInteractive="true" />} (res/drawable/glass_*.xml).
  */
@@ -44,7 +45,8 @@ public class GlassDrawable extends Drawable {
     private float radius = -1f;
     private boolean interactive;
     private float hairline = 1f;
-    private int fillTop, fillBottom, rimTop, rimBottom, focusColor;
+    private int fillTop, fillBottom, chosenTop, chosenBottom, rimTop, rimBottom, focusColor;
+    private boolean activated;
 
     /** 0 at rest, 1 fully white. Animated between the two on focus changes. */
     private float focus;
@@ -68,6 +70,8 @@ public class GlassDrawable extends Drawable {
         a.recycle();
         fillTop = r.getColor(panel ? R.color.glass_panel_top : R.color.glass_fill_top, theme);
         fillBottom = r.getColor(panel ? R.color.glass_panel_bottom : R.color.glass_fill_bottom, theme);
+        chosenTop = r.getColor(R.color.glass_chosen_top, theme);
+        chosenBottom = r.getColor(R.color.glass_chosen_bottom, theme);
         rimTop = r.getColor(R.color.glass_rim_top, theme);
         rimBottom = r.getColor(R.color.glass_rim_bottom, theme);
         focusColor = r.getColor(R.color.focus, theme);
@@ -86,8 +90,8 @@ public class GlassDrawable extends Drawable {
 
     private void updateShaders() {
         if (rect.isEmpty()) return;
-        int top = Colors.lerp(fillTop, focusColor, focus);
-        int bottom = Colors.lerp(fillBottom, focusColor, focus);
+        int top = Colors.lerp(activated ? chosenTop : fillTop, focusColor, focus);
+        int bottom = Colors.lerp(activated ? chosenBottom : fillBottom, focusColor, focus);
         fill.setShader(new LinearGradient(0, rect.top, 0, rect.bottom, top, bottom, Shader.TileMode.CLAMP));
         // The rim is brightest along the top edge and nearly gone by halfway down, like light from above.
         rim.setShader(new LinearGradient(0, rect.top, 0, rect.bottom,
@@ -116,8 +120,20 @@ public class GlassDrawable extends Drawable {
     protected boolean onStateChange(@NonNull int[] state) {
         if (!interactive) return false;
         boolean now = false;
-        for (int s : state) if (s == android.R.attr.state_focused) now = true;
-        if (now == focused) return false;
+        boolean on = false;
+        for (int s : state) {
+            if (s == android.R.attr.state_focused) now = true;
+            if (s == android.R.attr.state_activated) on = true;
+        }
+        boolean changed = on != activated;
+        activated = on;
+        if (now == focused) {
+            if (changed) {
+                updateShaders();
+                invalidateSelf();
+            }
+            return changed;
+        }
         focused = now;
         animateFocus(now ? 1f : 0f);
         return true;

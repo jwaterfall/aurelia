@@ -88,6 +88,15 @@
                             android:layout_height="match_parent"
                             android:importantForAccessibility="no" />
                     </FrameLayout>
+
+                    <!-- A newer version waits in the profile panel (update.Updates). -->
+                    <View
+                        android:id="@+id/updateDot"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_gravity="top|end"
+                        android:background="@drawable/update_dot"
+                        android:visibility="gone" />
                 </FrameLayout>
 
                 <ImageView

@@ -37,7 +37,7 @@ jobs:
           java-version: "17"
       - uses: android-actions/setup-android@v3
         with:
-          packages: platforms;android-34 build-tools;34.0.0
+          packages: platforms;android-35 build-tools;35.0.0
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests, lint and release build
         working-directory: launcher
@@ -48,4 +48,5 @@ jobs:
         run: |
           size=$(stat -c %s launcher/app/build/outputs/apk/release/app-release.apk)
           echo "release APK: $((size / 1024)) KB"
-          test "$size" -lt 409600 || { echo "APK is over 400 KB; the launcher targets 1 GB TVs, keep it small"; exit 1; }
+          # The player and its FFmpeg audio decoder are most of it (about 4.4 MB in all); keep the rest small.
+          test "$size" -lt 6291456 || { echo "APK is over 6 MB; the launcher runs on small TVs, keep it small"; exit 1; }

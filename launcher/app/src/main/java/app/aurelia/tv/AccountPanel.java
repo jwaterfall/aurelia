@@ -1,12 +1,17 @@
 package app.aurelia.tv;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.provider.Settings;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import app.aurelia.tv.jellyfin.Account;
 import app.aurelia.tv.jellyfin.Api;
@@ -15,6 +20,7 @@ import app.aurelia.tv.jellyfin.Library;
 import app.aurelia.tv.jellyfin.QuickConnect;
 import app.aurelia.tv.ui.GlassSheet;
 import app.aurelia.tv.ui.PanelStep;
+import app.aurelia.tv.update.Updates;
 
 import org.json.JSONObject;
 
@@ -72,7 +78,7 @@ final class AccountPanel {
         stopSignIn();
         step++;
         back = onBack;
-        return new PanelStep(activity, sheet);
+        return new PanelStep(activity, sheet).about();
     }
 
     private void show(PanelStep s) {
@@ -92,6 +98,7 @@ final class AccountPanel {
                 .body(activity.getString(R.string.jellyfin_connect_body))
                 .status(activity.getString(R.string.jellyfin_searching), true);
         View enterAddress = s.row(activity.getString(R.string.jellyfin_enter_address), null, () -> showAddress(""));
+        offerUpdate(s);
         show(s);
 
         int mine = step;
@@ -251,6 +258,7 @@ final class AccountPanel {
             });
         }
         s.row(activity.getString(R.string.jellyfin_sign_out), null, this::signOut);
+        offerUpdate(s);
         show(s);
         int mine = step;
         Api.async(() -> Library.avatar(account), new Api.Callback<Bitmap>() {
@@ -262,6 +270,52 @@ final class AccountPanel {
             @Override
             public void onError(Exception e) {
             }
+        });
+    }
+
+    /**
+     * A newer version of the launcher, when there is one ({@link Updates}): taking it downloads and installs it,
+     * and the launcher opens again by itself once it is in place.
+     */
+    private void offerUpdate(PanelStep s) {
+        Updates.Release release = Updates.known(activity);
+        if (release == null) return;
+        View row = s.row(activity.getString(R.string.update_to, release.version),
+                activity.getString(R.string.update_detail), null);
+        TextView title = row.findViewById(R.id.rowTitle);
+        TextView detail = row.findViewById(R.id.rowSubtitle);
+        row.setOnClickListener(v -> {
+            if (!Updates.canInstall(activity)) {
+                detail.setText(R.string.update_allow);
+                try {
+                    activity.startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                            Uri.parse("package:" + activity.getPackageName())));
+                } catch (ActivityNotFoundException e) {
+                    // Android TV often has no such screen: the hint says how to allow it over adb.
+                }
+                return;
+            }
+            row.setEnabled(false);
+            title.setText(R.string.update_downloading);
+            detail.setText(R.string.update_detail);
+            int mine = step;
+            Api.async(() -> {
+                Updates.install(activity, Updates.download(activity, release));
+                return true;
+            }, new Api.Callback<Boolean>() {
+                @Override
+                public void onResult(Boolean ok) {
+                    if (mine == step) title.setText(R.string.update_installing);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    if (mine != step) return;
+                    row.setEnabled(true);
+                    title.setText(activity.getString(R.string.update_to, release.version));
+                    detail.setText(R.string.update_failed);
+                }
+            });
         });
     }
 

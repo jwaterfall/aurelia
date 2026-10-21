@@ -62,7 +62,10 @@ public final class Playback {
         public int audioIndex = DEFAULT;
         public int subtitleIndex = DEFAULT;
         public int maxBitrate = DeviceProfile.MAX_BITRATE;
-        /** Only audio the TV decodes itself (no Dolby or DTS passthrough), which any playback speed works with. */
+        /**
+         * Audio decoded on the TV, Dolby and DTS too (by FFmpeg), never passed through to an amplifier: levelling
+         * and any playback speed need it. The server sends the same stream either way.
+         */
         public boolean compatibleAudio;
         /** Text subtitles burned into the picture, not sent as files (the server could not make the files). */
         public boolean noSidecars;
@@ -93,6 +96,8 @@ public final class Playback {
         public final List<Track> subtitles;
         /** The show's or film's logo, empty when it has none. */
         public final String logoUrl;
+        /** The video's frames a second (23.976), 0 when the server does not say. */
+        public final float frameRate;
         /** Chapters: where each starts (ms), and its name. */
         public final List<Long> chapterStarts;
         public final List<String> chapterNames;
@@ -103,7 +108,7 @@ public final class Playback {
         Stream(String itemId, String type, String seriesId, String title, String subtitle, long startMs,
                long durationMs, String url, Method method, String reasons, String mediaSourceId, String playSessionId,
                int sourceBitrate, Options options, List<Track> audio, List<Track> subtitles, int audioIndex,
-               int subtitleIndex, String logoUrl, List<Long> chapterStarts, List<String> chapterNames) {
+               int subtitleIndex, String logoUrl, float frameRate, List<Long> chapterStarts, List<String> chapterNames) {
             this.itemId = itemId;
             this.type = type;
             this.seriesId = seriesId;
@@ -125,6 +130,7 @@ public final class Playback {
             this.audioIndex = audioIndex;
             this.subtitleIndex = subtitleIndex;
             this.logoUrl = logoUrl;
+            this.frameRate = frameRate;
             this.chapterStarts = chapterStarts;
             this.chapterNames = chapterNames;
         }
@@ -148,10 +154,13 @@ public final class Playback {
     public static final class Next {
         public final String itemId;
         public final String title;
+        /** Its picture (a still from it), empty when it has none. */
+        public final String imageUrl;
 
-        Next(String itemId, String title) {
+        Next(String itemId, String title, String imageUrl) {
             this.itemId = itemId;
             this.title = title;
+            this.imageUrl = imageUrl;
         }
     }
 
@@ -182,8 +191,8 @@ public final class Playback {
     private Playback() { }
 
     /**
-     * Asks the server how to play {@code itemId} on this TV. {@code profile} is the {@link DeviceProfile} to match
-     * the options' {@link Options#compatibleAudio}. Blocks; call it in the background.
+     * Asks the server how to play {@code itemId} on this TV. {@code profile} is the {@link DeviceProfile}.
+     * Blocks; call it in the background.
      */
     public static Stream open(Account account, String itemId, JSONObject profile, Options options) throws IOException {
         String server = account.server();
@@ -257,7 +266,7 @@ public final class Playback {
             return new Stream(itemId, item.optString("Type", ""), item.optString("SeriesId", ""), title(item),
                     subtitle(item), startTicks / TICKS_PER_MS, item.optLong("RunTimeTicks", 0) / TICKS_PER_MS, url,
                     method, reasons, sourceId, session, source.optInt("Bitrate", 0), options, audio, subtitles,
-                    audioIndex, subtitleIndex, logoUrl(server, item), chapterStarts, chapterNames);
+                    audioIndex, subtitleIndex, logoUrl(server, item), frameRate(source), chapterStarts, chapterNames);
         } catch (JSONException e) {
             throw new IOException("Unexpected answer from the server", e);
         }
@@ -272,6 +281,19 @@ public final class Playback {
         }
         String r = Uri.parse("http://x" + path).getQueryParameter("TranscodeReasons");
         return r == null ? "" : r.replace(",", ", ");
+    }
+
+    /** The source's video frame rate: the real one where the server has measured it, else the average. */
+    static float frameRate(JSONObject source) {
+        JSONArray streams = source.optJSONArray("MediaStreams");
+        for (int i = 0; streams != null && i < streams.length(); i++) {
+            JSONObject s = streams.optJSONObject(i);
+            if (s == null || !"Video".equals(s.optString("Type"))) continue;
+            double fps = s.optDouble("RealFrameRate", 0);
+            if (!(fps > 0)) fps = s.optDouble("AverageFrameRate", 0);
+            return fps > 0 ? (float) fps : 0f;
+        }
+        return 0f;
     }
 
     private static void tracks(String server, JSONObject source, List<Track> audio, List<Track> subtitles) {
@@ -375,7 +397,11 @@ public final class Playback {
         for (int i = 0; i < items.length(); i++) {
             JSONObject it = items.optJSONObject(i);
             if (it == null || it.optString("Id").equals(s.itemId)) continue;
-            return new Next(it.optString("Id"), episodeName(it));
+            JSONObject tags = it.optJSONObject("ImageTags");
+            String tag = tags != null ? tags.optString("Primary", "") : "";
+            String image = tag.isEmpty() ? "" : account.server() + "/Items/" + it.optString("Id")
+                    + "/Images/Primary?maxWidth=384&quality=85&tag=" + tag;
+            return new Next(it.optString("Id"), episodeName(it), image);
         }
         return null;
     }

@@ -32,9 +32,11 @@ import app.aurelia.tv.ui.GlassMenu;
 import app.aurelia.tv.ui.GlassSheet;
 import app.aurelia.tv.ui.GridShelfLayoutManager;
 import app.aurelia.tv.ui.GridSpacing;
+import app.aurelia.tv.ui.ImageDisk;
 import app.aurelia.tv.ui.ScrollEdge;
 import app.aurelia.tv.ui.SegmentedControl;
 import app.aurelia.tv.ui.ShelfLayoutManager;
+import app.aurelia.tv.update.Updates;
 
 import java.util.Collections;
 import java.util.List;
@@ -115,6 +117,7 @@ public class MainActivity extends Activity {
         ambient.setAnimationsEnabled(animations);
 
         account = Account.get(this);
+        ImageDisk.init(this);
         sheet = findViewById(R.id.sheet);
         sheet.setAnimationsEnabled(animations);
         accountPanel = new AccountPanel(this, sheet, findViewById(R.id.content));
@@ -201,6 +204,10 @@ public class MainActivity extends Activity {
         nuCaption = nuHeader.findViewById(R.id.sectionCaption);
         nuAdapter = new ContinueWatchingAdapter(MEDIA_COLUMNS, gutter, mediaListener);
         setUpRow(nuRow = findViewById(R.id.nuRow), nuAdapter, gutter);
+        // The rows as they were last time, at once, while the server is asked again: placeholders only when
+        // there is nothing kept (the first start, or another account).
+        Library.HomeRows kept = Library.keptHomeRows(this, account);
+        if (kept != null) showHomeRows(kept);
         ((app.aurelia.tv.ui.SectionScrollView) pageHome).setAlignTop(false);
         ((app.aurelia.tv.ui.SectionScrollView) pageHome).setAnimationsEnabled(animations);
 
@@ -381,25 +388,8 @@ public class MainActivity extends Activity {
         Library.homeRows(account, new Api.Callback<Library.HomeRows>() {
             @Override
             public void onResult(Library.HomeRows rows) {
-                // Nothing in progress: the next episodes take the first row.
-                boolean nextFirst = rows.resume.isEmpty() && !rows.nextUp.isEmpty();
-                List<Library.MediaItem> items = nextFirst ? rows.nextUp : rows.resume;
-                showNextUp(nextFirst ? Collections.emptyList() : rows.nextUp);
-                cwTitle.setText(nextFirst ? R.string.next_up : R.string.continue_watching);
-                if (items.isEmpty()) {
-                    cwCaption.setText(null);
-                    updateRow(() -> cwAdapter.showMessage(new ContinueWatchingAdapter.Message(R.drawable.ic_check,
-                            getString(R.string.cw_empty_title), getString(R.string.cw_empty_body),
-                            getString(R.string.cw_browse_movies), () -> {
-                                showPage(PAGE_MOVIES, animations);
-                                movies.focusIn();
-                            })));
-                    return;
-                }
-                cwCaption.setText(nextFirst
-                        ? getResources().getQuantityString(R.plurals.next_up_shows, items.size(), items.size())
-                        : getString(R.string.jellyfin_items, items.size()));
-                updateRow(() -> cwAdapter.showItems(items, Library.auth(account)));
+                showHomeRows(rows);
+                Library.keepHomeRows(getApplicationContext(), account, rows);
             }
 
             @Override
@@ -424,6 +414,29 @@ public class MainActivity extends Activity {
     }
 
     /** Next Up's row, gone when there is nothing in it; focus in it moves up a row if it goes. */
+    /** Continue Watching and Next Up from {@code rows}: fresh from the server, or kept from last time. */
+    private void showHomeRows(Library.HomeRows rows) {
+        // Nothing in progress: the next episodes take the first row.
+        boolean nextFirst = rows.resume.isEmpty() && !rows.nextUp.isEmpty();
+        List<Library.MediaItem> items = nextFirst ? rows.nextUp : rows.resume;
+        showNextUp(nextFirst ? Collections.emptyList() : rows.nextUp);
+        cwTitle.setText(nextFirst ? R.string.next_up : R.string.continue_watching);
+        if (items.isEmpty()) {
+            cwCaption.setText(null);
+            updateRow(() -> cwAdapter.showMessage(new ContinueWatchingAdapter.Message(R.drawable.ic_check,
+                    getString(R.string.cw_empty_title), getString(R.string.cw_empty_body),
+                    getString(R.string.cw_browse_movies), () -> {
+                        showPage(PAGE_MOVIES, animations);
+                        movies.focusIn();
+                    })));
+            return;
+        }
+        cwCaption.setText(nextFirst
+                ? getResources().getQuantityString(R.plurals.next_up_shows, items.size(), items.size())
+                : getString(R.string.jellyfin_items, items.size()));
+        updateRow(() -> cwAdapter.showItems(items, Library.auth(account)));
+    }
+
     private void showNextUp(List<Library.MediaItem> items) {
         boolean hadFocus = nuRow.hasFocus();
         nuCaption.setText(items.isEmpty() ? null
@@ -692,6 +705,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         refreshJellyfin();
+        checkForUpdate();
         // Back from a film or show: what was watched or favourited there shows on its poster.
         LibraryPage shown = library(currentPage());
         if (shown != null) shown.refresh();
@@ -702,6 +716,25 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         wallpaperPlayer.stop();
+    }
+
+    /** Marks the profile button while a newer version waits, asking GitHub every few hours (update.Updates). */
+    private void checkForUpdate() {
+        View dot = findViewById(R.id.updateDot);
+        dot.setVisibility(Updates.known(this) != null ? View.VISIBLE : View.GONE);
+        if (!Updates.due(this)) return;
+        Context app = getApplicationContext();
+        Api.async(() -> Updates.check(app) != null, new Api.Callback<Boolean>() {
+            @Override
+            public void onResult(Boolean newer) {
+                dot.setVisibility(newer ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // Offline, or GitHub busy: next time.
+            }
+        });
     }
 
     @Override

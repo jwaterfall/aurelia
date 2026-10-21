@@ -8,7 +8,7 @@
     <string name="not_available">לא זמין בטלוויזיה זו</string>
     <string name="date_format">EEEE  d בMMMM</string>
     <string name="home_settings">מסך הבית המוגדר כברירת מחדל</string>
-    <string name="home_settings_help">כדי להפסיק להשתמש ב־CleanYourTV כמסך הבית, יש לבחור במסך הבית המקורי. כדי לחזור, יש לבחור ב־CleanYourTV. מפעיל מסך הבית המקורי חייב להיות פעיל, והטלוויזיה צריכה לתמוך בבחירת מסך בית. אם הוא הושבת, יש להפעיל תחילה את סקריפט השחזור.</string>
+    <string name="home_settings_help">כדי להפסיק להשתמש ב־Aurelia כמסך הבית, יש לבחור במסך הבית המקורי. כדי לחזור, יש לבחור ב־Aurelia. מפעיל מסך הבית המקורי חייב להיות פעיל, והטלוויזיה צריכה לתמוך בבחירת מסך בית. אם הוא הושבת, יש להפעיל תחילה את סקריפט השחזור.</string>
     <string name="launcher_settings">הגדרות מסך הבית</string>
     <string name="columns_label">אפליקציות בשורה</string>
     <string name="settings_motion">תנועה</string>
@@ -68,6 +68,13 @@
     <string name="jellyfin_signed_in_to">מחובר אל %1$s</string>
     <string name="jellyfin_open_app">פתיחת Jellyfin</string>
     <string name="jellyfin_sign_out">התנתקות</string>
+    <string name="about_version">גרסה %1$s</string>
+    <string name="update_to">עדכון לגרסה %1$s</string>
+    <string name="update_detail">Aurelia תיפתח שוב אחרי ההתקנה</string>
+    <string name="update_downloading">העדכון יורד…</string>
+    <string name="update_installing">מתקין…</string>
+    <string name="update_failed">לא ניתן היה להוריד את העדכון. נסו שוב</string>
+    <string name="update_allow">יש לאפשר ל-Aurelia להתקין אפליקציות: adb shell appops set app.aurelia.tv REQUEST_INSTALL_PACKAGES allow</string>
     <string name="cw_connect_title">מה צופים עכשיו</string>
     <string name="cw_connect_body">יש להתחבר ל־Jellyfin כדי להמשיך מאיפה שעצרת.</string>
     <string name="cw_offline_title">אין חיבור אל %1$s</string>

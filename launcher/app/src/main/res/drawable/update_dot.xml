@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- On the profile button while an update waits: a small white dot, edged dark so it reads on a light picture. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="@color/text_primary" />
+    <stroke
+        android:width="2dp"
+        android:color="@color/backdrop_base" />
+</shape>

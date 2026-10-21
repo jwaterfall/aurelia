@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A focusable tile of glass with a picture in it (the next episode): rounded like a card, not a pill. -->
+<app.aurelia.tv.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:glassInteractive="true"
+    app:glassRadius="@dimen/radius_card" />

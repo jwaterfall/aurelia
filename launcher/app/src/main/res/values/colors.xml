@@ -23,6 +23,9 @@
 
     <!-- The tab indicator while focus is elsewhere: glass, a step brighter than the track under it. -->
     <color name="glass_selected">#38FFFFFF</color>
+    <!-- A toggle that is on (watched, a favourite): its glass a step brighter, as a chosen tab is. -->
+    <color name="glass_chosen_top">#4DFFFFFF</color>
+    <color name="glass_chosen_bottom">#2BFFFFFF</color>
 
     <!-- Card surfaces before their artwork arrives, and the hairline that keeps dark artwork off the backdrop. -->
     <color name="surface_card">#1AFFFFFF</color>

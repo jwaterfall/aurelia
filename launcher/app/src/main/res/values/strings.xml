@@ -10,7 +10,7 @@
     <string name="date_format">EEEE  d MMMM</string>
     <string name="dream_name" translatable="false">Aurelia</string>
     <string name="home_settings">Choose default home</string>
-    <string name="home_settings_help">Select your original home to stop using CleanYourTV as Home, or CleanYourTV to switch back. The original launcher must be enabled and your TV must provide a home picker; use the restore script first if it was disabled.</string>
+    <string name="home_settings_help">Select your original home to stop using Aurelia as Home, or Aurelia to switch back. The original launcher must be enabled and your TV must provide a home picker; use the restore script first if it was disabled.</string>
     <string name="launcher_settings">Launcher settings</string>
     <string name="columns_label">Apps per row</string>
     <string name="settings_motion">Motion</string>
@@ -71,6 +71,13 @@
     <string name="jellyfin_signed_in_to">Signed in to %1$s</string>
     <string name="jellyfin_open_app">Open Jellyfin</string>
     <string name="jellyfin_sign_out">Sign out</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="update_to">Update to version %1$s</string>
+    <string name="update_detail">Aurelia opens again once it is installed</string>
+    <string name="update_downloading">Downloading the update…</string>
+    <string name="update_installing">Installing…</string>
+    <string name="update_failed">Could not download the update. Try again</string>
+    <string name="update_allow">Allow Aurelia to install apps first: adb shell appops set app.aurelia.tv REQUEST_INSTALL_PACKAGES allow</string>
     <string name="cw_connect_title">See what you’re watching</string>
     <string name="cw_connect_body">Sign in to Jellyfin to pick up where you left off.</string>
     <string name="cw_offline_title">Can’t reach %1$s</string>

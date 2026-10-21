@@ -8,9 +8,16 @@ import android.net.Uri;
 import android.util.Log;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -102,6 +109,75 @@ public final class Library {
         }, callback);
     }
 
+    // ---- Home's rows as last seen, to show at once on the next start --------------------------------------
+
+    private static final String HOME_ROWS_FILE = "home_rows.json";
+
+    /** Keeps {@code rows} for the next start, for the account they belong to; written in the background. */
+    public static void keepHomeRows(Context context, Account account, HomeRows rows) {
+        String owner = account.server() + "|" + account.userId();
+        Api.inBackground(() -> writeHomeRows(context, owner, rows));
+    }
+
+    private static void writeHomeRows(Context context, String owner, HomeRows rows) {
+        try {
+            JSONObject o = new JSONObject()
+                    .put("account", owner)
+                    .put("resume", toJson(rows.resume))
+                    .put("nextUp", toJson(rows.nextUp));
+            File file = new File(context.getFilesDir(), HOME_ROWS_FILE);
+            File part = new File(file.getPath() + ".part");
+            try (OutputStream out = new FileOutputStream(part)) {
+                out.write(o.toString().getBytes(StandardCharsets.UTF_8));
+            }
+            if (!part.renameTo(file)) Log.w(TAG, "Could not keep Home's rows");
+        } catch (IOException | JSONException e) {
+            Log.w(TAG, "Could not keep Home's rows", e);
+        }
+    }
+
+    /** Home's rows as they were last time for this account, or null. Reads a small file. */
+    public static HomeRows keptHomeRows(Context context, Account account) {
+        if (!account.isSignedIn()) return null;
+        File file = new File(context.getFilesDir(), HOME_ROWS_FILE);
+        if (!file.isFile()) return null;
+        try (InputStream in = new FileInputStream(file)) {
+            byte[] bytes = new byte[(int) file.length()];
+            int read = 0;
+            while (read < bytes.length) {
+                int n = in.read(bytes, read, bytes.length - read);
+                if (n < 0) break;
+                read += n;
+            }
+            JSONObject o = new JSONObject(new String(bytes, 0, read, StandardCharsets.UTF_8));
+            if (!o.optString("account").equals(account.server() + "|" + account.userId())) return null;
+            return new HomeRows(fromJson(o.optJSONArray("resume")), fromJson(o.optJSONArray("nextUp")));
+        } catch (IOException | JSONException e) {
+            return null;
+        }
+    }
+
+    private static JSONArray toJson(List<MediaItem> items) throws JSONException {
+        JSONArray a = new JSONArray();
+        for (MediaItem m : items) {
+            a.put(new JSONObject().put("id", m.id).put("seriesId", m.seriesId).put("title", m.title)
+                    .put("subtitle", m.subtitle).put("tag", m.tag).put("imageUrl", m.imageUrl)
+                    .put("progress", m.progress));
+        }
+        return a;
+    }
+
+    private static List<MediaItem> fromJson(JSONArray a) {
+        List<MediaItem> out = new ArrayList<>();
+        for (int i = 0; a != null && i < a.length(); i++) {
+            JSONObject m = a.optJSONObject(i);
+            if (m == null) continue;
+            out.add(new MediaItem(m.optString("id"), m.optString("seriesId"), m.optString("title"),
+                    m.optString("subtitle"), m.optString("tag"), m.optString("imageUrl"), m.optInt("progress")));
+        }
+        return out;
+    }
+
     /** The user's profile picture, small, or null when they have none. Blocks; call it in the background. */
     public static Bitmap avatar(Account account) throws IOException {
         if (!account.isSignedIn() || account.imageTag().isEmpty()) return null;
@@ -178,9 +254,12 @@ public final class Library {
             if (!name.isEmpty()) sub.append(" • ").append(name);
             if (!left.isEmpty()) sub.append(" • ").append(left);
             String backdropOf = it.optString("ParentBackdropItemId", "");
+            JSONObject tags = it.optJSONObject("ImageTags");
             String image = !backdropOf.isEmpty()
                     ? server + "/Items/" + backdropOf + "/Images/Backdrop/0?maxWidth=720&quality=85"
-                    : server + "/Items/" + id + "/Images/Primary?maxWidth=720&quality=85";
+                            + tag(firstTag(it.optJSONArray("ParentBackdropImageTags")))
+                    : server + "/Items/" + id + "/Images/Primary?maxWidth=720&quality=85"
+                            + tag(tags != null ? tags.optString("Primary", "") : "");
             return new MediaItem(id, it.optString("SeriesId", ""), series.isEmpty() ? name : series, sub.toString(),
                     "TV Series • Season " + season, image, progress);
         }
@@ -190,7 +269,20 @@ public final class Library {
         if (!rating.isEmpty()) sub.append(sub.length() > 0 ? " • " : "").append(rating);
         return new MediaItem(id, "", name, sub.length() > 0 ? sub.toString() : "Movie",
                 year > 0 ? "Movie • " + year : "Movie",
-                server + "/Items/" + id + "/Images/Backdrop/0?maxWidth=720&quality=85", progress);
+                server + "/Items/" + id + "/Images/Backdrop/0?maxWidth=720&quality=85"
+                        + tag(firstTag(it.optJSONArray("BackdropImageTags"))), progress);
+    }
+
+    /**
+     * The picture's version for its address: the server then lets it be kept for good, as a new picture gets a
+     * new tag (and ui.ImageDisk keeps only tagged pictures). Empty when the server gave none.
+     */
+    private static String tag(String tag) {
+        return tag.isEmpty() ? "" : "&tag=" + tag;
+    }
+
+    private static String firstTag(JSONArray tags) {
+        return tags != null && tags.length() > 0 ? tags.optString(0, "") : "";
     }
 
     /** "1h 4m left", "49m left", or empty under a minute. One tick is 100 ns. */

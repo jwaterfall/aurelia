@@ -103,10 +103,15 @@ final class DetailsHeader {
         showToggles();
     }
 
+    /**
+     * The two toggles say the same way whether they are on: an outline icon on plain glass when off, the icon
+     * filled on brighter glass when on, so either reads at a glance with or without focus.
+     */
     private void showToggles() {
-        watched.setImageAlpha(isWatched ? 255 : 110);
+        watched.setImageResource(isWatched ? R.drawable.ic_watched_on : R.drawable.ic_watched);
         watched.setActivated(isWatched);
         favourite.setImageResource(isFavourite ? R.drawable.ic_heart : R.drawable.ic_heart_outline);
+        favourite.setActivated(isFavourite);
     }
 
     private void setWatched(boolean on) {
