@@ -26,7 +26,7 @@ import java.net.URL;
 /**
  * New versions, from this repository's GitHub releases ({@code BuildConfig.UPDATE_REPO}): a release tagged
  * v2.5.0 with the APK attached (.github/workflows/release.yml). Checked every few hours in the background, and as
- * the profile panel opens; when one is newer, the panel offers it. Taking it downloads the APK and hands it to
+ * the profile button's menu opens; when one is newer, the menu offers it. Taking it downloads the APK and hands it to
  * Android's installer, which asks once to confirm, and after the first update installs the next ones without
  * asking. Once installed, the new version opens itself again ({@link UpdatedReceiver}).
  */
@@ -70,10 +70,10 @@ public final class Updates {
     }
 
     /**
-     * Whether the profile panel should ask GitHub as it opens. Someone opening it may be looking for a release
+     * Whether the profile button's menu should ask GitHub as it opens. Someone opening it may be looking for a release
      * made minutes ago, so it does not wait for {@link #due}; opening it again straight away asks only once.
      */
-    public static boolean dueForPanel(Context context) {
+    public static boolean dueForMenu(Context context) {
         return since(context) > PANEL_CHECK_AFTER_MS;
     }
 

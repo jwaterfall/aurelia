@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- The surface of a side panel (ui.GlassSheet): glass floating over the frosted screen, with the cards' corners. -->
-<app.aurelia.tv.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:glassPanel="true"
-    app:glassRadius="@dimen/radius_panel" />

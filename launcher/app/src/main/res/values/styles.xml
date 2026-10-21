@@ -276,8 +276,7 @@
         <item name="android:paddingBottom">@dimen/section_gap</item>
     </style>
 
-    <!-- A choice in a panel, or in Launcher settings: full width, glass that turns white with focus.
-         item_panel_row.xml uses it. -->
+    <!-- A choice in Launcher settings or the player's error card: full width, glass that turns white with focus. -->
     <style name="Widget.Launcher.PanelRow" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>

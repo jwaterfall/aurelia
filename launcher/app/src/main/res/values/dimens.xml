@@ -53,20 +53,20 @@
     <dimen name="hero_dot">5dp</dimen>
     <dimen name="hero_dot_on">18dp</dimen>
 
-    <!-- Side panel (ui.GlassSheet). -->
-    <dimen name="panel_width">420dp</dimen>
-    <dimen name="panel_padding">32dp</dimen>
-    <dimen name="panel_margin">@dimen/space_lg</dimen>
     <dimen name="row_height">52dp</dimen>
     <!-- Launcher settings: the column of rows, and a column-count choice. -->
     <dimen name="settings_width">640dp</dimen>
     <dimen name="settings_choice_width">64dp</dimen>
     <!-- A GlassMenu over the player. -->
     <dimen name="menu_width">240dp</dimen>
+    <!-- A menu with sentences in it as well as options: signing in. -->
+    <dimen name="menu_wide_width">340dp</dimen>
     <dimen name="menu_row_height">32dp</dimen>
     <dimen name="menu_max_height">320dp</dimen>
     <!-- Rows are pills, like the tabs and buttons. -->
     <dimen name="menu_row_radius">16dp</dimen>
+    <!-- Above and below a menu option with a second line. -->
+    <dimen name="menu_row_two_line_pad">9dp</dimen>
     <!-- The rows' radius plus the card's padding, so the corners nest. -->
     <dimen name="menu_radius">22dp</dimen>
     <!-- The player: its round buttons, and the show's logo. -->
