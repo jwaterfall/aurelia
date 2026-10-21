@@ -24,7 +24,7 @@ import java.util.Set;
  * port 7359, which every server answers with its name and address.
  *
  * A server in Docker hears the broadcast only with host networking: Docker forwards packets addressed to its
- * host, not broadcasts. The account panel also checks the servers used before directly, which finds those anyway.
+ * host, not broadcasts. Signing in also checks the servers used before directly, which finds those anyway.
  */
 public final class Discovery {
 

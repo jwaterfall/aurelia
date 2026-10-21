@@ -244,6 +244,23 @@
                             android:layout_height="wrap_content" />
                     </LinearLayout>
 
+                    <!-- Signed out, in place of all of the above: the shared empty state, in the middle of the space
+                         over the apps, which rest at the foot of the page, as the library pages show it. -->
+                    <FrameLayout
+                        android:id="@+id/homeMessageArea"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:visibility="gone">
+
+                        <include
+                            android:id="@+id/homeMessage"
+                            layout="@layout/view_empty_state"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center" />
+                    </FrameLayout>
+
                     <LinearLayout
                         style="@style/Widget.Launcher.HomeSection"
                         android:paddingBottom="0dp">
@@ -294,12 +311,6 @@
     <!-- Menus of the library pages' sort and filter pills. -->
     <app.aurelia.tv.ui.GlassMenu
         android:id="@+id/menu"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <!-- Side panels (sign-in, account) open over everything else. -->
-    <app.aurelia.tv.ui.GlassSheet
-        android:id="@+id/sheet"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </FrameLayout>

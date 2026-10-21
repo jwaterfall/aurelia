@@ -33,7 +33,6 @@ import app.aurelia.tv.jellyfin.Library;
 import app.aurelia.tv.player.PlayerActivity;
 import app.aurelia.tv.ui.AmbientBackdrop;
 import app.aurelia.tv.ui.GlassMenu;
-import app.aurelia.tv.ui.GlassSheet;
 import app.aurelia.tv.ui.GridShelfLayoutManager;
 import app.aurelia.tv.ui.GridSpacing;
 import app.aurelia.tv.ui.ImageDisk;
@@ -90,16 +89,18 @@ public class MainActivity extends Activity {
     private TextView cwTitle, cwCaption, nuCaption;
     private ContinueWatchingAdapter cwAdapter, nuAdapter;
     private AppTileAdapter pinnedAdapter, appsAdapter;
-    private GlassSheet sheet;
     private Account account;
     /** The framed hero at the top of Home. */
     private HomeHero hero;
     /** Recently added, under the hero; Continue Watching and Next Up are in the hero instead. */
     private View recentSection, cwSection;
+    /** Signed out: the empty state over the apps, instead of the hero and the rows. */
+    private View homeMessageArea;
+    private EmptyState homeMessage;
     private RecyclerView recentRow;
     private PosterAdapter recentAdapter;
     private int recentFocus;
-    private AccountPanel accountPanel;
+    private AccountMenu accountMenu;
     private final Account.Listener accountListener = this::onAccountChanged;
     private final PathInterpolator ease = new PathInterpolator(0.2f, 0f, 0f, 1f);
 
@@ -149,9 +150,8 @@ public class MainActivity extends Activity {
 
         account = Account.get(this);
         ImageDisk.init(this);
-        sheet = findViewById(R.id.sheet);
-        sheet.setAnimationsEnabled(animations);
-        accountPanel = new AccountPanel(this, sheet, findViewById(R.id.content));
+        accountMenu = new AccountMenu(this, findViewById(R.id.menu), findViewById(R.id.btnProfile),
+                findViewById(R.id.content), this::addUpdateRow, this::addAbout);
         setUpTopBar();
         setUpHome();
         setUpLibraries();
@@ -181,10 +181,10 @@ public class MainActivity extends Activity {
     private void setUpTopBar() {
         topBar = findViewById(R.id.topBar);
         findViewById(R.id.avatar).setClipToOutline(true);
-        // Signed in, a compact menu under the button; signing in keeps the panel, for its code and servers.
+        // A compact menu under the button: the account signed in, or signing in.
         findViewById(R.id.btnProfile).setOnClickListener(v -> {
             if (account.isSignedIn()) showProfileMenu(v);
-            else accountPanel.open();
+            else accountMenu.open();
         });
 
         View settings = findViewById(R.id.btnSettings);
@@ -269,6 +269,8 @@ public class MainActivity extends Activity {
         });
         hero.setAnimationsEnabled(animations);
         cwSection = findViewById(R.id.cwSection);
+        homeMessageArea = findViewById(R.id.homeMessageArea);
+        homeMessage = new EmptyState(findViewById(R.id.homeMessage));
         recentSection = findViewById(R.id.recentSection);
         ((TextView) findViewById(R.id.recentHeader).findViewById(R.id.sectionTitle)).setText(R.string.recently_added);
         recentAdapter = new PosterAdapter(account, LibraryPage.COLUMNS, gutter, new PosterAdapter.Listener() {
@@ -346,7 +348,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void onSignIn() {
-                accountPanel.open();
+                accountMenu.open();
             }
 
             @Override
@@ -571,17 +573,40 @@ public class MainActivity extends Activity {
         ((TextView) header.findViewById(R.id.profileServer))
                 .setText(account.serverName().isEmpty() ? account.server() : account.serverName());
         GlassMenu.Builder m = new GlassMenu.Builder().add(GlassMenu.Item.view(header));
-        Updates.Release release = Updates.known(this);
-        if (release != null) {
-            m.add(GlassMenu.Item.live(getString(R.string.update_to, release.version), null, R.drawable.update_dot,
-                    (row, title, detail) -> startUpdate(release, row, title, detail)));
-        }
+        addUpdateRow(m);
         if (Library.hasApp(this)) {
             m.add(GlassMenu.Item.option(getString(R.string.jellyfin_open_app), null, false, () -> Library.openApp(this)));
         }
-        m.add(GlassMenu.Item.option(getString(R.string.jellyfin_sign_out), null, false, accountPanel::signOut));
+        m.add(GlassMenu.Item.option(getString(R.string.jellyfin_sign_out), null, false, accountMenu::signOut));
+        addAbout(m);
+        menu.show(button, m, findViewById(R.id.content));
+        // Someone opening it may be looking for a release made minutes ago: GitHub is asked again (unless it was a
+        // moment ago), and one it names joins the menu if it is still open.
+        if (Updates.known(this) == null && Updates.dueForMenu(this)) {
+            Context app = getApplicationContext();
+            Api.async(() -> Updates.check(app), new Api.Callback<Updates.Release>() {
+                @Override
+                public void onResult(Updates.Release release) {
+                    if (release == null) return;
+                    findViewById(R.id.updateDot).setVisibility(View.VISIBLE);
+                    if (menu.isShowingFrom(button) && account.isSignedIn() && !accountMenu.isOpen()) {
+                        showProfileMenu(button);
+                    }
+                }
+
+                @Override
+                public void onError(Exception e) {
+                }
+            });
+        }
+    }
+
+    /**
+     * The foot of the profile button's menu, signed in or out: a footnote, not a heading, with the app's icon and
+     * version, quiet and in ordinary case.
+     */
+    private void addAbout(GlassMenu.Builder m) {
         m.add(GlassMenu.Item.divider());
-        // A footnote, not a heading: the app's icon and version, quiet and in ordinary case.
         View about = getLayoutInflater().inflate(R.layout.view_menu_about, null, false);
         ((TextView) about.findViewById(R.id.aboutVersion)).setText("Aurelia " + BuildConfig.VERSION_NAME);
         View icon = about.findViewById(R.id.aboutIcon);
@@ -594,7 +619,14 @@ public class MainActivity extends Activity {
         });
         icon.setClipToOutline(true);
         m.add(GlassMenu.Item.view(about));
-        menu.show(button, m, findViewById(R.id.content));
+    }
+
+    /** A waiting update, marked in the icon's blue, in the profile button's menu signed in or out. */
+    private void addUpdateRow(GlassMenu.Builder m) {
+        Updates.Release release = Updates.known(this);
+        if (release == null) return;
+        m.add(GlassMenu.Item.live(getString(R.string.update_to, release.version), null, R.drawable.update_dot,
+                (row, title, detail) -> startUpdate(release, row, title, detail)));
     }
 
     /** Downloads and installs {@code release}, saying how far it has got in the menu row that started it. */
@@ -696,13 +728,19 @@ public class MainActivity extends Activity {
             homeRows = null;
             hero.setWatching(Collections.emptyList(), Collections.emptyList());
             showNextUp(Collections.emptyList());
-            cwTitle.setText(R.string.continue_watching);
-            cwCaption.setText(null);
-            updateRow(() -> cwAdapter.showMessage(new ContinueWatchingAdapter.Message(R.drawable.ic_link,
-                    getString(R.string.cw_connect_title), getString(R.string.cw_connect_body),
-                    getString(R.string.jellyfin_connect_title), accountPanel::open)));
+            // Nothing to watch yet, so no rows: the apps rest at the foot, under a way to sign in.
+            boolean hadFocus = cwRow.hasFocus();
+            cwSection.setVisibility(View.GONE);
+            homeMessage.show(R.drawable.ic_link, getString(R.string.cw_connect_title),
+                    getString(R.string.cw_connect_body), getString(R.string.jellyfin_connect_title), accountMenu::open);
+            homeMessageArea.setVisibility(View.VISIBLE);
+            if (hadFocus) homeMessage.action.requestFocus();
             return;
         }
+        boolean hadFocus = homeMessageArea.hasFocus();
+        homeMessageArea.setVisibility(View.GONE);
+        cwSection.setVisibility(View.VISIBLE);
+        if (hadFocus) focusHomeStart();
         int request = ++homeRequest;
         Library.homeRows(account, new Api.Callback<Library.HomeRows>() {
             @Override
@@ -795,7 +833,7 @@ public class MainActivity extends Activity {
         nuAdapter.showItems(items, Library.auth(account));
         nuSection.setVisibility(View.VISIBLE);
         if (hadFocus) nuRow.post(() -> {
-            if (!nuRow.hasFocus() && !sheet.isShowing()) focusRow(nuRow, Math.min(nuFocus, items.size() - 1));
+            if (!nuRow.hasFocus() && !menu.isShowing()) focusRow(nuRow, Math.min(nuFocus, items.size() - 1));
         });
     }
 
@@ -804,7 +842,7 @@ public class MainActivity extends Activity {
         boolean hadFocus = cwRow.hasFocus();
         change.run();
         if (hadFocus) cwRow.post(() -> {
-            if (!cwRow.hasFocus() && !sheet.isShowing()) focusRow(cwRow, cwFocus);
+            if (!cwRow.hasFocus() && !menu.isShowing()) focusRow(cwRow, cwFocus);
         });
     }
 
@@ -920,7 +958,7 @@ public class MainActivity extends Activity {
      */
     private boolean routeKey(int keyCode) {
         View focus = getCurrentFocus();
-        if (focus == null || sheet.isShowing() || menu.isShowing()) return false;
+        if (focus == null || menu.isShowing()) return false;
         LibraryPage library = library(currentPage());
         if (library != null && !isIn(focus, topBar)) return library.routeKey(keyCode, focus);
         boolean right = keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
@@ -930,13 +968,15 @@ public class MainActivity extends Activity {
                 if (isIn(focus, topBar)) return true;
                 if (focus == hero.card()) return tabs.requestFocus();
                 if (isIn(focus, cwRow)) return hero.isShowing() ? hero.card().requestFocus() : tabs.requestFocus();
+                if (isIn(focus, homeMessageArea)) return tabs.requestFocus();
                 if (isIn(focus, nuRow)) return focusRow(cwRow, cwFocus);
                 if (isIn(focus, recentRow)) {
                     return nuSection.getVisibility() == View.VISIBLE ? focusRow(nuRow, nuFocus) : focusRow(cwRow, cwFocus);
                 }
                 if (isIn(focus, pinnedRow)) {
                     if (recentSection.getVisibility() == View.VISIBLE) return focusRow(recentRow, recentFocus);
-                    return nuSection.getVisibility() == View.VISIBLE ? focusRow(nuRow, nuFocus) : focusRow(cwRow, cwFocus);
+                    if (nuSection.getVisibility() == View.VISIBLE) return focusRow(nuRow, nuFocus);
+                    return focusWatching();
                 }
                 if (isIn(focus, appsGrid)) {
                     int pos = positionIn(appsGrid, focus);
@@ -950,8 +990,9 @@ public class MainActivity extends Activity {
                         return true;
                     }
                     if (currentPage() == PAGE_HOME && hero.isShowing()) return hero.card().requestFocus();
-                    return currentPage() == PAGE_HOME ? focusRow(cwRow, cwFocus) : focusRow(appsGrid, appsFocus);
+                    return currentPage() == PAGE_HOME ? focusWatching() : focusRow(appsGrid, appsFocus);
                 }
+                if (isIn(focus, homeMessageArea)) return focusRow(pinnedRow, pinnedFocus);
                 if (focus == hero.card()) return focusRow(cwRow, cwFocus);
                 if (isIn(focus, cwRow)) {
                     if (nuSection.getVisibility() == View.VISIBLE) return focusRow(nuRow, nuFocus);
@@ -998,7 +1039,14 @@ public class MainActivity extends Activity {
     /** Home's first stop: the hero, or the first card when there is nothing for it. */
     private void focusHomeStart() {
         if (hero.isShowing()) hero.card().requestFocus();
+        else if (homeMessageArea.getVisibility() == View.VISIBLE) homeMessage.action.requestFocus();
         else focusRow(cwRow, 0);
+    }
+
+    /** Continue Watching, or signed out the way to sign in that stands in for it. */
+    private boolean focusWatching() {
+        if (homeMessageArea.getVisibility() == View.VISIBLE) return homeMessage.action.requestFocus();
+        return focusRow(cwRow, cwFocus);
     }
 
     private void remember(View focus) {
@@ -1057,7 +1105,7 @@ public class MainActivity extends Activity {
     @Override
     public void onBackPressed() {
         // A launcher never closes; Back steps back through a panel, and otherwise returns to the start.
-        if (accountPanel.isOpen()) accountPanel.back();
+        if (accountMenu.isOpen()) accountMenu.back();
         else if (menu.isShowing()) menu.hide();
         else goHome();
     }
@@ -1152,7 +1200,7 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         account.removeListener(accountListener);
-        accountPanel.close();
+        accountMenu.close();
         unregisterReceiver(packageReceiver);
         wallpaperPlayer.close();
     }

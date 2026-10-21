@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A text field in a GlassMenu (a server's address), between the note above it and the options below. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/space_2xs"
+    android:paddingBottom="@dimen/space_xs">
+
+    <EditText
+        android:id="@+id/menuField"
+        style="@style/Widget.Launcher.TextField"
+        android:layout_height="@dimen/control_height"
+        android:imeOptions="actionGo"
+        android:importantForAutofill="no"
+        android:inputType="textUri"
+        android:paddingStart="@dimen/space_md"
+        android:paddingEnd="@dimen/space_md" />
+</FrameLayout>

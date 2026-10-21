@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- At the top of a GlassMenu that needs words as well as options (signing in): a title, a sentence or two, and a
+     quiet line of status under them while something is under way. AccountMenu fills it. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/space_md"
+    android:paddingTop="@dimen/space_xs"
+    android:paddingEnd="@dimen/space_md"
+    android:paddingBottom="@dimen/space_sm">
+
+    <TextView
+        android:id="@+id/noteTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.Launcher.Label"
+        android:textColor="@color/text_primary" />
+
+    <TextView
+        android:id="@+id/noteBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_2xs"
+        android:textAppearance="@style/TextAppearance.Launcher.Meta"
+        android:visibility="gone" />
+
+    <!-- The code to enter on another device, large, when signing in with Quick Connect. -->
+    <TextView
+        android:id="@+id/noteCode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_md"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:textAppearance="@style/TextAppearance.Launcher.Code"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/noteStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_sm"
+        android:textAppearance="@style/TextAppearance.Launcher.Meta.Quiet"
+        android:visibility="gone" />
+</LinearLayout>

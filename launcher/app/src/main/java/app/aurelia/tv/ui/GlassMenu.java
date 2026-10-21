@@ -85,9 +85,23 @@ public class GlassMenu extends FrameLayout {
 
     public static final class Builder {
         private final List<Item> items = new ArrayList<>();
+        private int width;
+        private boolean focusFirst;
 
         public Builder add(Item item) {
             items.add(item);
+            return this;
+        }
+
+        /** Focus goes to the first option even when shown again over another that had it. */
+        public Builder focusFirst() {
+            focusFirst = true;
+            return this;
+        }
+
+        /** Wider than {@code menu_width}: a dimension, for a menu with sentences in it (signing in). */
+        public Builder width(int dimen) {
+            width = dimen;
             return this;
         }
     }
@@ -144,6 +158,10 @@ public class GlassMenu extends FrameLayout {
         });
         card.setClipToOutline(true);
         scroll = findViewById(R.id.menuScroll);
+        // Grown or shrunk while open (a line of status, a code arriving): placed again, its frost with it.
+        card.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+            if (open && card.getAlpha() == 1f && b - t != ob - ot) v.post(this::settle);
+        });
         rows = findViewById(R.id.menuRows);
         highlight = findViewById(R.id.menuHighlight);
         setClipChildren(false);
@@ -168,6 +186,11 @@ public class GlassMenu extends FrameLayout {
         animate = enabled;
     }
 
+    /** Open, and opened from {@code button}. */
+    public boolean isShowingFrom(View button) {
+        return open && anchor == button;
+    }
+
     public boolean isShowing() {
         return open;
     }
@@ -177,9 +200,23 @@ public class GlassMenu extends FrameLayout {
      * take focus until the menu closes.
      */
     public void show(View from, Builder menu, ViewGroup background) {
+        // Shown again while open from the same button: its contents change in place (a step of signing in, or
+        // a server that has just answered), keeping focus on the same option where there still is one.
+        boolean again = open && from == anchor;
+        CharSequence wasFocused = null;
+        View had = rows.getFocusedChild();
+        if (again && had != null && had.findViewById(R.id.rowTitle) != null) {
+            wasFocused = ((TextView) had.findViewById(R.id.rowTitle)).getText().toString();
+        }
         rows.removeAllViews();
         if (slide != null) slide.cancel();
         highlight.setVisibility(INVISIBLE);
+        ViewGroup.LayoutParams sl = scroll.getLayoutParams();
+        sl.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        scroll.setLayoutParams(sl);
+        ViewGroup.LayoutParams cl = card.getLayoutParams();
+        cl.width = getResources().getDimensionPixelSize(menu.width != 0 ? menu.width : R.dimen.menu_width);
+        card.setLayoutParams(cl);
         View focus = null;
         View first = null;
         LayoutInflater inflater = LayoutInflater.from(getContext());
@@ -187,6 +224,16 @@ public class GlassMenu extends FrameLayout {
             if (item.view != null) {
                 if (item.view.getParent() instanceof ViewGroup) ((ViewGroup) item.view.getParent()).removeView(item.view);
                 rows.addView(item.view);
+                // One that takes focus (a text field) has its own look for it, so the highlight steps aside.
+                for (View field : item.view.getFocusables(FOCUS_DOWN)) {
+                    field.setOnFocusChangeListener((v, has) -> {
+                        if (has) {
+                            if (slide != null) slide.cancel();
+                            highlight.setVisibility(INVISIBLE);
+                        }
+                    });
+                    if (first == null) first = field;
+                }
                 continue;
             }
             if (item.action == null && item.label.length() == 0) {
@@ -204,6 +251,12 @@ public class GlassMenu extends FrameLayout {
             TextView detail = row.findViewById(R.id.rowSubtitle);
             detail.setText(item.detail);
             detail.setVisibility(item.detail == null ? GONE : VISIBLE);
+            // Two lines get room above and below, so the white's rounded ends sit clear of the words, as a single
+            // line's pill does.
+            if (item.detail != null) {
+                int pad = getResources().getDimensionPixelSize(R.dimen.menu_row_two_line_pad);
+                row.setPadding(row.getPaddingStart(), pad, row.getPaddingEnd(), pad);
+            }
             android.widget.ImageView check = row.findViewById(R.id.rowCheck);
             check.setVisibility(item.chosen ? VISIBLE : INVISIBLE);
             if (item.mark != 0) {
@@ -234,8 +287,22 @@ public class GlassMenu extends FrameLayout {
             rows.addView(row);
             if (first == null) first = row;
             if (item.chosen && focus == null) focus = row;
+            if (!menu.focusFirst && wasFocused != null && wasFocused.equals(item.label.toString())) focus = row;
         }
-        View initial = focus != null ? focus : first;
+        View initial = menu.focusFirst || focus == null ? first : focus;
+
+        if (again) {
+            card.addOnLayoutChangeListener(new OnLayoutChangeListener() {
+                @Override
+                public void onLayoutChange(View v, int l, int t, int r, int b, int ol, int ot, int or, int ob) {
+                    card.removeOnLayoutChangeListener(this);
+                    settle();
+                    if (initial != null) initial.requestFocus();
+                }
+            });
+            card.requestLayout();
+            return;
+        }
 
         anchor = from;
         if (!open) {
@@ -267,6 +334,13 @@ public class GlassMenu extends FrameLayout {
             }
         });
         card.requestLayout();
+    }
+
+    /** Placed where it now belongs, at once, with no animation. */
+    private void settle() {
+        if (!open || anchor == null) return;
+        place();
+        card.setTranslationY(placedY);
     }
 
     /**
