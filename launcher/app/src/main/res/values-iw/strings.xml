@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">בית</string>
     <string name="inputs">כניסות</string>
     <string name="wifi">Wi-Fi</string>
     <string name="settings">הגדרות</string>
@@ -8,11 +7,12 @@
     <string name="live_tv">שידור חי</string>
     <string name="not_available">לא זמין בטלוויזיה זו</string>
     <string name="date_format">EEEE  d בMMMM</string>
-    <string name="dream_name">שעון</string>
     <string name="home_settings">מסך הבית המוגדר כברירת מחדל</string>
     <string name="home_settings_help">כדי להפסיק להשתמש ב־CleanYourTV כמסך הבית, יש לבחור במסך הבית המקורי. כדי לחזור, יש לבחור ב־CleanYourTV. מפעיל מסך הבית המקורי חייב להיות פעיל, והטלוויזיה צריכה לתמוך בבחירת מסך בית. אם הוא הושבת, יש להפעיל תחילה את סקריפט השחזור.</string>
     <string name="launcher_settings">הגדרות מסך הבית</string>
     <string name="columns_label">אפליקציות בשורה</string>
+    <string name="settings_motion">תנועה</string>
+    <string name="settings_system">מערכת</string>
     <string name="animations_state">הנפשות: %1$s</string>
     <string name="advanced_effects">אפקטים מתקדמים</string>
     <string name="advanced_effects_state">אפקטים מתקדמים: %1$s</string>
@@ -36,6 +36,7 @@
     <string name="tab_apps">אפליקציות</string>
     <string name="search">חיפוש</string>
     <string name="continue_watching">המשך צפייה</string>
+    <string name="next_up">הבא בתור</string>
     <string name="jellyfin_items">%1$d בצפייה</string>
     <string name="pinned_apps">אפליקציות</string>
     <string name="all_apps">כל האפליקציות</string>
@@ -102,7 +103,7 @@
     <string name="player_zoom_fit">התאמה</string>
     <string name="player_zoom_crop">מילוי המסך</string>
     <string name="player_zoom_stretch">מתיחה</string>
-    <string name="player_time">%1$s / %2$s</string>
+    <string name="player_remaining">−%1$s</string>
     <string name="player_sound">צליל</string>
     <!-- Libraries -->
     <string name="tab_movies">סרטים</string>
@@ -140,14 +141,21 @@
         <item quantity="two">שתי סדרות</item>
         <item quantity="other">%d סדרות</item>
     </plurals>
+    <plurals name="next_up_shows">
+        <item quantity="one">סדרה אחת</item>
+        <item quantity="two">שתי סדרות</item>
+        <item quantity="other">%d סדרות</item>
+    </plurals>
     <plurals name="seasons">
         <item quantity="one">עונה אחת</item>
         <item quantity="two">שתי עונות</item>
         <item quantity="other">%d עונות</item>
     </plurals>
-    <string name="library_nothing">אין כאן כלום שמתאים לסינון.</string>
+    <string name="library_nothing">אין כאן כלום שמתאים לסינון</string>
     <string name="library_clear">הצגת הכול</string>
-    <string name="library_signed_out">חברו את Jellyfin כדי לראות כאן את הספרייה.</string>
+    <string name="library_connect_title">עיון בספרייה</string>
+    <string name="library_signed_out">התחברו ל־Jellyfin כדי לראות כאן את הסרטים והסדרות.</string>
+    <string name="library_empty_title">אין כאן עדיין כלום</string>
     <string name="library_none">אין ספרייה כזו ב-%1$s.</string>
     <!-- A film's or show's page -->
     <string name="details_play">ניגון</string>
@@ -160,9 +168,25 @@
     <string name="details_directed">בימוי: %1$s</string>
     <string name="details_starring">בכיכובם של %1$s</string>
     <string name="details_left">נותרו %1$s</string>
-    <string name="details_episode">פ%1$d</string>
+    <string name="details_episode">%1$d. %2$s</string>
     <string name="details_specials">מיוחדים</string>
-    <string name="details_season">ע%1$d</string>
+    <string name="episode_code">S%1$d:E%2$d</string>
+    <string name="person_director">במאי</string>
+    <string name="person_writer">תסריטאי</string>
+    <string name="person_producer">מפיק</string>
+    <string name="details_cast">שחקנים וצוות</string>
+    <string name="details_more_like_this">עוד בסגנון</string>
+    <string name="person_born">נולד/ה ב־%1$s</string>
+    <plurals name="person_in_library">
+        <item quantity="one">פריט אחד בספרייה שלך</item>
+        <item quantity="two">שני פריטים בספרייה שלך</item>
+        <item quantity="other">%d בספרייה שלך</item>
+    </plurals>
+    <string name="search_hint">סרטים, סדרות, פרקים ואפליקציות</string>
+    <string name="search_episodes">פרקים</string>
+    <string name="search_recent">חיפושים אחרונים</string>
+    <string name="search_nothing">אין תוצאות עבור „%1$s”</string>
+    <string name="details_season">עונה %1$d</string>
     <string name="details_failed">לא ניתן לטעון את זה מ-%1$s.</string>
     <string name="cw_browse_movies">לעיון בסרטים</string>
 </resources>

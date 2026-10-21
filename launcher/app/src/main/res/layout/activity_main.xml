@@ -18,7 +18,7 @@
         android:scaleType="centerCrop"
         android:src="@drawable/wallpaper" />
 
-    <com.gathin.tvhome.ui.AmbientBackdrop
+    <app.aurelia.tv.ui.AmbientBackdrop
         android:id="@+id/ambient"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
@@ -27,6 +27,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/backdrop_scrim" />
+
+    <!-- Behind the top bar once a page scrolls under it (ui.ScrollEdge). -->
+    <include
+        android:id="@+id/edgeBand"
+        layout="@layout/view_scroll_edge_band" />
 
     <LinearLayout
         android:id="@+id/content"
@@ -73,11 +78,9 @@
                             android:id="@+id/avatarInitial"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:fontFamily="@font/outfit_semibold"
                             android:gravity="center"
                             android:includeFontPadding="false"
-                            android:textColor="@color/text_primary"
-                            android:textSize="15sp" />
+                            android:textAppearance="@style/TextAppearance.Launcher.Heading" />
 
                         <ImageView
                             android:id="@+id/avatarImage"
@@ -102,7 +105,7 @@
                     android:src="@drawable/ic_search" />
             </LinearLayout>
 
-            <com.gathin.tvhome.ui.SegmentedControl
+            <app.aurelia.tv.ui.SegmentedControl
                 android:id="@+id/tabs"
                 style="@style/Widget.Launcher.TabBar"
                 android:layout_width="wrap_content"
@@ -123,13 +126,15 @@
                 <TextView
                     style="@style/Widget.Launcher.Tab"
                     android:text="@string/tab_apps" />
-            </com.gathin.tvhome.ui.SegmentedControl>
+            </app.aurelia.tv.ui.SegmentedControl>
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
+                android:layout_marginTop="@dimen/clock_overhang"
+                android:layout_marginBottom="@dimen/clock_overhang"
                 android:gravity="end"
                 android:orientation="vertical">
 
@@ -150,8 +155,7 @@
                     android:format12Hour="EEE d MMM"
                     android:format24Hour="EEE d MMM"
                     android:includeFontPadding="false"
-                    android:textAppearance="@style/TextAppearance.Launcher.Caption"
-                    android:textSize="12sp" />
+                    android:textAppearance="@style/TextAppearance.Launcher.Meta.Quiet" />
             </LinearLayout>
         </RelativeLayout>
 
@@ -164,52 +168,75 @@
             android:clipChildren="false"
             android:clipToPadding="false">
 
-            <!-- Home: Continue Watching, then the pinned apps, resting low on the screen. -->
-            <LinearLayout
+            <!-- Home: Continue Watching, Next Up, then the pinned apps, resting low on the screen while they fit,
+                 and otherwise scrolling just far enough to show the row with focus whole. -->
+            <app.aurelia.tv.ui.SectionScrollView
                 android:id="@+id/pageHome"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:clipChildren="false"
-                android:clipToPadding="false"
-                android:orientation="vertical"
-                android:paddingBottom="@dimen/space_3xl">
-
-                <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
+                android:fillViewport="true"
+                android:paddingTop="@dimen/space_md">
 
                 <LinearLayout
-                    android:id="@+id/cwSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clipChildren="false"
                     android:clipToPadding="false"
                     android:orientation="vertical"
-                    android:paddingBottom="@dimen/section_gap">
+                    android:paddingBottom="@dimen/space_3xl">
 
-                    <include
-                        android:id="@+id/cwHeader"
-                        layout="@layout/view_section_header" />
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/cwRow"
-                        style="@style/Widget.Launcher.Shelf"
-                        android:layout_height="wrap_content" />
+                    <LinearLayout
+                        android:id="@+id/cwSection"
+                        style="@style/Widget.Launcher.HomeSection">
+
+                        <include
+                            android:id="@+id/cwHeader"
+                            layout="@layout/view_section_header" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/cwRow"
+                            style="@style/Widget.Launcher.Shelf"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/nuSection"
+                        style="@style/Widget.Launcher.HomeSection"
+                        android:visibility="gone">
+
+                        <include
+                            android:id="@+id/nuHeader"
+                            layout="@layout/view_section_header" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/nuRow"
+                            style="@style/Widget.Launcher.Shelf"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/Widget.Launcher.HomeSection"
+                        android:paddingBottom="0dp">
+
+                        <include
+                            android:id="@+id/pinnedHeader"
+                            layout="@layout/view_section_header" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/pinnedRow"
+                            style="@style/Widget.Launcher.Shelf"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
                 </LinearLayout>
+            </app.aurelia.tv.ui.SectionScrollView>
 
-                <include
-                    android:id="@+id/pinnedHeader"
-                    layout="@layout/view_section_header" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/pinnedRow"
-                    style="@style/Widget.Launcher.Shelf"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <!-- Apps: every app, five to a row on the same columns as the Home row. Rows scroll under a fade at the
-                 top and bottom; the page clips them at the grid's own top edge, below the header. -->
+            <!-- Apps: every app, five to a row on the same columns as the Home row. Rows scroll up under the scroll
+                 edge; the page clips them at the grid's own top, below the header. -->
             <LinearLayout
                 android:id="@+id/pageApps"
                 android:layout_width="match_parent"
@@ -230,22 +257,25 @@
                     style="@style/Widget.Launcher.Shelf"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:fadingEdgeLength="@dimen/space_xl"
                     android:paddingTop="@dimen/space_sm"
-                    android:paddingBottom="@dimen/space_3xl"
-                    android:requiresFadingEdge="vertical" />
+                    android:paddingBottom="@dimen/space_3xl" />
             </LinearLayout>
         </FrameLayout>
     </LinearLayout>
 
+    <!-- The scroll edge's shadow, over the page under it. -->
+    <include
+        android:id="@+id/edgeShadow"
+        layout="@layout/view_scroll_edge_shadow" />
+
     <!-- Menus of the library pages' sort and filter pills. -->
-    <com.gathin.tvhome.ui.GlassMenu
+    <app.aurelia.tv.ui.GlassMenu
         android:id="@+id/menu"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
     <!-- Side panels (sign-in, account) open over everything else. -->
-    <com.gathin.tvhome.ui.GlassSheet
+    <app.aurelia.tv.ui.GlassSheet
         android:id="@+id/sheet"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

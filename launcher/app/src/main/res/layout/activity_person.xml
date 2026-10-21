@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PersonActivity: Home's wallpaper, and over it, once it arrives, the backdrop of the first of their films or
+     shows, darkened as a film's page is; at the top their photo beside their name, when and where they were born,
+     how much of theirs is here and a few lines about them; under it their films and shows, a row each. The photo
+     and the first row fit the screen together. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backdrop_base">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@drawable/wallpaper" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/backdrop_scrim" />
+
+    <ImageView
+        android:id="@+id/personBackdrop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/details_scrim" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/person_dim" />
+
+    <app.aurelia.tv.ui.SectionScrollView
+        android:id="@+id/personScroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="@dimen/screen_margin_top">
+
+        <LinearLayout
+            android:id="@+id/personColumn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/space_md">
+
+            <LinearLayout
+                android:id="@+id/personHero"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/screen_margin"
+                android:paddingEnd="@dimen/screen_margin"
+                android:paddingBottom="@dimen/space_lg">
+
+                <app.aurelia.tv.ui.AspectRatioFrameLayout
+                    android:layout_width="@dimen/person_photo_width"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/card_surface"
+                    android:foreground="@drawable/card_focus_ring"
+                    app:aspectRatio="0.6667">
+
+                    <app.aurelia.tv.ui.Placeholder
+                        android:id="@+id/personLoading"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:placeholderRadius="@dimen/radius_card" />
+
+                    <TextView
+                        android:id="@+id/personInitials"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:textAppearance="@style/TextAppearance.Launcher.Display"
+                        android:textColor="@color/text_tertiary"
+                        android:visibility="invisible" />
+
+                    <ImageView
+                        android:id="@+id/personPhoto"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:importantForAccessibility="no"
+                        android:scaleType="centerCrop" />
+                </app.aurelia.tv.ui.AspectRatioFrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:layout_marginStart="@dimen/space_xl"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/personName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:textAppearance="@style/TextAppearance.Launcher.Display" />
+
+                    <TextView
+                        android:id="@+id/personFacts"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:singleLine="true"
+                        android:textAppearance="@style/TextAppearance.Launcher.Meta" />
+
+                    <TextView
+                        android:id="@+id/personOverview"
+                        android:layout_width="@dimen/details_width"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_md"
+                        android:ellipsize="end"
+                        android:maxLines="5"
+                        android:textAppearance="@style/TextAppearance.Launcher.Body" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </app.aurelia.tv.ui.SectionScrollView>
+</FrameLayout>

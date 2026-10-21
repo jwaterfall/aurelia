@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Màn hình chính</string>
     <string name="inputs">Nguồn vào</string>
     <string name="wifi">Wi-Fi</string>
     <string name="settings">Cài đặt</string>
@@ -9,7 +8,6 @@
     <string name="not_available">TV này không hỗ trợ</string>
     <!-- "Thứ Hai, 20 tháng 10" -->
     <string name="date_format">EEEE, d MMMM</string>
-    <string name="dream_name">Đồng hồ</string>
     <string name="home_settings">Chọn màn hình chính mặc định</string>
     <string name="home_settings_help">Chọn màn hình chính gốc để thôi dùng CleanYourTV, hoặc chọn CleanYourTV để dùng lại. Launcher gốc phải đang bật và TV phải có mục chọn màn hình chính; nếu launcher gốc đã bị tắt, hãy chạy script khôi phục trước.</string>
     <string name="launcher_settings">Cài đặt launcher</string>

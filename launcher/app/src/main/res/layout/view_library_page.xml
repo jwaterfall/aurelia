@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A library page (Movies, TV Shows; LibraryPage): what has focus in a strip at the top (its logo or title, the
-     facts, a couple of lines about it), then sort and filter pills, then every poster on the launcher's columns,
-     scrolling up under the pills' bar. -->
+<!-- A library page (Movies, TV Shows; LibraryPage): sort and filter buttons, with the name and facts of whichever
+     poster has focus at the bar's far end, then every poster on the launcher's columns, scrolling up under the
+     bar and Home's scroll edge (ui.ScrollEdge, which MainActivity draws to the bar's foot). While the first page
+     loads, placeholder posters stand in their places. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,78 +11,11 @@
     android:orientation="vertical"
     android:visibility="gone">
 
-    <!-- Preview, one strip at a fixed height so the page never moves as focus does: the logo (or the name) in
-         a slot of its own on the left, so the facts and the lines about it always start in the same place. -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/library_preview_height"
-        android:layout_marginTop="@dimen/space_lg"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/screen_margin"
-        android:paddingEnd="@dimen/library_preview_end">
-
-        <FrameLayout
-            android:layout_width="@dimen/library_mark_width"
-            android:layout_height="match_parent">
-
-            <ImageView
-                android:id="@+id/previewLogo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|start"
-                android:adjustViewBounds="true"
-                android:importantForAccessibility="no"
-                android:maxWidth="@dimen/library_mark_width"
-                android:maxHeight="@dimen/library_logo_height"
-                android:scaleType="fitStart" />
-
-            <TextView
-                android:id="@+id/previewTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textAppearance="@style/TextAppearance.Launcher.PlayerTitle"
-                android:textSize="22sp" />
-        </FrameLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_lg"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/previewFacts"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:textAppearance="@style/TextAppearance.Launcher.PlayerTime"
-                android:textColor="@color/text_secondary" />
-
-            <TextView
-                android:id="@+id/previewOverview"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_2xs"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textAppearance="@style/TextAppearance.Launcher.Body"
-                android:textSize="14sp" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- Sort and filter, and how many there are. Once the posters scroll, its band of glass (the background,
-         clear until then) fades in, with an edge and a shadow, for them to slide under. -->
     <LinearLayout
         android:id="@+id/libraryToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
-        android:background="@drawable/library_bar_surface"
+        android:layout_marginTop="@dimen/space_md"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:gravity="center_vertical"
@@ -93,34 +27,44 @@
 
         <TextView
             android:id="@+id/librarySort"
-            style="@style/Widget.Launcher.ToolbarPill"
+            style="@style/Widget.Launcher.TextButton.Icon"
             android:drawableStart="@drawable/ic_sort" />
 
         <TextView
             android:id="@+id/libraryFilter"
-            style="@style/Widget.Launcher.ToolbarPill"
+            style="@style/Widget.Launcher.TextButton.Icon"
             android:layout_marginStart="@dimen/control_gap"
             android:drawableStart="@drawable/ic_filter" />
 
         <TextView
             android:id="@+id/libraryGenre"
-            style="@style/Widget.Launcher.ToolbarPill"
+            style="@style/Widget.Launcher.TextButton.Icon"
             android:layout_marginStart="@dimen/control_gap"
             android:drawableStart="@drawable/ic_genre" />
 
-        <Space
+        <!-- What has focus: its name, then the facts. How many there are while nothing does. -->
+        <TextView
+            android:id="@+id/libraryFocusName"
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_xl"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="end"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Launcher.Heading" />
 
         <TextView
-            android:id="@+id/libraryCount"
+            android:id="@+id/libraryFocusFacts"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.Launcher.Caption" />
+            android:layout_marginStart="@dimen/space_sm"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Launcher.Meta" />
     </LinearLayout>
 
     <FrameLayout
+        android:id="@+id/libraryContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
@@ -132,44 +76,15 @@
             android:paddingTop="@dimen/space_md"
             android:paddingBottom="@dimen/space_3xl" />
 
-        <!-- The bar's shadow on the posters, with the band. -->
-        <View
-            android:id="@+id/libraryBarShadow"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/library_bar_shadow"
-            android:alpha="0"
-            android:background="@drawable/library_bar_shadow" />
-
-        <!-- Instead of the posters: loading, signed out, nothing matching. -->
-        <LinearLayout
+        <!-- Instead of the posters (signed out, unreachable, nothing matching): the shared empty state, in the
+             middle of the page, a little above centre. -->
+        <include
             android:id="@+id/libraryMessage"
+            layout="@layout/view_empty_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/space_3xl"
-            android:clipChildren="false"
-            android:clipToPadding="false"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <ProgressBar
-                android:id="@+id/librarySpinner"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:indeterminateTint="@color/text_secondary" />
-
-            <TextView
-                android:id="@+id/libraryMessageText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textAppearance="@style/TextAppearance.Launcher.Body" />
-
-            <TextView
-                android:id="@+id/libraryMessageAction"
-                style="@style/Widget.Launcher.PlayerButton"
-                android:layout_marginTop="@dimen/space_md" />
-        </LinearLayout>
+            android:layout_gravity="center"
+            android:layout_marginBottom="@dimen/space_3xl"
+            android:visibility="gone" />
     </FrameLayout>
 </LinearLayout>

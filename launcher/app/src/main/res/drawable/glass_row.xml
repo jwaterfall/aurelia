@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- A choice or a field in a panel: a pill of glass that turns white with focus, like every button on Home. -->
-<com.gathin.tvhome.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
+<app.aurelia.tv.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
     app:glassInteractive="true" />

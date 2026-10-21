@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Home</string>
     <string name="inputs">Quellen</string>
     <string name="wifi">WLAN</string>
     <string name="settings">Einstellungen</string>
@@ -8,7 +7,6 @@
     <string name="live_tv">Live TV</string>
     <string name="not_available">Auf diesem TV nicht verfügbar</string>
     <string name="date_format">EEEE, d. MMMM</string>
-    <string name="dream_name">Uhr</string>
     <string name="input_key_service_description">Öffnet die Quellenauswahl, wenn die Input-Taste der Fernbedienung gedrückt wird.</string>
     <string name="launcher_settings">Launcher-Einstellungen</string>
     <string name="columns_label">Apps pro Zeile</string>

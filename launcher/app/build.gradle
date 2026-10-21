@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.gathin.tvhome'
+    namespace 'app.aurelia.tv'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.gathin.tvhome'
+        applicationId 'app.aurelia.tv'
         minSdk 26
         targetSdk 34
         versionCode 5

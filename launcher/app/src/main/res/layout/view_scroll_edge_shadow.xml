@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ui.ScrollEdge's shadow; include it over a screen's content. ScrollEdge moves it down to the edge. -->
+<View xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/scroll_edge_shadow"
+    android:layout_gravity="top"
+    android:alpha="0"
+    android:background="@drawable/scroll_edge_shadow"
+    android:importantForAccessibility="no" />

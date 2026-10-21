@@ -10,7 +10,7 @@
         android:duplicateParentState="true"
         android:ellipsize="end"
         android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.Launcher.Control" />
+        android:textAppearance="@style/TextAppearance.Launcher.Label" />
 
     <TextView
         android:id="@+id/rowSubtitle"
@@ -20,6 +20,6 @@
         android:duplicateParentState="true"
         android:ellipsize="end"
         android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.Launcher.RowSubtitle"
+        android:textAppearance="@style/TextAppearance.Launcher.Meta.OnGlass"
         android:visibility="gone" />
 </LinearLayout>

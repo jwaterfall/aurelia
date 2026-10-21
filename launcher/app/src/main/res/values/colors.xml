@@ -30,12 +30,29 @@
     <!-- Inside the white focus ring, so the ring reads on white artwork too. -->
     <color name="focus_ring_inner">#59000000</color>
 
+    <!-- A card's badge (episodes left, watched): dark glass over the artwork. -->
+    <color name="badge_fill">#B30B0D14</color>
+
+    <!-- Behind the screensaver's text, so it reads on a light picture too. -->
+    <color name="dream_text_shadow">#80000000</color>
+
+    <!-- Over a film's or show's backdrop once the rows below it scroll up. -->
+    <color name="details_dim">#E605070D</color>
+
+    <!-- Over the backdrop behind a person's page, deeper than a film's: it is only a setting for them. -->
+    <color name="person_dim">#C705070D</color>
+
+    <!-- Something still loading (ui.Placeholder) breathes between these. -->
+    <color name="placeholder_low">#0DFFFFFF</color>
+    <color name="placeholder_high">#21FFFFFF</color>
+
     <color name="backdrop_base">#FF05070D</color>
     <color name="avatar">#FF4F7BFF</color>
     <color name="progress_track">#40FFFFFF</color>
     <color name="progress_buffered">#66FFFFFF</color>
     <!-- Under a menu's glass over video: solid, so nothing behind shows through its options. -->
     <color name="menu_tint">#FF15181F</color>
-    <!-- A library's pill bar once its posters scroll under it. -->
-    <color name="library_bar">#D90B0D14</color>
+    <!-- ui.ScrollEdge: the band behind the top bar once a page scrolls under it, and its shadow halfway out. -->
+    <color name="scroll_edge">#D90B0D14</color>
+    <color name="scroll_edge_mid">#730B0D14</color>
 </resources>

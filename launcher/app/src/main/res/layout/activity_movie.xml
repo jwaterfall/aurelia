@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- MovieActivity: a film's backdrop, and over its darkened left side what it is, with Play focused. -->
+<!-- MovieActivity: a film's backdrop, and over its darkened left side what it is, with Play focused (a placeholder
+     in the same place while it loads). Below, scrolling up over the backdrop as it dims, the cast and more like
+     it. The page is the height of the screen less a peek of the first row's title, so there is clearly more. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -24,19 +26,54 @@
         android:layout_gravity="bottom"
         android:background="@drawable/details_scrim_bottom" />
 
-    <include
-        android:id="@+id/detailsHeader"
-        layout="@layout/view_details_header"
-        android:layout_width="@dimen/details_width"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start"
-        android:layout_marginStart="@dimen/screen_margin"
-        android:layout_marginBottom="@dimen/space_3xl" />
+    <!-- Darkens the backdrop as the rows scroll up over it. -->
+    <View
+        android:id="@+id/detailsDim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="@color/details_dim" />
 
-    <ProgressBar
-        android:id="@+id/detailsSpinner"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_gravity="center"
-        android:indeterminateTint="@color/text_secondary" />
+    <app.aurelia.tv.ui.SectionScrollView
+        android:id="@+id/detailsScroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="@dimen/screen_margin_top">
+
+        <LinearLayout
+            android:id="@+id/detailsColumn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/space_3xl">
+
+            <FrameLayout
+                android:id="@+id/detailsHero"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <include
+                    android:id="@+id/detailsHeader"
+                    layout="@layout/view_details_header"
+                    android:layout_width="@dimen/details_width"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|start"
+                    android:layout_marginStart="@dimen/screen_margin"
+                    android:layout_marginBottom="@dimen/space_xl" />
+
+                <include
+                    android:id="@+id/detailsPlaceholder"
+                    layout="@layout/view_details_placeholder"
+                    android:layout_width="@dimen/details_width"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|start"
+                    android:layout_marginStart="@dimen/screen_margin"
+                    android:layout_marginBottom="@dimen/space_xl" />
+            </FrameLayout>
+        </LinearLayout>
+    </app.aurelia.tv.ui.SectionScrollView>
 </FrameLayout>

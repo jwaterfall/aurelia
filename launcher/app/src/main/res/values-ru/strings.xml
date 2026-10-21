@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Главный экран</string>
     <string name="inputs">Источники</string>
     <string name="wifi">Wi-Fi</string>
     <string name="settings">Настройки</string>
@@ -8,7 +7,6 @@
     <string name="live_tv">Телеканалы</string>
     <string name="not_available">Недоступно на этом телевизоре</string>
     <string name="date_format">EEEE, d MMMM</string>
-    <string name="dream_name">Часы</string>
     <string name="home_settings">Главный экран по умолчанию</string>
     <string name="home_settings_help">Выберите исходный главный экран, чтобы перестать использовать CleanYourTV по умолчанию, или CleanYourTV, чтобы вернуться. Исходный экран должен быть включён, а телевизор должен поддерживать выбор главного экрана. Если он отключён, сначала запустите скрипт восстановления.</string>
     <string name="input_key_service_description">Открывает список источников при нажатии кнопки выбора источника на пульте.</string>

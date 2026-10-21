@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ui.Placeholder: set on a placeholder once its reveal has begun. -->
+    <item name="revealing" type="id" />
+</resources>

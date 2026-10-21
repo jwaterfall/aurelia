@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Someone in the credits (PersonAdapter, which sets the width): their photo (breathing while it loads, their
+     initials if there is none), and under it their name and their part. Like an episode, the whole item takes
+     focus; the photo shows it, and the name brightens. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:descendantFocusability="blocksDescendants"
+    android:focusable="true"
+    android:orientation="vertical">
+
+    <app.aurelia.tv.ui.AspectRatioFrameLayout
+        style="@style/Widget.Launcher.Card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:duplicateParentState="true"
+        android:focusable="false"
+        app:aspectRatio="0.6667">
+
+        <app.aurelia.tv.ui.Placeholder
+            android:id="@+id/personLoading"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:placeholderRadius="@dimen/radius_card" />
+
+        <TextView
+            android:id="@+id/personInitials"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.Launcher.Title"
+            android:textColor="@color/text_tertiary"
+            android:visibility="invisible" />
+
+        <ImageView
+            android:id="@+id/personPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop" />
+    </app.aurelia.tv.ui.AspectRatioFrameLayout>
+
+    <TextView
+        android:id="@+id/personName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_sm"
+        android:duplicateParentState="true"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textAppearance="@style/TextAppearance.Launcher.Label"
+        android:textColor="@color/text_on_focusable" />
+
+    <TextView
+        android:id="@+id/personRole"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textAppearance="@style/TextAppearance.Launcher.Meta.Quiet" />
+</LinearLayout>

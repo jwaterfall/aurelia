@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One section of a ShelfStack (search results, more about a film or show, a person's films): its title
+     and how many, over a row of cards. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/section_gap"
+    android:visibility="gone">
+
+    <include
+        android:id="@+id/sectionHeader"
+        layout="@layout/view_section_header" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/sectionRow"
+        style="@style/Widget.Launcher.Shelf"
+        android:layout_height="wrap_content" />
+</LinearLayout>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SearchActivity: Home's wallpaper; along the top the search field, with the clock as on Home; under it the
+     recent searches until something is typed, then what matches in sections (films, shows, episodes, apps), each
+     a row on the launcher's columns, scrolling a section at a time. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backdrop_base">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@drawable/wallpaper" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/backdrop_scrim" />
+
+    <!-- Behind the field once the results scroll under it (ui.ScrollEdge). -->
+    <include
+        android:id="@+id/edgeBand"
+        layout="@layout/view_scroll_edge_band" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/screen_margin_top">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/screen_margin"
+            android:paddingEnd="@dimen/screen_margin">
+
+            <EditText
+                android:id="@+id/searchField"
+                style="@style/Widget.Launcher.TextField"
+                android:layout_width="@dimen/search_field_width"
+                android:layout_height="@dimen/control_height"
+                android:drawableStart="@drawable/ic_search"
+                android:drawablePadding="@dimen/space_sm"
+                android:drawableTint="@color/on_glass"
+                android:hint="@string/search_hint"
+                android:imeOptions="actionSearch|flagNoExtractUi"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:paddingStart="@dimen/space_md" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:orientation="vertical">
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:format12Hour="h:mm"
+                    android:format24Hour="HH:mm"
+                    android:includeFontPadding="false"
+                    android:textAppearance="@style/TextAppearance.Launcher.Clock" />
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:format12Hour="EEE d MMM"
+                    android:format24Hour="EEE d MMM"
+                    android:includeFontPadding="false"
+                    android:textAppearance="@style/TextAppearance.Launcher.Meta.Quiet" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Before anything is typed: the last few searches, to run again. -->
+        <LinearLayout
+            android:id="@+id/searchRecent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xl"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/screen_margin"
+            android:paddingEnd="@dimen/screen_margin"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/search_recent"
+                android:textAppearance="@style/TextAppearance.Launcher.Overline" />
+
+            <LinearLayout
+                android:id="@+id/searchRecentRow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:orientation="horizontal" />
+        </LinearLayout>
+
+        <!-- Nothing matching. -->
+        <TextView
+            android:id="@+id/searchMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xl"
+            android:paddingStart="@dimen/screen_margin"
+            android:paddingEnd="@dimen/screen_margin"
+            android:textAppearance="@style/TextAppearance.Launcher.Body"
+            android:visibility="gone" />
+
+        <app.aurelia.tv.ui.SectionScrollView
+            android:id="@+id/searchResults"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/space_sm"
+            android:layout_weight="1"
+            android:paddingTop="@dimen/space_md">
+
+            <LinearLayout
+                android:id="@+id/searchSections"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:orientation="vertical"
+                android:paddingBottom="@dimen/search_tail" />
+        </app.aurelia.tv.ui.SectionScrollView>
+    </LinearLayout>
+
+    <include
+        android:id="@+id/edgeShadow"
+        layout="@layout/view_scroll_edge_shadow" />
+</FrameLayout>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- App tile: the app's banner, or its icon and name when it has none. Width is set by AppTileAdapter. -->
-<com.gathin.tvhome.ui.AspectRatioFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<app.aurelia.tv.ui.AspectRatioFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/Widget.Launcher.Card"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
@@ -37,4 +37,4 @@
             android:textAppearance="@style/TextAppearance.Launcher.Meta"
             android:textColor="@color/text_primary" />
     </LinearLayout>
-</com.gathin.tvhome.ui.AspectRatioFrameLayout>
+</app.aurelia.tv.ui.AspectRatioFrameLayout>

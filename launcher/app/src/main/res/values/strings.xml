@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Home</string>
+    <string name="app_name" translatable="false">Aurelia</string>
     <string name="inputs">Inputs</string>
     <string name="wifi">Wi-Fi</string>
     <string name="settings">Settings</string>
@@ -8,11 +8,13 @@
     <string name="live_tv">Live TV</string>
     <string name="not_available">Not available on this TV</string>
     <string name="date_format">EEEE  d MMMM</string>
-    <string name="dream_name">Clock</string>
+    <string name="dream_name" translatable="false">Aurelia</string>
     <string name="home_settings">Choose default home</string>
     <string name="home_settings_help">Select your original home to stop using CleanYourTV as Home, or CleanYourTV to switch back. The original launcher must be enabled and your TV must provide a home picker; use the restore script first if it was disabled.</string>
     <string name="launcher_settings">Launcher settings</string>
     <string name="columns_label">Apps per row</string>
+    <string name="settings_motion">Motion</string>
+    <string name="settings_system">System</string>
     <string name="animations_state">Animations: %1$s</string>
     <string name="advanced_effects">Advanced effects</string>
     <string name="advanced_effects_state">Advanced effects: %1$s</string>
@@ -36,6 +38,7 @@
     <string name="tab_apps">Apps</string>
     <string name="search">Search</string>
     <string name="continue_watching">Continue Watching</string>
+    <string name="next_up">Next Up</string>
     <string name="jellyfin_items">%1$d in progress</string>
     <string name="pinned_apps">Applications</string>
     <string name="all_apps">All Applications</string>
@@ -103,7 +106,7 @@
     <string name="player_zoom_fit">Fit</string>
     <string name="player_zoom_crop">Fill screen</string>
     <string name="player_zoom_stretch">Stretch</string>
-    <string name="player_time">%1$s / %2$s</string>
+    <string name="player_remaining">−%1$s</string>
     <string name="player_sound">Sound</string>
     <!-- Libraries -->
     <string name="tab_movies">Movies</string>
@@ -139,13 +142,19 @@
         <item quantity="one">%d show</item>
         <item quantity="other">%d shows</item>
     </plurals>
+    <plurals name="next_up_shows">
+        <item quantity="one">%d show</item>
+        <item quantity="other">%d shows</item>
+    </plurals>
     <plurals name="seasons">
         <item quantity="one">%d season</item>
         <item quantity="other">%d seasons</item>
     </plurals>
-    <string name="library_nothing">Nothing matches these filters.</string>
+    <string name="library_nothing">Nothing matches these filters</string>
     <string name="library_clear">Show everything</string>
-    <string name="library_signed_out">Connect Jellyfin to see your library here.</string>
+    <string name="library_connect_title">Browse your library</string>
+    <string name="library_signed_out">Sign in to Jellyfin to see your films and shows here.</string>
+    <string name="library_empty_title">Nothing here yet</string>
     <string name="library_none">There is no library like this on %1$s.</string>
     <!-- A film's or show's page -->
     <string name="details_play">Play</string>
@@ -158,9 +167,24 @@
     <string name="details_directed">Directed by %1$s</string>
     <string name="details_starring">Starring %1$s</string>
     <string name="details_left">%1$s left</string>
-    <string name="details_episode">E%1$d</string>
+    <string name="details_episode">%1$d. %2$s</string>
     <string name="details_specials">Specials</string>
-    <string name="details_season">S%1$d</string>
+    <string name="episode_code">S%1$d:E%2$d</string>
+    <string name="person_director">Director</string>
+    <string name="person_writer">Writer</string>
+    <string name="person_producer">Producer</string>
+    <string name="details_cast">Cast and crew</string>
+    <string name="details_more_like_this">More like this</string>
+    <string name="person_born">Born %1$s</string>
+    <plurals name="person_in_library">
+        <item quantity="one">%d in your library</item>
+        <item quantity="other">%d in your library</item>
+    </plurals>
+    <string name="search_hint">Films, shows, episodes and apps</string>
+    <string name="search_episodes">Episodes</string>
+    <string name="search_recent">Recent searches</string>
+    <string name="search_nothing">Nothing matches “%1$s”</string>
+    <string name="details_season">Season %1$d</string>
     <string name="details_failed">Couldn’t load this from %1$s.</string>
     <string name="watched_mark" translatable="false">✓</string>
     <string name="cw_browse_movies">Browse movies</string>

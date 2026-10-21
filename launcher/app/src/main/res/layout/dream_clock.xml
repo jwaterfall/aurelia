@@ -1,62 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Screensaver (ClockDream): clock and date that drift around a black screen over an ambient glow. -->
+<!-- Screensaver (ClockDream). Back to front: the ambient glow (shown when there is nothing from Jellyfin), two
+     slides that cross-fade into each other as they drift, the launcher's scrims, then the clock at the top right
+     and what the slide is at the bottom left, both on the screen margins. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FF000000">
+    android:background="@color/backdrop_base"
+    android:clipChildren="false">
 
     <View
         android:id="@+id/dreamAmbient"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <ImageView
+        android:id="@+id/dreamSlideA"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop" />
+
+    <ImageView
+        android:id="@+id/dreamSlideB"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop" />
+
+    <View
+        android:id="@+id/dreamScrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="@drawable/dream_scrim" />
+
     <LinearLayout
-        android:id="@+id/dreamContent"
+        android:id="@+id/dreamClockGroup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="@dimen/screen_margin_top"
+        android:layout_marginEnd="@dimen/screen_margin"
+        android:gravity="end"
         android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:baselineAligned="true">
-
-            <TextClock
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:format12Hour="h:mm"
-                android:format24Hour="HH:mm"
-                android:textColor="#E6FFFFFF"
-                android:textSize="120sp"
-                android:fontFamily="@font/outfit_extralight"
-                android:letterSpacing="-0.04"
-                android:includeFontPadding="false" />
-
-            <TextClock
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:format12Hour="a"
-                android:format24Hour=""
-                android:textColor="#99FFFFFF"
-                android:textSize="22sp"
-                android:fontFamily="@font/outfit_medium"
-                android:letterSpacing="0.08"
-                android:textAllCaps="true" />
-        </LinearLayout>
 
         <TextClock
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_marginTop="4dp"
+            android:format12Hour="h:mm"
+            android:format24Hour="HH:mm"
+            android:includeFontPadding="false"
+            android:layoutDirection="ltr"
+            android:textAppearance="@style/TextAppearance.Launcher.DreamClock"
+
+            android:shadowColor="@color/dream_text_shadow"
+
+            android:shadowRadius="16" />
+
+        <TextClock
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_2xs"
             android:format12Hour="@string/date_format"
             android:format24Hour="@string/date_format"
-            android:textColor="#8CFFFFFF"
-            android:textSize="18sp"
-            android:fontFamily="@font/outfit_regular"
-            android:letterSpacing="0.14"
-            android:textAllCaps="true" />
+            android:includeFontPadding="false"
+            android:textAppearance="@style/TextAppearance.Launcher.Body"
+
+            android:shadowColor="@color/dream_text_shadow"
+
+            android:shadowRadius="16" />
+    </LinearLayout>
+
+    <!-- What the slide is: its logo (or its name) and the facts. -->
+    <LinearLayout
+        android:id="@+id/dreamCaption"
+        android:layout_width="@dimen/details_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="@dimen/screen_margin"
+        android:layout_marginBottom="@dimen/space_3xl"
+        android:alpha="0"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dream_logo_height">
+
+            <ImageView
+                android:id="@+id/dreamLogo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:adjustViewBounds="true"
+                android:importantForAccessibility="no"
+                android:maxWidth="@dimen/dream_logo_width"
+                android:maxHeight="@dimen/dream_logo_height"
+                android:scaleType="fitStart" />
+
+            <TextView
+                android:id="@+id/dreamTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.Launcher.Display"
+
+                android:shadowColor="@color/dream_text_shadow"
+
+                android:shadowRadius="16" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/dreamFacts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Launcher.Meta"
+
+            android:shadowColor="@color/dream_text_shadow"
+
+            android:shadowRadius="16" />
     </LinearLayout>
 </FrameLayout>

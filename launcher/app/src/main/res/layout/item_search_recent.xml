@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A recent search to run again (SearchActivity). -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.Launcher.TextButton"
+    android:layout_marginEnd="@dimen/control_gap" />

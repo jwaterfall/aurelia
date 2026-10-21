@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ui.ScrollEdge's band: dark glass across the screen behind the top bar, fading in from the top of the screen so
+     it never starts with a line, solid by the bottom, where a hairline marks the edge content scrolls under. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#000B0D14"
+                android:centerColor="@color/scroll_edge"
+                android:centerY="0.45"
+                android:endColor="@color/scroll_edge" />
+        </shape>
+    </item>
+    <item android:gravity="bottom" android:height="@dimen/hairline">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/card_hairline" />
+        </shape>
+    </item>
+</layer-list>

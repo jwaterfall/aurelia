@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Ekran główny</string>
     <string name="inputs">Wejścia</string>
     <string name="wifi">Wi-Fi</string>
     <string name="settings">Ustawienia</string>
@@ -8,7 +7,6 @@
     <string name="live_tv">Telewizja</string>
     <string name="not_available">Niedostępne na tym telewizorze</string>
     <string name="date_format">EEEE  d MMMM</string>
-    <string name="dream_name">Zegar</string>
     <string name="home_settings">Domyślny ekran główny</string>
     <string name="home_settings_help">Wybierz oryginalny ekran główny, aby przestać używać CleanYourTV jako domyślnego, albo wybierz CleanYourTV, aby wrócić. Oryginalny launcher musi być włączony, a telewizor musi udostępniać wybór ekranu głównego. Jeśli został wyłączony, najpierw użyj skryptu przywracania.</string>
     <string name="input_key_service_description">Otwiera wybór wejścia po naciśnięciu przycisku Input na pilocie.</string>

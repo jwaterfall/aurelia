@@ -23,8 +23,14 @@
     <!-- Everything in the top bar is this tall. -->
     <dimen name="control_height">40dp</dimen>
     <dimen name="control_inset">4dp</dimen>
+    <!-- The clock and date are a little taller than the bar they sit in; they overhang it this much each way. -->
+    <dimen name="clock_overhang">-4dp</dimen>
     <dimen name="control_gap">12dp</dimen>
     <dimen name="tab_padding">22dp</dimen>
+    <!-- Under the current tab of a quiet tab bar. -->
+    <dimen name="tab_underline">2dp</dimen>
+    <!-- An icon's inset in its glass circle. -->
+    <dimen name="icon_inset">10dp</dimen>
 
     <dimen name="radius_card">14dp</dimen>
     <!-- radius_card less the focus ring, for anything drawn just inside it. -->
@@ -40,6 +46,9 @@
     <dimen name="panel_padding">32dp</dimen>
     <dimen name="panel_margin">@dimen/space_lg</dimen>
     <dimen name="row_height">52dp</dimen>
+    <!-- Launcher settings: the column of rows, and a column-count choice. -->
+    <dimen name="settings_width">640dp</dimen>
+    <dimen name="settings_choice_width">64dp</dimen>
     <!-- A GlassMenu over the player. -->
     <dimen name="menu_width">240dp</dimen>
     <dimen name="menu_row_height">32dp</dimen>
@@ -49,28 +58,47 @@
     <dimen name="menu_radius">12dp</dimen>
     <!-- The player: its round buttons, and the show's logo. -->
     <dimen name="player_button">38dp</dimen>
-    <!-- Between groups of player buttons, on top of the usual space after each. -->
-    <dimen name="player_group_gap">@dimen/space_md</dimen>
+    <dimen name="player_icon_inset">9dp</dimen>
     <dimen name="player_logo_height">56dp</dimen>
+    <!-- ui.PulseIndicator, while a stream opens or buffers: its whole reach, the glass disc, and its lines. -->
+    <dimen name="pulse_size">72dp</dimen>
+    <dimen name="pulse_core">10dp</dimen>
+    <dimen name="pulse_line">1.5dp</dimen>
     <dimen name="player_logo_width">360dp</dimen>
-    <!-- Library pages: the preview of what has focus (it stops short of the right edge, under the clock), and a
-         poster's badge. -->
-    <dimen name="library_preview_height">64dp</dimen>
-    <dimen name="library_preview_end">280dp</dimen>
-    <dimen name="library_logo_height">56dp</dimen>
-    <dimen name="library_mark_width">200dp</dimen>
-    <dimen name="library_bar_shadow">24dp</dimen>
+    <!-- How far ui.ScrollEdge's shadow reaches down over the content. -->
+    <dimen name="scroll_edge_shadow">96dp</dimen>
+    <!-- A poster's badge. -->
     <dimen name="poster_badge">20dp</dimen>
     <!-- A film's or show's page: the column its text sits in, and its logo. -->
     <dimen name="details_width">520dp</dimen>
     <dimen name="details_logo_height">96dp</dimen>
     <dimen name="details_logo_width">400dp</dimen>
     <dimen name="show_logo_height">64dp</dimen>
-    <!-- Two lines about the episode with focus, kept so the row below never moves. -->
-    <dimen name="episode_overview_width">640dp</dimen>
-    <dimen name="episode_overview_height">36dp</dimen>
+    <!-- A person's photo on their page. -->
+    <dimen name="person_photo_width">148dp</dimen>
+    <!-- How much of the first row under a film's or show's page shows at the foot of the screen. -->
+    <dimen name="details_peek">44dp</dimen>
+    <!-- A show's seasons: a quiet tab's padding before the margin, so the first season's name is on the line. -->
+    <dimen name="season_tabs_start">32dp</dimen>
     <!-- Between stacked controls in a panel (rows, fields), whatever they are. -->
     <dimen name="control_stack_gap">@dimen/space_sm</dimen>
+
+    <!-- Search: the field, and room under the last section so it can still scroll up to the top. -->
+    <dimen name="search_field_width">520dp</dimen>
+    <dimen name="search_tail">240dp</dimen>
+
+    <!-- The empty state (view_empty_state.xml): its icon, and how wide its line of text may run. -->
+    <dimen name="empty_icon">28dp</dimen>
+    <dimen name="empty_width">420dp</dimen>
+
+    <!-- A placeholder for a line of text: about the height of its letters. -->
+    <dimen name="placeholder_line">10dp</dimen>
+
+    <!-- The screensaver: a slide's logo, and how far its scrims reach in from the top and the foot. -->
+    <dimen name="dream_logo_height">88dp</dimen>
+    <dimen name="dream_logo_width">360dp</dimen>
+    <dimen name="dream_scrim_top">180dp</dimen>
+    <dimen name="dream_scrim_bottom">300dp</dimen>
 
     <!-- Lift on focus: elevation of the shadow. The scale lives in res/animator. -->
     <dimen name="lift_card">14dp</dimen>

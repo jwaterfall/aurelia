@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Inici</string>
     <string name="inputs">Entrades</string>
     <string name="wifi">Wi-Fi</string>
     <string name="settings">Configuració</string>
     <string name="choose_input">Entrades</string>
     <string name="live_tv">TV en directe</string>
     <string name="not_available">No disponible en aquest televisor</string>
-    <string name="dream_name">Rellotge</string>
     <string name="launcher_settings">Configuració del llançador</string>
     <string name="columns_label">Aplicacions per fila</string>
     <string name="animations_state">Animacions: %1$s</string>

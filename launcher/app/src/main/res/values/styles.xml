@@ -6,69 +6,95 @@
         <item name="android:windowAnimationStyle">@null</item>
     </style>
 
-    <style name="SettingsRow">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">52dp</item>
-        <item name="android:gravity">center_vertical</item>
-        <item name="android:paddingStart">18dp</item>
-        <item name="android:paddingEnd">18dp</item>
-        <item name="android:background">@drawable/settings_choice_bg</item>
-        <item name="android:textColor">#FFFFFFFF</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:focusable">true</item>
-        <item name="android:clickable">true</item>
-    </style>
-    <style name="SettingsColumnChoice" parent="SettingsRow">
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_weight">1</item>
-        <item name="android:layout_marginEnd">10dp</item>
-        <item name="android:gravity">center</item>
-    </style>
     <!-- ==== Launcher component library ================================================================
          Type, then widgets. Layouts use these styles rather than setting sizes, colours or fonts themselves;
          the values they use are the tokens in colors.xml and dimens.xml. -->
 
-    <!-- Type -->
-    <style name="TextAppearance.Launcher.SectionTitle" parent="">
-        <item name="android:textSize">16sp</item>
-        <item name="android:fontFamily">@font/outfit_semibold</item>
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:letterSpacing">0.01</item>
-    </style>
-    <style name="TextAppearance.Launcher.Caption" parent="">
-        <item name="android:textSize">13sp</item>
-        <item name="android:fontFamily">@font/outfit_regular</item>
-        <item name="android:textColor">@color/text_tertiary</item>
-    </style>
-    <style name="TextAppearance.Launcher.Control" parent="">
-        <item name="android:textSize">14sp</item>
+    <!-- Type. One scale, six steps (34, 20, 16, 14, 13, 11) and two weights: Regular for reading, Medium for
+         what names something (titles, buttons, tabs). Hierarchy comes from size and from the three text
+         colours (primary, secondary, tertiary), never from a heavier weight. -->
+
+    <!-- A film's or show's name on its page, when it has no logo. -->
+    <style name="TextAppearance.Launcher.Display" parent="">
+        <item name="android:textSize">34sp</item>
         <item name="android:fontFamily">@font/outfit_medium</item>
-        <item name="android:textColor">@color/on_glass</item>
-    </style>
-    <style name="TextAppearance.Launcher.Overline" parent="">
-        <item name="android:textSize">10sp</item>
-        <item name="android:fontFamily">@font/outfit_medium</item>
-        <item name="android:textColor">@color/text_secondary</item>
-        <item name="android:letterSpacing">0.1</item>
-        <item name="android:textAllCaps">true</item>
-    </style>
-    <style name="TextAppearance.Launcher.CardTitle" parent="">
-        <item name="android:textSize">17sp</item>
-        <item name="android:fontFamily">@font/outfit_semibold</item>
         <item name="android:textColor">@color/text_primary</item>
+        <item name="android:lineSpacingMultiplier">0.95</item>
+        <item name="android:letterSpacing">-0.01</item>
     </style>
-    <style name="TextAppearance.Launcher.Meta" parent="">
-        <item name="android:textSize">11sp</item>
-        <item name="android:fontFamily">@font/outfit_regular</item>
-        <item name="android:textColor">@color/text_secondary</item>
-    </style>
-    <style name="TextAppearance.Launcher.Clock" parent="">
+    <!-- A panel's title, the player's title, a card's message. -->
+    <style name="TextAppearance.Launcher.Title" parent="">
         <item name="android:textSize">20sp</item>
         <item name="android:fontFamily">@font/outfit_medium</item>
         <item name="android:textColor">@color/text_primary</item>
     </style>
+    <!-- Section titles, card titles, the line naming what has focus. -->
+    <style name="TextAppearance.Launcher.Heading" parent="">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+    <!-- Anything read as sentences: overviews, explanations, messages. -->
+    <style name="TextAppearance.Launcher.Body" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:lineSpacingMultiplier">1.3</item>
+    </style>
+    <!-- Sentences that sit back: under a card. -->
+    <style name="TextAppearance.Launcher.Body.Quiet">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+    <!-- On a control: buttons, tabs, menu options, panel rows. Dark once the control turns white. -->
+    <style name="TextAppearance.Launcher.Label" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="android:textColor">@color/on_glass</item>
+    </style>
+    <!-- Facts and figures: year, length, rating, counts, times. -->
+    <style name="TextAppearance.Launcher.Meta" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+    <!-- A quieter note beside or under them: the date, when it ends, credits. -->
+    <style name="TextAppearance.Launcher.Meta.Quiet">
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+    <!-- Under a Label, on the same control. -->
+    <style name="TextAppearance.Launcher.Meta.OnGlass">
+        <item name="android:textColor">@color/on_glass_secondary</item>
+    </style>
+    <!-- Small capitals over a group: a menu's headings, a card's tag, an episode's number. -->
+    <style name="TextAppearance.Launcher.Overline" parent="">
+        <item name="android:textSize">11sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
 
-    <!-- Glass button: the one control shape in the top bar and in empty rows. Pill with text, or a circle. -->
+    <!-- Set pieces outside the scale. The clock at the top right of every screen: -->
+    <style name="TextAppearance.Launcher.Clock" parent="TextAppearance.Launcher.Title">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+    <!-- The screensaver's clock: the clock again, large enough to read across the room. -->
+    <style name="TextAppearance.Launcher.DreamClock" parent="TextAppearance.Launcher.Clock">
+        <item name="android:textSize">56sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+    <!-- A code to type on another device. -->
+    <style name="TextAppearance.Launcher.Code" parent="">
+        <item name="android:textSize">44sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0.22</item>
+    </style>
+
+    <!-- Glass button: the one control shape. A pill with a label, or a circle with an icon. -->
     <style name="Widget.Launcher.GlassButton" parent="">
         <item name="android:layout_height">@dimen/control_height</item>
         <item name="android:background">@drawable/glass_button</item>
@@ -79,59 +105,32 @@
     </style>
     <style name="Widget.Launcher.GlassButton.Icon">
         <item name="android:layout_width">@dimen/control_height</item>
-        <item name="android:padding">10dp</item>
+        <item name="android:padding">@dimen/icon_inset</item>
         <item name="android:scaleType">fitCenter</item>
         <item name="android:tint">@color/on_glass</item>
     </style>
-
-    <!-- A text pill in the player (options under the seek bar, skip intro): a glass button sized to its label. -->
-    <style name="Widget.Launcher.PlayerButton" parent="Widget.Launcher.GlassButton">
+    <!-- A glass button sized to its label. -->
+    <style name="Widget.Launcher.TextButton" parent="Widget.Launcher.GlassButton">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:paddingStart">@dimen/space_lg</item>
         <item name="android:paddingEnd">@dimen/space_lg</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:singleLine">true</item>
-        <item name="android:textAppearance">@style/TextAppearance.Launcher.Control</item>
+        <item name="android:textAppearance">@style/TextAppearance.Launcher.Label</item>
     </style>
-
-    <!-- A pill with an icon and its current value, above a library's posters (sort, filter, genre). -->
-    <style name="Widget.Launcher.ToolbarPill" parent="Widget.Launcher.PlayerButton">
+    <!-- A text button led by an icon: Play, and a library's sort and filter. -->
+    <style name="Widget.Launcher.TextButton.Icon">
         <item name="android:paddingStart">@dimen/space_md</item>
         <item name="android:paddingEnd">@dimen/space_lg</item>
         <item name="android:drawablePadding">@dimen/space_xs</item>
         <item name="android:drawableTint">@color/on_glass</item>
     </style>
 
-    <!-- The player's type, three steps: the title (when there is no logo), figures and the episode line (the
-         clock is Clock, a step up, as on Home), and notes under them (the date, when it ends). -->
-    <style name="TextAppearance.Launcher.PlayerTitle" parent="">
-        <item name="android:textSize">26sp</item>
-        <item name="android:fontFamily">@font/outfit_semibold</item>
-        <item name="android:textColor">@color/text_primary</item>
-    </style>
-    <!-- A film's or show's name on its page, when it has no logo. -->
-    <style name="TextAppearance.Launcher.DetailsTitle" parent="">
-        <item name="android:textSize">36sp</item>
-        <item name="android:fontFamily">@font/outfit_semibold</item>
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:lineSpacingMultiplier">0.95</item>
-    </style>
-    <style name="TextAppearance.Launcher.PlayerTime" parent="">
-        <item name="android:textSize">16sp</item>
-        <item name="android:fontFamily">@font/outfit_medium</item>
-        <item name="android:textColor">@color/text_primary</item>
-    </style>
-    <style name="TextAppearance.Launcher.PlayerNote" parent="">
-        <item name="android:textSize">12sp</item>
-        <item name="android:fontFamily">@font/outfit_regular</item>
-        <item name="android:textColor">@color/text_tertiary</item>
-    </style>
-
-    <!-- A player button by the seek bar: a glass circle, as in the top bar, a little smaller and closer set. -->
+    <!-- A player button by the seek bar: the glass circle, a little smaller and closer set. -->
     <style name="Widget.Launcher.PlayerIcon" parent="Widget.Launcher.GlassButton.Icon">
         <item name="android:layout_width">@dimen/player_button</item>
         <item name="android:layout_height">@dimen/player_button</item>
-        <item name="android:padding">9dp</item>
+        <item name="android:padding">@dimen/player_icon_inset</item>
         <item name="android:layout_marginEnd">@dimen/space_xs</item>
     </style>
 
@@ -141,6 +140,12 @@
         <item name="android:background">@drawable/glass_track</item>
         <item name="android:padding">@dimen/control_inset</item>
         <item name="android:orientation">horizontal</item>
+    </style>
+    <!-- The same tabs without the glass track: words in a row, the current one underlined (a show's seasons). -->
+    <style name="Widget.Launcher.TabBar.Quiet">
+        <item name="android:background">@null</item>
+        <item name="android:padding">0dp</item>
+        <item name="quiet">true</item>
     </style>
     <style name="Widget.Launcher.Tab" parent="">
         <item name="android:layout_width">wrap_content</item>
@@ -152,8 +157,11 @@
         <item name="android:clickable">true</item>
         <item name="android:background">@null</item>
         <item name="android:includeFontPadding">false</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="android:textAppearance">@style/TextAppearance.Launcher.Label</item>
+    </style>
+    <style name="Widget.Launcher.Tab.Quiet">
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
     </style>
 
     <!-- Card: any focusable tile with artwork (app tiles, media cards). Its artwork is clipped to the rounded
@@ -164,6 +172,36 @@
         <item name="android:stateListAnimator">@animator/card_lift</item>
         <item name="android:focusable">true</item>
         <item name="android:clickable">true</item>
+    </style>
+    <!-- A card's small mark in its corner: watched, or how many episodes are left. -->
+    <style name="Widget.Launcher.CardBadge" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/poster_badge</item>
+        <item name="android:layout_gravity">top|end</item>
+        <item name="android:layout_margin">@dimen/space_xs</item>
+        <item name="android:minWidth">@dimen/poster_badge</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:paddingEnd">6dp</item>
+        <item name="android:background">@drawable/poster_badge</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:visibility">gone</item>
+    </style>
+    <!-- Watch progress along a card's foot. -->
+    <style name="Widget.Launcher.CardProgress" parent="android:Widget.Material.ProgressBar.Horizontal">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/progress_height</item>
+        <item name="android:layout_gravity">bottom</item>
+        <item name="android:layout_marginStart">@dimen/space_xs</item>
+        <item name="android:layout_marginEnd">@dimen/space_xs</item>
+        <item name="android:layout_marginBottom">@dimen/space_xs</item>
+        <item name="android:max">100</item>
+        <item name="android:progressDrawable">@drawable/progress_bar</item>
+        <item name="android:visibility">gone</item>
     </style>
 
     <!-- A row of cards (horizontal) or a grid of them. Bleeds to the screen edges so cards scroll off the edge
@@ -178,31 +216,19 @@
         <item name="android:scrollbars">none</item>
         <item name="android:descendantFocusability">afterDescendants</item>
     </style>
-    <!-- Panels (ui.GlassSheet) and what goes in them. -->
-    <style name="TextAppearance.Launcher.PanelTitle" parent="">
-        <item name="android:textSize">20sp</item>
-        <item name="android:fontFamily">@font/outfit_semibold</item>
-        <item name="android:textColor">@color/text_primary</item>
-    </style>
-    <style name="TextAppearance.Launcher.Body" parent="">
-        <item name="android:textSize">13sp</item>
-        <item name="android:fontFamily">@font/outfit_regular</item>
-        <item name="android:textColor">@color/text_secondary</item>
-        <item name="android:lineSpacingMultiplier">1.25</item>
-    </style>
-    <style name="TextAppearance.Launcher.Code" parent="">
-        <item name="android:textSize">44sp</item>
-        <item name="android:fontFamily">@font/outfit_semibold</item>
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:letterSpacing">0.22</item>
-    </style>
-    <style name="TextAppearance.Launcher.RowSubtitle" parent="">
-        <item name="android:textSize">12sp</item>
-        <item name="android:fontFamily">@font/outfit_regular</item>
-        <item name="android:textColor">@color/on_glass_secondary</item>
+
+    <!-- A row on Home with its header, a section gap above the next. -->
+    <style name="Widget.Launcher.HomeSection" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:clipChildren">false</item>
+        <item name="android:clipToPadding">false</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingBottom">@dimen/section_gap</item>
     </style>
 
-    <!-- A choice in a panel: full width, glass that turns white with focus. item_panel_row.xml uses it. -->
+    <!-- A choice in a panel, or in Launcher settings: full width, glass that turns white with focus.
+         item_panel_row.xml uses it. -->
     <style name="Widget.Launcher.PanelRow" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -218,6 +244,32 @@
         <item name="android:paddingTop">@dimen/space_xs</item>
         <item name="android:paddingBottom">@dimen/space_xs</item>
     </style>
+    <!-- The same row as a single line of text. -->
+    <style name="Widget.Launcher.PanelRow.Text">
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAppearance">@style/TextAppearance.Launcher.Label</item>
+        <item name="android:drawableTint">@color/on_glass</item>
+    </style>
+
+    <!-- Launcher settings: a choice among a few (how many columns), a glass circle with a tick once chosen, and
+         the quiet line under a row. -->
+    <style name="Widget.Launcher.SettingsChoice" parent="Widget.Launcher.TextButton">
+        <item name="android:minWidth">@dimen/settings_choice_width</item>
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
+        <item name="android:layout_marginEnd">@dimen/control_gap</item>
+        <item name="android:drawablePadding">@dimen/space_2xs</item>
+        <item name="android:drawableTint">@color/on_glass</item>
+    </style>
+    <style name="Widget.Launcher.SettingsHint" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/space_xs</item>
+        <item name="android:paddingStart">@dimen/space_lg</item>
+        <item name="android:paddingEnd">@dimen/space_lg</item>
+        <item name="android:textAppearance">@style/TextAppearance.Launcher.Body.Quiet</item>
+    </style>
 
     <!-- Text entry in a panel: glass at rest, white while typing. -->
     <style name="Widget.Launcher.TextField" parent="">
@@ -227,8 +279,8 @@
         <item name="android:paddingStart">@dimen/space_lg</item>
         <item name="android:paddingEnd">@dimen/space_lg</item>
         <item name="android:singleLine">true</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="android:textAppearance">@style/TextAppearance.Launcher.Label</item>
+        <!-- Set again here: the platform's text field style sets its own colour over the appearance's. -->
         <item name="android:textColor">@color/on_glass</item>
         <item name="android:textColorHint">@color/on_glass_secondary</item>
         <item name="android:textCursorDrawable">@null</item>

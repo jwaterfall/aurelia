@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Inicio</string>
     <string name="inputs">Entradas</string>
     <string name="wifi">Wi-Fi</string>
     <string name="settings">Ajustes</string>
@@ -8,7 +7,6 @@
     <string name="live_tv">TV en vivo</string>
     <string name="not_available">No disponible en este TV</string>
     <string name="date_format">EEEE d \'de\' MMMM</string>
-    <string name="dream_name">Reloj</string>
     <string name="launcher_settings">Ajustes del lanzador</string>
     <string name="columns_label">Aplicaciones por fila</string>
     <string name="animations_state">Animaciones: %1$s</string>

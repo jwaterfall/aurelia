@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Koti</string>
     <string name="inputs">Lähteet</string>
     <string name="wifi">Wi-Fi</string>
     <string name="settings">Asetukset</string>
@@ -9,7 +8,6 @@
     <string name="not_available">Ei käytettävissä tässä televisiossa</string>
     <!-- Finnish: "tiistaina 20. lokakuuta"; the weekday comes out in the essive form. -->
     <string name="date_format">EEEE d. MMMM</string>
-    <string name="dream_name">Kello</string>
     <string name="home_settings">Valitse oletuskotinäkymä</string>
     <string name="home_settings_help">Valitse alkuperäinen kotinäkymä, jos haluat lopettaa CleanYourTV:n käytön kotinäkymänä, tai CleanYourTV palataksesi siihen. Alkuperäisen käynnistimen on oltava käytössä ja television on tarjottava kotinäkymän valinta. Jos käynnistin on poistettu käytöstä, aja ensin palautusskripti.</string>
     <string name="launcher_settings">Käynnistimen asetukset</string>

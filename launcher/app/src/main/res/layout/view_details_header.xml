@@ -31,17 +31,16 @@
             android:layout_gravity="bottom"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textAppearance="@style/TextAppearance.Launcher.DetailsTitle" />
+            android:textAppearance="@style/TextAppearance.Launcher.Display" />
     </FrameLayout>
 
     <TextView
         android:id="@+id/detailsFacts"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
+        android:layout_marginTop="@dimen/space_md"
         android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.Launcher.PlayerTime"
-        android:textColor="@color/text_secondary" />
+        android:textAppearance="@style/TextAppearance.Launcher.Meta" />
 
     <TextView
         android:id="@+id/detailsGenres"
@@ -49,7 +48,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_2xs"
         android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.Launcher.PlayerNote" />
+        android:textAppearance="@style/TextAppearance.Launcher.Meta.Quiet" />
 
     <TextView
         android:id="@+id/detailsOverview"
@@ -58,9 +57,7 @@
         android:layout_marginTop="@dimen/space_sm"
         android:ellipsize="end"
         android:maxLines="4"
-        android:textAppearance="@style/TextAppearance.Launcher.Body"
-        android:textColor="@color/text_primary"
-        android:textSize="15sp" />
+        android:textAppearance="@style/TextAppearance.Launcher.Body" />
 
     <LinearLayout
         android:id="@+id/detailsButtons"
@@ -73,13 +70,13 @@
 
         <TextView
             android:id="@+id/detailsPlay"
-            style="@style/Widget.Launcher.ToolbarPill"
+            style="@style/Widget.Launcher.TextButton.Icon"
             android:drawableStart="@drawable/ic_play_small"
             android:text="@string/details_play" />
 
         <TextView
             android:id="@+id/detailsStartOver"
-            style="@style/Widget.Launcher.ToolbarPill"
+            style="@style/Widget.Launcher.TextButton.Icon"
             android:layout_marginStart="@dimen/control_gap"
             android:drawableStart="@drawable/ic_restart"
             android:text="@string/details_start_over"
@@ -107,5 +104,5 @@
         android:layout_marginTop="@dimen/space_md"
         android:ellipsize="end"
         android:maxLines="2"
-        android:textAppearance="@style/TextAppearance.Launcher.PlayerNote" />
+        android:textAppearance="@style/TextAppearance.Launcher.Meta.Quiet" />
 </LinearLayout>

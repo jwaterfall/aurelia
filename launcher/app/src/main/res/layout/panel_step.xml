@@ -35,7 +35,7 @@
                 android:id="@+id/stepTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.Launcher.PanelTitle" />
+                android:textAppearance="@style/TextAppearance.Launcher.Title" />
 
             <TextView
                 android:id="@+id/stepBody"
@@ -80,7 +80,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textAppearance="@style/TextAppearance.Launcher.Caption" />
+            android:textAppearance="@style/TextAppearance.Launcher.Meta.Quiet" />
     </LinearLayout>
 
     <!-- The controls: a text field if the step has one, then the choices, all control_stack_gap apart. -->

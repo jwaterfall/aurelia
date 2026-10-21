@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Ana Ekran</string>
     <string name="inputs">Girişler</string>
     <string name="wifi">Wi-Fi</string>
     <string name="settings">Ayarlar</string>
@@ -8,7 +7,6 @@
     <string name="live_tv">Canlı TV</string>
     <string name="not_available">Bu TV’de kullanılamıyor</string>
     <string name="date_format">d MMMM EEEE</string>
-    <string name="dream_name">Saat</string>
     <string name="home_settings">Varsayılan ana ekran</string>
     <string name="home_settings_help">CleanYourTV yerine özgün ana ekranı seçin; geri dönmek için CleanYourTV seçin. Özgün başlatıcı etkin olmalı ve TV ana ekran seçicisini desteklemelidir. Devre dışıysa önce geri yükleme betiğini kullanın.</string>
     <string name="input_key_service_description">Uzaktan kumandanın Giriş tuşuna basıldığında giriş seçiciyi açar.</string>

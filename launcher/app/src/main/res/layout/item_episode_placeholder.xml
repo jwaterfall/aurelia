@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- An episode's place while its season loads (EpisodeAdapter): the still, and lines for its name and about it. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:focusable="false"
+    android:orientation="vertical">
+
+    <app.aurelia.tv.ui.AspectRatioFrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <app.aurelia.tv.ui.Placeholder
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:placeholderRadius="@dimen/radius_card" />
+    </app.aurelia.tv.ui.AspectRatioFrameLayout>
+
+    <app.aurelia.tv.ui.Placeholder
+        android:layout_width="120dp"
+        android:layout_height="@dimen/placeholder_line"
+        android:layout_marginTop="@dimen/space_md" />
+
+    <app.aurelia.tv.ui.Placeholder
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/placeholder_line"
+        android:layout_marginTop="@dimen/space_sm" />
+
+    <app.aurelia.tv.ui.Placeholder
+        android:layout_width="140dp"
+        android:layout_height="@dimen/placeholder_line"
+        android:layout_marginTop="@dimen/space_xs" />
+</LinearLayout>

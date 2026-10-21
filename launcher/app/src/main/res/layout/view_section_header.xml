@@ -16,12 +16,12 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.Launcher.SectionTitle" />
+        android:textAppearance="@style/TextAppearance.Launcher.Heading" />
 
     <TextView
         android:id="@+id/sectionCaption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.Launcher.Caption" />
+        android:textAppearance="@style/TextAppearance.Launcher.Meta.Quiet" />
 </LinearLayout>

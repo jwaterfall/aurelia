@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Static frosted pill, for the tab bar's track. -->
-<com.gathin.tvhome.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
+<app.aurelia.tv.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
     app:glassInteractive="false" />

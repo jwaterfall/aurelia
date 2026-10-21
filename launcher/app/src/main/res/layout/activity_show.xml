@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ShowActivity: a show's backdrop; at the top what it is and its main button (resume or play the next episode);
-     at the bottom its seasons as tabs, the episode with focus, and that season's episodes in a row. -->
+     at the bottom its seasons as tabs and that season's episodes in a row. A placeholder in the same shape stands
+     in while it loads. Below, scrolling up over the backdrop as it dims, the cast and more like it. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -25,83 +26,92 @@
         android:layout_gravity="bottom"
         android:background="@drawable/details_scrim_bottom" />
 
-    <LinearLayout
-        android:id="@+id/showContent"
+    <!-- Darkens the backdrop as the rows under the page scroll up over it. -->
+    <View
+        android:id="@+id/detailsDim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:alpha="0"
-        android:clipChildren="false"
-        android:clipToPadding="false"
-        android:orientation="vertical"
+        android:background="@color/details_dim" />
+
+    <app.aurelia.tv.ui.SectionScrollView
+        android:id="@+id/detailsScroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:paddingTop="@dimen/screen_margin_top">
 
-        <include
-            android:id="@+id/detailsHeader"
-            layout="@layout/view_details_header"
-            android:layout_width="@dimen/details_width"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/screen_margin" />
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <!-- Many seasons scroll. The strip runs to the screen's edges and fades there; its margin is on the tabs,
-             so they start on the margin line, and the fade keeps the focused tab clear of the edge. -->
-        <HorizontalScrollView
-            android:id="@+id/seasonScroll"
+        <LinearLayout
+            android:id="@+id/detailsColumn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fadingEdgeLength="@dimen/screen_margin"
-            android:fillViewport="false"
-            android:overScrollMode="never"
-            android:requiresFadingEdge="horizontal"
-            android:scrollbars="none">
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/space_3xl">
 
-            <com.gathin.tvhome.ui.SegmentedControl
-                android:id="@+id/seasons"
-                style="@style/Widget.Launcher.TabBar"
-                android:layout_width="wrap_content"
-                android:layout_marginStart="@dimen/screen_margin"
-                android:layout_marginEnd="@dimen/screen_margin" />
-        </HorizontalScrollView>
+            <!-- The page itself, the height of the screen less a peek of the first row under it. -->
+            <LinearLayout
+                android:id="@+id/showContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:orientation="vertical">
 
-        <!-- The episode with focus. -->
-        <TextView
-            android:id="@+id/episodeTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_md"
-            android:ellipsize="end"
-            android:paddingStart="@dimen/screen_margin"
-            android:paddingEnd="@dimen/screen_margin"
-            android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.Launcher.PlayerTime" />
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/screen_margin"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
 
-        <TextView
-            android:id="@+id/episodeOverview"
-            android:layout_width="@dimen/episode_overview_width"
-            android:layout_height="@dimen/episode_overview_height"
-            android:layout_marginTop="@dimen/space_2xs"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:paddingStart="@dimen/screen_margin"
-            android:textAppearance="@style/TextAppearance.Launcher.Body"
-            android:textSize="13sp" />
+                    <include
+                        android:id="@+id/detailsHeader"
+                        layout="@layout/view_details_header"
+                        android:layout_width="@dimen/details_width"
+                        android:layout_height="wrap_content" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/episodes"
-            style="@style/Widget.Launcher.Shelf"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_sm"
-            android:paddingBottom="@dimen/space_xl" />
-    </LinearLayout>
+                    <include
+                        android:id="@+id/detailsPlaceholder"
+                        layout="@layout/view_details_placeholder"
+                        android:layout_width="@dimen/details_width"
+                        android:layout_height="wrap_content" />
+                </FrameLayout>
 
-    <ProgressBar
-        android:id="@+id/detailsSpinner"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_gravity="center"
-        android:indeterminateTint="@color/text_secondary" />
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <!-- Many seasons scroll. The strip runs to the screen's edges and fades there; its margin is on the tabs,
+                     so they start on the margin line, and the fade keeps the focused tab clear of the edge. -->
+                <HorizontalScrollView
+                    android:id="@+id/seasonScroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:alpha="0"
+                    android:fadingEdgeLength="@dimen/screen_margin"
+                    android:fillViewport="false"
+                    android:overScrollMode="never"
+                    android:requiresFadingEdge="horizontal"
+                    android:scrollbars="none">
+
+                    <app.aurelia.tv.ui.SegmentedControl
+                        android:id="@+id/seasons"
+                        style="@style/Widget.Launcher.TabBar.Quiet"
+                        android:layout_width="wrap_content"
+                        android:layout_marginStart="@dimen/season_tabs_start"
+                        android:layout_marginEnd="@dimen/screen_margin" />
+                </HorizontalScrollView>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/episodes"
+                    style="@style/Widget.Launcher.Shelf"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_md"
+                    android:paddingBottom="@dimen/space_md" />
+            </LinearLayout>
+        </LinearLayout>
+    </app.aurelia.tv.ui.SectionScrollView>
+
 </FrameLayout>

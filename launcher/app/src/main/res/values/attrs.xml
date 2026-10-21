@@ -12,4 +12,12 @@
         <!-- Width divided by height; the height follows the width. 16:9 by default. -->
         <attr name="aspectRatio" format="float" />
     </declare-styleable>
+    <declare-styleable name="SegmentedControl">
+        <!-- true: no glass under the indicator at rest, only a line under the current tab (Widget.Launcher.TabBar.Quiet). -->
+        <attr name="quiet" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="Placeholder">
+        <!-- Corner radius; leave unset for a pill (half the height), as for a line of text. -->
+        <attr name="placeholderRadius" format="dimension" />
+    </declare-styleable>
 </resources>

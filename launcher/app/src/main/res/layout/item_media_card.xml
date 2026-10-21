@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Media card: artwork with its title over a scrim, and watch progress. Width is set by its adapter. -->
-<com.gathin.tvhome.ui.AspectRatioFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<app.aurelia.tv.ui.AspectRatioFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/Widget.Launcher.Card"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
+
+    <!-- The whole card, while it is a placeholder for one still to come. -->
+    <app.aurelia.tv.ui.Placeholder
+        android:id="@+id/loading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:placeholderRadius="@dimen/radius_card" />
 
     <ImageView
         android:id="@+id/backdrop"
@@ -33,7 +42,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.Launcher.Overline" />
+            android:textAppearance="@style/TextAppearance.Launcher.Overline"
+            android:textColor="@color/text_secondary" />
 
         <TextView
             android:id="@+id/title"
@@ -42,7 +52,7 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.Launcher.CardTitle" />
+            android:textAppearance="@style/TextAppearance.Launcher.Heading" />
 
         <TextView
             android:id="@+id/subtitle"
@@ -61,4 +71,4 @@
             android:max="100"
             android:progressDrawable="@drawable/progress_bar" />
     </LinearLayout>
-</com.gathin.tvhome.ui.AspectRatioFrameLayout>
+</app.aurelia.tv.ui.AspectRatioFrameLayout>
