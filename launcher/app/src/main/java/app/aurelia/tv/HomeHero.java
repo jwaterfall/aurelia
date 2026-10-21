@@ -19,6 +19,7 @@ import app.aurelia.tv.jellyfin.Library;
 import app.aurelia.tv.ui.HeroDots;
 import app.aurelia.tv.ui.ImageDisk;
 import app.aurelia.tv.ui.Images;
+import app.aurelia.tv.ui.Placeholder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -93,6 +94,10 @@ final class HomeHero {
     private int at;
     /** Nothing shows until the first slide's art, details and logo are all in, so nothing pops in or moves. */
     private boolean revealed;
+    /** The whole card as a placeholder, until the first slide shows. */
+    private final View skeleton;
+    /** Whether what is being watched, and what was added, have come (each may be empty). */
+    private boolean watchingKnown, addedKnown;
     private boolean artIn;
     private boolean logoIn;
     private final Runnable reveal = this::reveal;
@@ -117,6 +122,7 @@ final class HomeHero {
         overview = section.findViewById(R.id.heroOverview);
         progress = section.findViewById(R.id.heroProgress);
         dots = section.findViewById(R.id.heroDots);
+        skeleton = section.findViewById(R.id.heroSkeleton);
         slide = card.getResources().getDimension(R.dimen.space_xl);
         card.setClipToOutline(true);
         info.setAlpha(0f);
@@ -153,13 +159,36 @@ final class HomeHero {
         return section.getVisibility() == View.VISIBLE;
     }
 
+    /**
+     * Signed in, before anything has come: the card as a placeholder, which stays until the first slide shows, or
+     * goes with the card if there turns out to be nothing for it.
+     */
+    void showLoading() {
+        watchingKnown = false;
+        addedKnown = false;
+        revealed = false;
+        artIn = false;
+        logoIn = false;
+        for (View v : new View[] {art, info, dots}) {
+            v.animate().cancel();
+            v.setAlpha(0f);
+        }
+        skeleton.animate().cancel();
+        skeleton.setTag(R.id.revealing, null);
+        skeleton.setAlpha(1f);
+        skeleton.setVisibility(View.VISIBLE);
+        section.setVisibility(View.VISIBLE);
+    }
+
     void setWatching(List<Library.MediaItem> resume, List<Library.MediaItem> nextUp) {
+        watchingKnown = true;
         this.resume = new ArrayList<>(resume);
         this.nextUp = new ArrayList<>(nextUp);
         rebuild();
     }
 
     void setAdded(List<Catalog.Item> added) {
+        addedKnown = true;
         this.added = new ArrayList<>(added);
         for (Catalog.Item i : added) details.put(i.id, i);
         rebuild();
@@ -180,7 +209,9 @@ final class HomeHero {
             boolean takeWatching = (turn == 0 || turn == 2) ? w < watching.size() : f >= fresh.size();
             slides.add(takeWatching ? watching.get(w++) : fresh.get(f++));
         }
-        section.setVisibility(slides.isEmpty() ? View.GONE : View.VISIBLE);
+        // With nothing to show yet, the placeholder holds the card's place until both answers are in.
+        boolean waiting = skeleton.getVisibility() == View.VISIBLE && !(watchingKnown && addedKnown);
+        section.setVisibility(slides.isEmpty() && !waiting ? View.GONE : View.VISIBLE);
         dots.setCount(slides.size() > 1 ? slides.size() : 0);
         dots.setVisibility(slides.size() > 1 ? View.VISIBLE : View.GONE);
         if (slides.isEmpty()) return;
@@ -342,6 +373,10 @@ final class HomeHero {
         if (revealed || slides.isEmpty()) return;
         revealed = true;
         handler.removeCallbacks(reveal);
+        if (skeleton.getVisibility() == View.VISIBLE) {
+            if (animate) Placeholder.reveal(skeleton);
+            else skeleton.setVisibility(View.GONE);
+        }
         for (View v : new View[] {art, info, dots}) {
             v.animate().cancel();
             if (animate) v.animate().alpha(1f).setDuration(ART_MS).setInterpolator(ease).start();

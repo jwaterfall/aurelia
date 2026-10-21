@@ -3,6 +3,7 @@
      Its padding puts it as far below the top bar's controls (screen_margin_top) as the controls are below the top
      of the screen, and the next section's heading the same distance below it. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/Widget.Launcher.HomeSection"
     android:paddingStart="@dimen/screen_margin"
     android:paddingTop="@dimen/space_sm"
@@ -102,5 +103,13 @@
             android:paddingTop="@dimen/space_xs"
             android:paddingEnd="@dimen/space_sm"
             android:paddingBottom="@dimen/space_xs" />
+
+        <!-- While the first slide is on its way: the whole card as one placeholder, as the rows' cards are. -->
+        <app.aurelia.tv.ui.Placeholder
+            android:id="@+id/heroSkeleton"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:placeholderRadius="@dimen/radius_card" />
     </FrameLayout>
 </LinearLayout>
