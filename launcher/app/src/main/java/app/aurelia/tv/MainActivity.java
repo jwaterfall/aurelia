@@ -295,7 +295,7 @@ public class MainActivity extends Activity {
         // The hero as one placeholder card until its first slide shows.
         if (account.isSignedIn()) hero.showLoading();
         Library.HomeRows kept = Library.keptHomeRows(this, account);
-        if (kept != null) showHomeRows(kept);
+        if (kept != null) showHomeRows(kept, false);
         ((app.aurelia.tv.ui.SectionScrollView) pageHome).setAlignTop(false);
         ((app.aurelia.tv.ui.SectionScrollView) pageHome).setAnimationsEnabled(animations);
         // The row under the hero peeks in and fades out, so it reads as more below, not cut off.
@@ -535,7 +535,7 @@ public class MainActivity extends Activity {
         if (homeRows == null) return;
         Library.HomeRows before = homeRows;
         takenOff.put(item.id, Integer.MAX_VALUE);
-        showHomeRows(homeRows.without(item.id));
+        showHomeRows(homeRows.without(item.id), true);
         Library.keepHomeRows(getApplicationContext(), account, homeRows);
         Api.async(change, new Api.Callback<Void>() {
             @Override
@@ -547,7 +547,7 @@ public class MainActivity extends Activity {
             @Override
             public void onError(Exception e) {
                 takenOff.remove(item.id);
-                showHomeRows(before);
+                showHomeRows(before, true);
                 Library.keepHomeRows(getApplicationContext(), account, before);
             }
         });
@@ -729,7 +729,7 @@ public class MainActivity extends Activity {
     private void refreshJellyfin() {
         if (!account.isSignedIn()) {
             homeRows = null;
-            hero.setWatching(Collections.emptyList(), Collections.emptyList());
+            hero.setWatching(Collections.emptyList(), Collections.emptyList(), true);
             showNextUp(Collections.emptyList());
             // Nothing to watch yet, so no rows: the apps rest at the foot, under a way to sign in.
             boolean hadFocus = cwRow.hasFocus();
@@ -749,7 +749,7 @@ public class MainActivity extends Activity {
             @Override
             public void onResult(Library.HomeRows answer) {
                 Library.HomeRows rows = withoutTakenOff(answer, request);
-                showHomeRows(rows);
+                showHomeRows(rows, true);
                 Library.keepHomeRows(getApplicationContext(), account, rows);
             }
 
@@ -776,10 +776,11 @@ public class MainActivity extends Activity {
 
     /** Next Up's row, gone when there is nothing in it; focus in it moves up a row if it goes. */
     /** Continue Watching and Next Up from {@code rows}: fresh from the server, or kept from last time. */
-    private void showHomeRows(Library.HomeRows rows) {
+    /** {@code answered}: the server's answer, not the rows kept from last time (which the hero does not wait on). */
+    private void showHomeRows(Library.HomeRows rows, boolean answered) {
         homeRows = rows;
         boolean heroHadFocus = hero.card().hasFocus();
-        hero.setWatching(rows.resume, rows.nextUp);
+        hero.setWatching(rows.resume, rows.nextUp, answered);
         if (heroHadFocus && !hero.isShowing()) focusHomeStart();
         // One row for everything being watched, in progress first and then next up; the hero
         // only picks from it.

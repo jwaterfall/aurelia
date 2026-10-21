@@ -64,8 +64,11 @@ final class HomeHero {
     private static final long OUT_MS = 160;
     private static final long IN_MS = 380;
     private static final long ART_MS = 600;
-    /** The first slide shows by now even if its art or logo is still on its way. */
-    private static final long REVEAL_BY_MS = 1500;
+    /**
+     * The placeholder gives way by now whatever has come (a slow or unreachable server), rather than breathing on
+     * for ever: what there is shows, or with nothing the card goes.
+     */
+    private static final long SKELETON_MAX_MS = 6000;
 
     private final View section;
     private final View card;
@@ -100,7 +103,7 @@ final class HomeHero {
     private boolean watchingKnown, addedKnown;
     private boolean artIn;
     private boolean logoIn;
-    private final Runnable reveal = this::reveal;
+    private final Runnable skeletonLimit = this::giveUpWaiting;
     private boolean running;
     private boolean animate = true;
     private final Runnable next = () -> {
@@ -178,10 +181,16 @@ final class HomeHero {
         skeleton.setAlpha(1f);
         skeleton.setVisibility(View.VISIBLE);
         section.setVisibility(View.VISIBLE);
+        handler.removeCallbacks(skeletonLimit);
+        handler.postDelayed(skeletonLimit, SKELETON_MAX_MS);
     }
 
-    void setWatching(List<Library.MediaItem> resume, List<Library.MediaItem> nextUp) {
-        watchingKnown = true;
+    /**
+     * What is being watched. {@code answered} is false for the rows kept from last time, shown at once at a start:
+     * the placeholder waits for the server's own answer, so the first slide is never one that then changes.
+     */
+    void setWatching(List<Library.MediaItem> resume, List<Library.MediaItem> nextUp, boolean answered) {
+        if (answered) watchingKnown = true;
         this.resume = new ArrayList<>(resume);
         this.nextUp = new ArrayList<>(nextUp);
         rebuild();
@@ -215,23 +224,24 @@ final class HomeHero {
         dots.setCount(slides.size() > 1 ? slides.size() : 0);
         dots.setVisibility(slides.size() > 1 ? View.VISIBLE : View.GONE);
         if (slides.isEmpty()) return;
-        if (!revealed) {
-            handler.removeCallbacks(reveal);
-            handler.postDelayed(reveal, REVEAL_BY_MS);
-        }
         for (Slide s : slides) {
             fetch(s);
             // Its art ready before it comes round; only for the slides in use, as Recently added has many more.
             Catalog.Item known = details.get(s.id);
             if (known != null) prefetch(known);
         }
+        // Once showing, the one showing stays; until then it opens on the first.
         int keep = 0;
-        for (int n = 0; n < slides.size(); n++) if (slides.get(n).id.equals(was)) keep = n;
+        if (revealed) for (int n = 0; n < slides.size(); n++) if (slides.get(n).id.equals(was)) keep = n;
         boolean same = slides.get(keep).id.equals(was);
         at = keep;
         dots.setCurrent(at);
         bind(slides.get(at));
-        if (!same) loadArt(slides.get(at), false);
+        if (!same) {
+            artIn = false;
+            loadArt(slides.get(at), false);
+        }
+        maybeReveal();
         schedule();
     }
 
@@ -321,6 +331,8 @@ final class HomeHero {
     /** The backdrop once the details are in (the card's art until then), faded in over the last. */
     private void loadArt(Slide s, boolean fade) {
         Catalog.Item d = details.get(s.id);
+        // Behind the placeholder only the real backdrop is fetched, not the card's picture on the way to it.
+        if (!revealed && d == null) return;
         String backdrop = d != null ? Catalog.backdrop(account, d, 1280) : "";
         String url = !backdrop.isEmpty() ? backdrop : s.media != null ? s.media.imageUrl : "";
         artBack.setImageDrawable(art.getDrawable());
@@ -364,15 +376,23 @@ final class HomeHero {
         });
     }
 
+    /** {@link #SKELETON_MAX_MS} has passed with the placeholder still up: what there is shows, or the card goes. */
+    private void giveUpWaiting() {
+        if (revealed) return;
+        if (slides.isEmpty()) section.setVisibility(View.GONE);
+        else reveal();
+    }
+
+    /** The placeholder gives way once everything about the first slide is final: which it is, its art, its logo. */
     private void maybeReveal() {
-        if (!revealed && artIn && logoIn) reveal();
+        if (!revealed && watchingKnown && addedKnown && artIn && logoIn) reveal();
     }
 
     /** The first slide, art and text together, faded in as one. */
     private void reveal() {
         if (revealed || slides.isEmpty()) return;
         revealed = true;
-        handler.removeCallbacks(reveal);
+        handler.removeCallbacks(skeletonLimit);
         if (skeleton.getVisibility() == View.VISIBLE) {
             if (animate) Placeholder.reveal(skeleton);
             else skeleton.setVisibility(View.GONE);
