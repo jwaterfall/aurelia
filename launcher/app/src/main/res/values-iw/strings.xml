@@ -39,8 +39,6 @@
     <string name="next_up">הבא בתור</string>
     <string name="jellyfin_items">%1$d בצפייה</string>
     <string name="pinned_apps">אפליקציות</string>
-    <string name="all_apps">כל האפליקציות</string>
-    <string name="app_count">%1$d מותקנות</string>
     <string name="cannot_open">לא ניתן לפתוח את %1$s</string>
     <!-- Jellyfin sign-in and Continue Watching -->
     <string name="sign_in">התחברות</string>
@@ -70,7 +68,6 @@
     <string name="jellyfin_sign_out">התנתקות</string>
     <string name="about_version">גרסה %1$s</string>
     <string name="update_to">עדכון לגרסה %1$s</string>
-    <string name="update_detail">Aurelia תיפתח שוב אחרי ההתקנה</string>
     <string name="update_downloading">העדכון יורד…</string>
     <string name="update_installing">מתקין…</string>
     <string name="update_failed">לא ניתן היה להוריד את העדכון. נסו שוב</string>
@@ -96,6 +93,10 @@
     <string name="player_up_next">%1$s • בעוד %2$d שנ׳</string>
     <string name="player_off">כבויות</string>
     <string name="player_burned_in">השרת מצייר אותן על התמונה</string>
+    <string name="player_subtitle_style">מראה</string>
+    <string name="player_subtitle_shadow">צל רך</string>
+    <string name="player_subtitle_glass">זכוכית</string>
+    <string name="player_subtitle_classic">קלאסי</string>
     <string name="player_skip_intro">דילוג על הפתיח</string>
     <string name="player_skip_recap">דילוג על התקציר</string>
     <string name="player_skip_credits">דילוג על הקרדיטים</string>
@@ -160,6 +161,7 @@
     </plurals>
     <string name="library_nothing">אין כאן כלום שמתאים לסינון</string>
     <string name="library_clear">הצגת הכול</string>
+    <string name="filter_clear">ניקוי</string>
     <string name="library_connect_title">עיון בספרייה</string>
     <string name="library_signed_out">התחברו ל־Jellyfin כדי לראות כאן את הסרטים והסדרות.</string>
     <string name="library_empty_title">אין כאן עדיין כלום</string>
@@ -191,6 +193,7 @@
     </plurals>
     <string name="search_hint">סרטים, סדרות, פרקים ואפליקציות</string>
     <string name="search_episodes">פרקים</string>
+    <string name="recently_added">נוספו לאחרונה</string>
     <string name="search_recent">חיפושים אחרונים</string>
     <string name="search_nothing">אין תוצאות עבור „%1$s”</string>
     <string name="details_season">עונה %1$d</string>
@@ -208,6 +211,7 @@
     <string name="menu_remove_resume">איפוס התקדמות</string>
     <string name="menu_play_from_start">ניגון מההתחלה</string>
     <string name="menu_go_to_show">מעבר לסדרה</string>
+    <string name="menu_go_to_movie">מעבר לסרט</string>
     <string name="menu_add_favourite">הוספה למועדפים</string>
     <string name="menu_remove_favourite">הסרה מהמועדפים</string>
 </resources>

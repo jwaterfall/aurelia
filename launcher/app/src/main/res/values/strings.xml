@@ -41,8 +41,6 @@
     <string name="next_up">Next Up</string>
     <string name="jellyfin_items">%1$d in progress</string>
     <string name="pinned_apps">Applications</string>
-    <string name="all_apps">All Applications</string>
-    <string name="app_count">%1$d installed</string>
     <string name="cannot_open">Cannot open %1$s</string>
     <!-- Jellyfin sign-in and Continue Watching -->
     <string name="jellyfin_address_hint" translatable="false">192.168.1.10:8096</string>
@@ -73,7 +71,6 @@
     <string name="jellyfin_sign_out">Sign out</string>
     <string name="about_version">Version %1$s</string>
     <string name="update_to">Update to version %1$s</string>
-    <string name="update_detail">Aurelia opens again once it is installed</string>
     <string name="update_downloading">Downloading the update…</string>
     <string name="update_installing">Installing…</string>
     <string name="update_failed">Could not download the update. Try again</string>
@@ -83,7 +80,7 @@
     <string name="cw_offline_title">Can’t reach %1$s</string>
     <string name="cw_offline_body">Check the server is running, then try again.</string>
     <string name="cw_empty_title">You’re all caught up</string>
-    <string name="cw_empty_body">Shows and films you start in Jellyfin show up here.</string>
+    <string name="cw_empty_body">Shows and movies you start in Jellyfin show up here.</string>
     <!-- Player -->
     <string name="player_failed">Can’t play this here</string>
     <string name="player_open_in_jellyfin">Open in Jellyfin</string>
@@ -99,6 +96,10 @@
     <string name="player_up_next">%1$s • in %2$d s</string>
     <string name="player_off">Off</string>
     <string name="player_burned_in">The server draws these onto the picture</string>
+    <string name="player_subtitle_style">Appearance</string>
+    <string name="player_subtitle_shadow">Soft shadow</string>
+    <string name="player_subtitle_glass">Glass</string>
+    <string name="player_subtitle_classic">Classic</string>
     <string name="player_skip_intro">Skip intro</string>
     <string name="player_skip_recap">Skip recap</string>
     <string name="player_skip_credits">Skip credits</string>
@@ -142,8 +143,8 @@
     <string name="library_genre">Genre</string>
     <string name="genre_all">All genres</string>
     <plurals name="library_movies">
-        <item quantity="one">%d film</item>
-        <item quantity="other">%d films</item>
+        <item quantity="one">%d movie</item>
+        <item quantity="other">%d movies</item>
     </plurals>
     <plurals name="library_shows">
         <item quantity="one">%d show</item>
@@ -159,8 +160,9 @@
     </plurals>
     <string name="library_nothing">Nothing matches these filters</string>
     <string name="library_clear">Show everything</string>
+    <string name="filter_clear">Clear</string>
     <string name="library_connect_title">Browse your library</string>
-    <string name="library_signed_out">Sign in to Jellyfin to see your films and shows here.</string>
+    <string name="library_signed_out">Sign in to Jellyfin to see your movies and shows here.</string>
     <string name="library_empty_title">Nothing here yet</string>
     <string name="library_none">There is no library like this on %1$s.</string>
     <!-- A film's or show's page -->
@@ -187,9 +189,10 @@
         <item quantity="one">%d in your library</item>
         <item quantity="other">%d in your library</item>
     </plurals>
-    <string name="search_hint">Films, shows, episodes and apps</string>
+    <string name="search_hint">Movies, shows, episodes and apps</string>
     <string name="search_episodes">Episodes</string>
     <string name="search_recent">Recent searches</string>
+    <string name="recently_added">Recently added</string>
     <string name="search_nothing">Nothing matches “%1$s”</string>
     <string name="details_season">Season %1$d</string>
     <string name="details_failed">Couldn’t load this from %1$s.</string>
@@ -207,6 +210,7 @@
     <string name="menu_remove_resume">Reset progress</string>
     <string name="menu_play_from_start">Play from the start</string>
     <string name="menu_go_to_show">Go to show</string>
+    <string name="menu_go_to_movie">Go to movie</string>
     <string name="menu_add_favourite">Add to favourites</string>
     <string name="menu_remove_favourite">Remove from favourites</string>
 </resources>

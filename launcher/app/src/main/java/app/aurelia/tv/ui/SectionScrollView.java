@@ -31,6 +31,7 @@ public class SectionScrollView extends ScrollView {
 
     private final PathInterpolator ease = new PathInterpolator(0.25f, 0f, 0f, 1f);
     private boolean alignTop = true;
+    private boolean bottomFadeOnly;
     private boolean animate = true;
     private ValueAnimator glide;
     private int target = -1;
@@ -49,6 +50,18 @@ public class SectionScrollView extends ScrollView {
     /** false: jump instead of gliding (config.xml, animations). */
     public void setAnimationsEnabled(boolean enabled) {
         animate = enabled;
+    }
+
+    /** Fade the content out at the foot only, where the next row peeks in; the top stays crisp. */
+    public void setBottomFadeOnly(int length) {
+        bottomFadeOnly = true;
+        setVerticalFadingEdgeEnabled(true);
+        setFadingEdgeLength(length);
+    }
+
+    @Override
+    protected float getTopFadingEdgeStrength() {
+        return bottomFadeOnly ? 0f : super.getTopFadingEdgeStrength();
     }
 
     /** false: scroll only as far as needed to show the whole section with focus. */

@@ -302,13 +302,15 @@ final class AccountPanel {
     }
 
     private void updateRow(PanelStep s, Updates.Release release) {
-        View row = s.row(activity.getString(R.string.update_to, release.version),
-                activity.getString(R.string.update_detail), null);
+        // Just what it does: that Aurelia opens again afterwards goes without saying. A line under it appears only
+        // when there is something to say (allow installs first, or it failed).
+        View row = s.row(activity.getString(R.string.update_to, release.version), null, null);
         TextView title = row.findViewById(R.id.rowTitle);
         TextView detail = row.findViewById(R.id.rowSubtitle);
         row.setOnClickListener(v -> {
             if (!Updates.canInstall(activity)) {
                 detail.setText(R.string.update_allow);
+                detail.setVisibility(View.VISIBLE);
                 try {
                     activity.startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
                             Uri.parse("package:" + activity.getPackageName())));
@@ -319,7 +321,7 @@ final class AccountPanel {
             }
             row.setEnabled(false);
             title.setText(R.string.update_downloading);
-            detail.setText(R.string.update_detail);
+            detail.setVisibility(View.GONE);
             int mine = step;
             Api.async(() -> {
                 Updates.install(activity, Updates.download(activity, release));
@@ -336,13 +338,14 @@ final class AccountPanel {
                     row.setEnabled(true);
                     title.setText(activity.getString(R.string.update_to, release.version));
                     detail.setText(R.string.update_failed);
+                    detail.setVisibility(View.VISIBLE);
                 }
             });
         });
     }
 
     /** Ends this device's session on the server too, then forgets it here whatever the server says. */
-    private void signOut() {
+    void signOut() {
         String server = account.server();
         String auth = Library.auth(account);
         Api.async(() -> {

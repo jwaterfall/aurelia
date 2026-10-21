@@ -60,6 +60,10 @@
         <item name="android:fontFamily">@font/outfit_medium</item>
         <item name="android:textColor">@color/on_glass</item>
     </style>
+    <!-- An option in a menu, a lighter weight than a button's label. -->
+    <style name="TextAppearance.Launcher.Label.Menu">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+    </style>
     <!-- Facts and figures: year, length, rating, counts, times. -->
     <style name="TextAppearance.Launcher.Meta" parent="">
         <item name="android:textSize">13sp</item>
@@ -127,6 +131,22 @@
         <item name="android:textAppearance">@style/TextAppearance.Launcher.Label</item>
     </style>
     <!-- A text button led by an icon: Play, and a library's sort and filter. -->
+    <!-- A page's own controls, such as a library's sort and filters: a step under the tab bar, so the
+         tabs read first and the page's controls after. -->
+    <style name="Widget.Launcher.Chip" parent="Widget.Launcher.TextButton">
+        <item name="android:layout_height">@dimen/chip_height</item>
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
+        <item name="android:textAppearance">@style/TextAppearance.Launcher.Label.Chip</item>
+    </style>
+    <style name="Widget.Launcher.Chip.Icon">
+        <item name="android:paddingStart">@dimen/space_sm</item>
+        <item name="android:drawablePadding">6dp</item>
+        <item name="android:drawableTint">@color/on_glass</item>
+    </style>
+    <style name="TextAppearance.Launcher.Label.Chip">
+        <item name="android:textSize">13sp</item>
+    </style>
     <style name="Widget.Launcher.TextButton.Icon">
         <item name="android:paddingStart">@dimen/space_md</item>
         <item name="android:paddingEnd">@dimen/space_lg</item>
@@ -135,11 +155,32 @@
     </style>
 
     <!-- A player button by the seek bar: the glass circle, a little smaller and closer set. -->
-    <style name="Widget.Launcher.PlayerIcon" parent="Widget.Launcher.GlassButton.Icon">
+    <!-- The player's controls. Round glass buttons in the middle; at the sides, icons in a glass pill
+         (ui.PillGroup), which draws their white. -->
+    <style name="Widget.Launcher.PlayerPill" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/glass_track</item>
+        <item name="android:padding">@dimen/control_inset</item>
+    </style>
+    <style name="Widget.Launcher.PlayerSegment" parent="">
         <item name="android:layout_width">@dimen/player_button</item>
         <item name="android:layout_height">@dimen/player_button</item>
         <item name="android:padding">@dimen/player_icon_inset</item>
-        <item name="android:layout_marginEnd">@dimen/space_xs</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:tint">@color/on_glass</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+    </style>
+    <style name="Widget.Launcher.PlayerSkip" parent="Widget.Launcher.GlassButton.Icon">
+        <item name="android:layout_width">@dimen/player_skip</item>
+        <item name="android:layout_height">@dimen/player_skip</item>
+        <item name="android:padding">@dimen/player_skip_inset</item>
+    </style>
+    <style name="Widget.Launcher.PlayerPlay" parent="Widget.Launcher.GlassButton.Icon">
+        <item name="android:layout_width">@dimen/player_play</item>
+        <item name="android:layout_height">@dimen/player_play</item>
+        <item name="android:padding">@dimen/player_play_inset</item>
     </style>
 
     <!-- Tab bar (ui.SegmentedControl) and its tabs. The control draws the indicator and colours the tab text. -->

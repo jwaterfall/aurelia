@@ -35,12 +35,33 @@ public class GlassMenu extends FrameLayout {
         final CharSequence detail;
         final boolean chosen;
         final Runnable action;
+        /** Set for an option that stays open and is handed its row (to show progress in it). */
+        Live live;
+        /** Set for a view shown as it is, such as the profile menu's header. */
+        View view;
+        /** Drawn where the tick goes, untinted (the update's blue dot). */
+        int mark;
 
         private Item(CharSequence label, CharSequence detail, boolean chosen, Runnable action) {
             this.label = label;
             this.detail = detail;
             this.chosen = chosen;
             this.action = action;
+        }
+
+        /** An option that keeps the menu open and is given its row, to change its own text. */
+        public static Item live(CharSequence label, @Nullable CharSequence detail, int mark, Live live) {
+            Item item = new Item(label, detail, false, () -> { });
+            item.live = live;
+            item.mark = mark;
+            return item;
+        }
+
+        /** {@code view} in the menu as it is; it does not take focus. */
+        public static Item view(View view) {
+            Item item = new Item("", null, false, null);
+            item.view = view;
+            return item;
         }
 
         public static Item option(CharSequence label, @Nullable CharSequence detail, boolean chosen, Runnable action) {
@@ -57,6 +78,11 @@ public class GlassMenu extends FrameLayout {
         }
     }
 
+    /** An option that stays open and handles itself. {@code title} and {@code detail} are its row's text. */
+    public interface Live {
+        void run(View row, TextView title, TextView detail);
+    }
+
     public static final class Builder {
         private final List<Item> items = new ArrayList<>();
 
@@ -68,10 +94,22 @@ public class GlassMenu extends FrameLayout {
 
     private static final long IN_MS = 200;
     private static final long OUT_MS = 140;
+    /** The highlight's slide from one option to the next. */
+    private static final long SLIDE_MS = 150;
 
     private final PathInterpolator ease = new PathInterpolator(0.2f, 0f, 0f, 1f);
-    private final LinearLayout card;
+    private final FrameLayout card;
+    /** Behind the card's glass, a blurred copy of the part of the screen it covers. */
+    private final android.widget.ImageView frost;
+    private android.graphics.Bitmap snapshot;
+    private boolean frostBehind = true;
+    /** Told when the menu opens and closes, so what is behind can hold still and match its frost. */
+    private java.util.function.Consumer<Boolean> onOpenChanged;
     private final LinearLayout rows;
+    /** The white behind the option with focus, and its slide there. */
+    private final View highlight;
+    private android.animation.ValueAnimator slide;
+    private boolean animate = true;
     private final ScrollView scroll;
     private final int gap;
     private final int margin;
@@ -96,10 +134,38 @@ public class GlassMenu extends FrameLayout {
         maxHeight = getResources().getDimensionPixelSize(R.dimen.menu_max_height);
         LayoutInflater.from(context).inflate(R.layout.view_glass_menu, this, true);
         card = findViewById(R.id.menuCard);
+        frost = findViewById(R.id.menuFrost);
+        float radius = getResources().getDimension(R.dimen.menu_radius);
+        card.setOutlineProvider(new android.view.ViewOutlineProvider() {
+            @Override
+            public void getOutline(View v, android.graphics.Outline outline) {
+                outline.setRoundRect(0, 0, v.getWidth(), v.getHeight(), radius);
+            }
+        });
+        card.setClipToOutline(true);
         scroll = findViewById(R.id.menuScroll);
         rows = findViewById(R.id.menuRows);
+        highlight = findViewById(R.id.menuHighlight);
         setClipChildren(false);
         setVisibility(GONE);
+    }
+
+    /**
+     * False where what is behind cannot be frosted (playing video draws on its own surface, which a
+     * snapshot misses): the card sits on a dark fill instead.
+     */
+    public void setFrostBehind(boolean frost) {
+        frostBehind = frost;
+    }
+
+    /** {@code listener} hears true as the menu opens and false as it closes. */
+    public void setOnOpenChanged(java.util.function.Consumer<Boolean> listener) {
+        onOpenChanged = listener;
+    }
+
+    /** false: the highlight jumps to each option instead of sliding (config.xml, animations). */
+    public void setAnimationsEnabled(boolean enabled) {
+        animate = enabled;
     }
 
     public boolean isShowing() {
@@ -112,10 +178,17 @@ public class GlassMenu extends FrameLayout {
      */
     public void show(View from, Builder menu, ViewGroup background) {
         rows.removeAllViews();
+        if (slide != null) slide.cancel();
+        highlight.setVisibility(INVISIBLE);
         View focus = null;
         View first = null;
         LayoutInflater inflater = LayoutInflater.from(getContext());
         for (Item item : menu.items) {
+            if (item.view != null) {
+                if (item.view.getParent() instanceof ViewGroup) ((ViewGroup) item.view.getParent()).removeView(item.view);
+                rows.addView(item.view);
+                continue;
+            }
             if (item.action == null && item.label.length() == 0) {
                 rows.addView(inflater.inflate(R.layout.item_menu_divider, rows, false));
                 continue;
@@ -131,10 +204,32 @@ public class GlassMenu extends FrameLayout {
             TextView detail = row.findViewById(R.id.rowSubtitle);
             detail.setText(item.detail);
             detail.setVisibility(item.detail == null ? GONE : VISIBLE);
-            row.findViewById(R.id.rowCheck).setVisibility(item.chosen ? VISIBLE : INVISIBLE);
+            android.widget.ImageView check = row.findViewById(R.id.rowCheck);
+            check.setVisibility(item.chosen ? VISIBLE : INVISIBLE);
+            if (item.mark != 0) {
+                check.setImageResource(item.mark);
+                check.setImageTintList(null);
+                check.setVisibility(VISIBLE);
+                int dot = Math.round(9 * getResources().getDisplayMetrics().density);
+                check.getLayoutParams().width = dot;
+                check.getLayoutParams().height = dot;
+            }
             row.setOnClickListener(v -> {
+                if (item.live != null) {
+                    item.live.run(row, row.findViewById(R.id.rowTitle), detail);
+                    return;
+                }
                 hide();
                 item.action.run();
+            });
+            row.setOnFocusChangeListener((v, has) -> {
+                if (has) highlight(v);
+            });
+            // A row that grows or shrinks with focus (an update's line under it) takes the highlight with it.
+            row.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+                if (v.hasFocus() && (slide == null || !slide.isRunning()) && (t != ot || b - t != ob - ot)) {
+                    placeHighlight(t, b - t);
+                }
             });
             rows.addView(row);
             if (first == null) first = row;
@@ -144,6 +239,9 @@ public class GlassMenu extends FrameLayout {
 
         anchor = from;
         if (!open) {
+            // Taken while the menu is still hidden, so it is only what is under it.
+            snapshot = frostBehind && getParent() instanceof View ? Blur.snapshot((View) getParent(), 8, 6) : null;
+            if (onOpenChanged != null) onOpenChanged.accept(true);
             behind = background;
             behindFocusability = background.getDescendantFocusability();
             background.setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
@@ -172,6 +270,39 @@ public class GlassMenu extends FrameLayout {
     }
 
     /**
+     * Moves the highlight behind {@code row}: at once onto the first option to take focus, sliding
+     * after that. A press mid-slide sets off from where the highlight is, so holding Down never waits on it.
+     */
+    private void highlight(View row) {
+        if (slide != null) slide.cancel();
+        float toTop = row.getTop();
+        int toHeight = row.getHeight();
+        if (highlight.getVisibility() != VISIBLE || !animate) {
+            placeHighlight(toTop, toHeight);
+            highlight.setVisibility(VISIBLE);
+            return;
+        }
+        float fromTop = highlight.getTranslationY();
+        int fromHeight = highlight.getLayoutParams().height;
+        slide = android.animation.ValueAnimator.ofFloat(0f, 1f).setDuration(SLIDE_MS);
+        slide.setInterpolator(ease);
+        slide.addUpdateListener(a -> {
+            float f = (float) a.getAnimatedValue();
+            placeHighlight(fromTop + (toTop - fromTop) * f, Math.round(fromHeight + (toHeight - fromHeight) * f));
+        });
+        slide.start();
+    }
+
+    private void placeHighlight(float top, int height) {
+        highlight.setTranslationY(top);
+        ViewGroup.LayoutParams lp = highlight.getLayoutParams();
+        if (lp.height != height) {
+            lp.height = height;
+            highlight.setLayoutParams(lp);
+        }
+    }
+
+    /**
      * Just above the anchor (or below it, where there is more room), starting where it starts, kept on screen;
      * no taller than {@code menu_max_height}.
      */
@@ -195,6 +326,23 @@ public class GlassMenu extends FrameLayout {
         card.setX(x);
         float y = below ? anchorTop + anchor.getHeight() + gap : anchorTop - gap - height;
         placedY = y - card.getTop();
+        frost(x, y, height);
+    }
+
+    /** The snapshot's piece under the card (at x, y, height tall), or a dark fill when there is none. */
+    private void frost(float x, float y, int height) {
+        if (snapshot == null || getWidth() == 0) {
+            frost.setImageDrawable(null);
+            frost.setBackgroundColor(getContext().getColor(R.color.menu_solid));
+            return;
+        }
+        frost.setBackground(null);
+        float f = (float) snapshot.getWidth() / getWidth();
+        int left = Math.max(0, Math.min(snapshot.getWidth() - 1, Math.round(x * f)));
+        int top = Math.max(0, Math.min(snapshot.getHeight() - 1, Math.round(y * f)));
+        int w = Math.max(1, Math.min(snapshot.getWidth() - left, Math.round(card.getWidth() * f)));
+        int h = Math.max(1, Math.min(snapshot.getHeight() - top, Math.round(height * f)));
+        frost.setImageBitmap(android.graphics.Bitmap.createBitmap(snapshot, left, top, w, h));
     }
 
     /** The anchor's top-left corner, in this view's coordinates. */
@@ -213,6 +361,7 @@ public class GlassMenu extends FrameLayout {
     public void hide() {
         if (!open) return;
         open = false;
+        if (onOpenChanged != null) onOpenChanged.accept(false);
         if (behind != null) behind.setDescendantFocusability(behindFocusability);
         behind = null;
         if (anchor != null && anchor.isAttachedToWindow()) anchor.requestFocus();

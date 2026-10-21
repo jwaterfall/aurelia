@@ -70,6 +70,7 @@ final class LibraryPage {
     private final TextView sortPill;
     private final TextView filterPill;
     private final TextView genrePill;
+    private TextView clearPill;
     private final View message;
     private final EmptyState empty;
 
@@ -100,6 +101,8 @@ final class LibraryPage {
         sortPill = root.findViewById(R.id.librarySort);
         filterPill = root.findViewById(R.id.libraryFilter);
         genrePill = root.findViewById(R.id.libraryGenre);
+        clearPill = root.findViewById(R.id.libraryClear);
+        clearPill.setOnClickListener(v -> clearFilters());
         message = root.findViewById(R.id.libraryMessage);
         empty = new EmptyState(message);
 
@@ -383,6 +386,31 @@ final class LibraryPage {
         }
         filterPill.setText(filter);
         genrePill.setText(query.genre.isEmpty() ? activity.getString(R.string.genre_all) : query.genre);
+        clearPill.setVisibility(filtered() ? View.VISIBLE : View.GONE);
+    }
+
+    private boolean filtered() {
+        return query.watched != Catalog.Watched.Any || query.favourites || !query.genre.isEmpty();
+    }
+
+    /**
+     * Back away long enough that the filters were for another time: they go, the sort (a liking) stays. Quietly,
+     * without moving focus; the page loads again the next time it shows.
+     */
+    void forgetFilters() {
+        if (!filtered()) return;
+        query.watched = Catalog.Watched.Any;
+        query.favourites = false;
+        query.genre = "";
+        prefs.edit()
+                .putString(key("watched"), query.watched.name())
+                .putBoolean(key("favourites"), false)
+                .putString(key("genre"), "")
+                .apply();
+        updatePills();
+        focus = 0;
+        grid.scrollToPosition(0);
+        if (loadedOnce) reload();
     }
 
     private String sortName(Catalog.Sort sort) {

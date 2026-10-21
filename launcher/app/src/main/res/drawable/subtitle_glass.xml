@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Behind glass subtitles (ui.SubtitleText): the menus' glass over video, a dark tint (nothing behind
+     video can be blurred) under the panels' glass and its rim. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/subtitle_glass_tint" />
+            <corners android:radius="@dimen/subtitle_glass_radius" />
+        </shape>
+    </item>
+    <item>
+        <app.aurelia.tv.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
+            app:glassPanel="true"
+            app:glassRadius="@dimen/subtitle_glass_radius" />
+    </item>
+</layer-list>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The top of the profile button's menu: who is signed in, and to which server. No picture: the
+     button just above it shows that. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/space_md"
+    android:paddingTop="@dimen/space_xs"
+    android:paddingEnd="@dimen/space_md"
+    android:paddingBottom="@dimen/space_sm">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/profileName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Launcher.Label"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/profileServer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Launcher.Meta" />
+    </LinearLayout>
+</LinearLayout>

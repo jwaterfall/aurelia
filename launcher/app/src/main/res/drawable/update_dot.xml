@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- On the profile button while an update waits: a small white dot, edged dark so it reads on a light picture. -->
+<!-- On the profile button while an update waits: a dot of the icon's blue, sitting on the button's rim. Not white:
+     solid white on screen means focus. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
-    <solid android:color="@color/text_primary" />
-    <stroke
-        android:width="2dp"
-        android:color="@color/backdrop_base" />
+    <solid android:color="@color/accent" />
 </shape>

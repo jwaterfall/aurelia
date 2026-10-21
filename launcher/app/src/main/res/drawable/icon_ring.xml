@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A hairline of light around the app's icon in a menu, so its dark edge does not sink into the glass.
+     Faint, not white: solid white on screen means focus. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <stroke
+        android:width="1dp"
+        android:color="@color/icon_ring" />
+</shape>
