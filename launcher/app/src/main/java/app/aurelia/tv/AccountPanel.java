@@ -2,6 +2,7 @@ package app.aurelia.tv;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -275,11 +276,32 @@ final class AccountPanel {
 
     /**
      * A newer version of the launcher, when there is one ({@link Updates}): taking it downloads and installs it,
-     * and the launcher opens again by itself once it is in place.
+     * and the launcher opens again by itself once it is in place. Unless GitHub was asked a moment ago, it is asked
+     * again now, and a release it names joins the step when the answer comes.
      */
     private void offerUpdate(PanelStep s) {
-        Updates.Release release = Updates.known(activity);
-        if (release == null) return;
+        Updates.Release known = Updates.known(activity);
+        if (known != null) {
+            updateRow(s, known);
+            return;
+        }
+        if (!Updates.dueForPanel(activity)) return;
+        Context app = activity.getApplicationContext();
+        int mine = step;
+        Api.async(() -> Updates.check(app), new Api.Callback<Updates.Release>() {
+            @Override
+            public void onResult(Updates.Release release) {
+                if (mine == step && release != null) updateRow(s, release);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // Offline, or GitHub busy: the background check tries again later.
+            }
+        });
+    }
+
+    private void updateRow(PanelStep s, Updates.Release release) {
         View row = s.row(activity.getString(R.string.update_to, release.version),
                 activity.getString(R.string.update_detail), null);
         TextView title = row.findViewById(R.id.rowTitle);

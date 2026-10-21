@@ -25,15 +25,16 @@ import java.net.URL;
 
 /**
  * New versions, from this repository's GitHub releases ({@code BuildConfig.UPDATE_REPO}): a release tagged
- * v2.5.0 with the APK attached (.github/workflows/release.yml). Checked now and then in the background; when one
- * is newer, Launcher settings offers it. Taking it downloads the APK and hands it to Android's installer, which
- * asks once to confirm, and after the first update installs the next ones without asking. Once installed, the
- * new version opens itself again ({@link UpdatedReceiver}).
+ * v2.5.0 with the APK attached (.github/workflows/release.yml). Checked every few hours in the background, and as
+ * the profile panel opens; when one is newer, the panel offers it. Taking it downloads the APK and hands it to
+ * Android's installer, which asks once to confirm, and after the first update installs the next ones without
+ * asking. Once installed, the new version opens itself again ({@link UpdatedReceiver}).
  */
 public final class Updates {
 
     /** How often to look: a release can wait a few hours, and GitHub allows 60 unsigned requests an hour. */
     private static final long CHECK_EVERY_MS = 6 * 60 * 60 * 1000L;
+    private static final long PANEL_CHECK_AFTER_MS = 60 * 1000L;
     private static final String PREFS = "updates";
     private static final String KEY_CHECKED = "checked";
     private static final String KEY_VERSION = "version";
@@ -65,7 +66,19 @@ public final class Updates {
 
     /** Whether it is time to ask GitHub again. */
     public static boolean due(Context context) {
-        return System.currentTimeMillis() - prefs(context).getLong(KEY_CHECKED, 0) > CHECK_EVERY_MS;
+        return since(context) > CHECK_EVERY_MS;
+    }
+
+    /**
+     * Whether the profile panel should ask GitHub as it opens. Someone opening it may be looking for a release
+     * made minutes ago, so it does not wait for {@link #due}; opening it again straight away asks only once.
+     */
+    public static boolean dueForPanel(Context context) {
+        return since(context) > PANEL_CHECK_AFTER_MS;
+    }
+
+    private static long since(Context context) {
+        return System.currentTimeMillis() - prefs(context).getLong(KEY_CHECKED, 0);
     }
 
     /** Asks GitHub for the latest release, and remembers it. Null when this build is the latest. Blocks. */
