@@ -640,18 +640,16 @@ public final class PlayerActivity extends Activity {
 
     private void showAudio(View from) {
         if (stream == null) return;
-        GlassMenu.Builder m = new GlassMenu.Builder();
+        GlassMenu.Builder m = new GlassMenu.Builder().add(GlassMenu.Item.heading(getString(R.string.player_audio)));
         if (stream.audio.size() > 1) {
-            m.add(GlassMenu.Item.heading(getString(R.string.player_audio)));
             for (Playback.Track t : stream.audio) {
                 m.add(GlassMenu.Item.option(t.title, null, t.index == stream.audioIndex, () -> chooseAudio(t.index)));
             }
         }
+        // A switch: ticked while on, and choosing it turns it the other way.
         boolean level = prefs.getBoolean(PREF_LEVEL, false);
-        m.add(GlassMenu.Item.heading(getString(R.string.player_level_volume)))
-                .add(GlassMenu.Item.option(getString(R.string.player_off), null, !level, () -> setLevelling(false)))
-                .add(GlassMenu.Item.option(getString(R.string.player_on), getString(R.string.player_level_volume_detail),
-                        level, () -> setLevelling(true)));
+        if (stream.audio.size() > 1) m.add(GlassMenu.Item.heading(getString(R.string.player_sound)));
+        m.add(GlassMenu.Item.option(getString(R.string.player_level_volume), null, level, () -> setLevelling(!level)));
         showMenu(from, m);
     }
 
