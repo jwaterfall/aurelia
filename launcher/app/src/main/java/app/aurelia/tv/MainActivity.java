@@ -292,6 +292,8 @@ public class MainActivity extends Activity {
         setUpRow(recentRow = findViewById(R.id.recentRow), recentAdapter, gutter);
         // The rows as they were last time, at once, while the server is asked again: placeholders only when
         // there is nothing kept (the first start, or another account).
+        // The hero as one placeholder card until its first slide shows.
+        if (account.isSignedIn()) hero.showLoading();
         Library.HomeRows kept = Library.keptHomeRows(this, account);
         if (kept != null) showHomeRows(kept);
         ((app.aurelia.tv.ui.SectionScrollView) pageHome).setAlignTop(false);
@@ -709,6 +711,7 @@ public class MainActivity extends Activity {
 
     private void onAccountChanged() {
         updateProfile();
+        if (account.isSignedIn()) hero.showLoading();
         updateRow(cwAdapter::showLoading);
         refreshJellyfin();
         loadRecent();
