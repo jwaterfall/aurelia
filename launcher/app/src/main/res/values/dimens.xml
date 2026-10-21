@@ -49,6 +49,8 @@
     <dimen name="menu_radius">12dp</dimen>
     <!-- The player: its round buttons, and the show's logo. -->
     <dimen name="player_button">38dp</dimen>
+    <!-- Between groups of player buttons, on top of the usual space after each. -->
+    <dimen name="player_group_gap">@dimen/space_md</dimen>
     <dimen name="player_logo_height">56dp</dimen>
     <dimen name="player_logo_width">360dp</dimen>
     <!-- Between stacked controls in a panel (rows, fields), whatever they are. -->

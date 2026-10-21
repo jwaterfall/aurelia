@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- PlayerActivity: the video, and over it the controls, shown on any key and hidden again while playing:
      at the top the show's logo (or its title) and the episode, with the clock; at the
-     bottom the seek bar between two rows of small buttons (playing, subtitles and audio above it with when it
-     ends; the other options below it with the time), each option opening a menu above it. A skip button or the next episode rises in the corner when there is something to skip to. A glass
+     bottom the seek bar and one row of glass buttons under it, each option opening a menu above it, with the
+     time and when it ends. A skip button or the next episode rises in the corner when there is something to skip to. A glass
      card replaces it all when something cannot be played. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -129,13 +129,44 @@
             android:orientation="vertical"
             android:paddingStart="@dimen/screen_margin"
             android:paddingEnd="@dimen/screen_margin"
-            android:paddingBottom="@dimen/space_md">
+            android:paddingBottom="@dimen/space_lg">
 
-            <!-- Above the bar: playing and what to hear and read, and when it ends. -->
+            <!-- The seek bar. It takes focus: Left and Right scrub, OK pauses. -->
+            <FrameLayout
+                android:id="@+id/playerTrack"
+                android:layout_width="match_parent"
+                android:layout_height="14dp"
+                android:clipChildren="false"
+                android:focusable="true">
+
+                <ProgressBar
+                    android:id="@+id/playerSeek"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_gravity="center_vertical"
+                    android:max="1000"
+                    android:progressDrawable="@drawable/seek_bar" />
+
+                <!-- Where playback is; grows while the bar has focus. -->
+                <View
+                    android:id="@+id/playerThumb"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/seek_thumb"
+                    android:scaleX="0.6"
+                    android:scaleY="0.6" />
+            </FrameLayout>
+
+            <!-- Under the bar, in three groups: playing; what to hear and read; the rest. The time and when it
+                 ends on the far side. PlayerActivity hides buttons that do not apply; each option opens a menu
+                 above it. -->
             <LinearLayout
-                android:id="@+id/playerRowTop"
+                android:id="@+id/playerButtons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:gravity="center_vertical"
@@ -162,6 +193,7 @@
                 <ImageView
                     android:id="@+id/buttonSubtitles"
                     style="@style/Widget.Launcher.PlayerIcon"
+                    android:layout_marginStart="@dimen/player_group_gap"
                     android:contentDescription="@string/player_subtitles"
                     android:src="@drawable/ic_subtitles" />
 
@@ -171,64 +203,10 @@
                     android:contentDescription="@string/player_audio"
                     android:src="@drawable/ic_audio" />
 
-                <Space
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-
-                <TextView
-                    android:id="@+id/playerEnds"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFeatureSettings="tnum"
-                    android:textAppearance="@style/TextAppearance.Launcher.Control"
-                    android:textColor="@color/text_secondary" />
-            </LinearLayout>
-
-            <!-- The seek bar. It takes focus: Left and Right scrub, OK pauses. -->
-            <FrameLayout
-                android:id="@+id/playerTrack"
-                android:layout_width="match_parent"
-                android:layout_height="14dp"
-                android:layout_marginTop="@dimen/space_xs"
-                android:layout_marginBottom="@dimen/space_xs"
-                android:clipChildren="false"
-                android:focusable="true">
-
-                <ProgressBar
-                    android:id="@+id/playerSeek"
-                    style="@android:style/Widget.ProgressBar.Horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="4dp"
-                    android:layout_gravity="center_vertical"
-                    android:max="1000"
-                    android:progressDrawable="@drawable/seek_bar" />
-
-                <!-- Where playback is; grows while the bar has focus. -->
-                <View
-                    android:id="@+id/playerThumb"
-                    android:layout_width="14dp"
-                    android:layout_height="14dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="@drawable/seek_thumb"
-                    android:scaleX="0.6"
-                    android:scaleY="0.6" />
-            </FrameLayout>
-
-            <!-- Below the bar: the rest of the options, and the time. PlayerActivity hides those that do not
-                 apply. Each option opens a menu above it. -->
-            <LinearLayout
-                android:id="@+id/playerRowBottom"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clipChildren="false"
-                android:clipToPadding="false"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
                 <ImageView
                     android:id="@+id/buttonNext"
                     style="@style/Widget.Launcher.PlayerIcon"
+                    android:layout_marginStart="@dimen/player_group_gap"
                     android:contentDescription="@string/player_next_episode"
                     android:src="@drawable/ic_skip_next"
                     android:visibility="gone" />
@@ -270,6 +248,15 @@
                     android:fontFeatureSettings="tnum"
                     android:textAppearance="@style/TextAppearance.Launcher.Control"
                     android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/playerEnds"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_md"
+                    android:fontFeatureSettings="tnum"
+                    android:textAppearance="@style/TextAppearance.Launcher.Control"
+                    android:textColor="@color/text_secondary" />
             </LinearLayout>
         </LinearLayout>
     </FrameLayout>

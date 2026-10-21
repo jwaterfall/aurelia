@@ -34,6 +34,6 @@
     <color name="avatar">#FF4F7BFF</color>
     <color name="progress_track">#40FFFFFF</color>
     <color name="progress_buffered">#66FFFFFF</color>
-    <!-- Under a menu's glass over video: nearly solid, so nothing behind shows through its options. -->
-    <color name="menu_tint">#F00E1118</color>
+    <!-- Under a menu's glass over video: solid, so nothing behind shows through its options. -->
+    <color name="menu_tint">#FF15181F</color>
 </resources>
