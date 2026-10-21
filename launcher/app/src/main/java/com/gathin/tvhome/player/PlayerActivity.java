@@ -814,7 +814,13 @@ public final class PlayerActivity extends Activity {
         if (player == null || stream == null) return;
         long duration = player.getDuration() != C.TIME_UNSET ? player.getDuration() : stream.durationMs;
         long position = scrubTo >= 0 ? scrubTo : player.getCurrentPosition();
-        time.setText(getString(R.string.player_time, clock(position), clock(Math.max(0, duration))));
+        // Where it is, bright; out of how long, quieter.
+        String now = clock(position);
+        android.text.SpannableString t = new android.text.SpannableString(
+                getString(R.string.player_time, now, clock(Math.max(0, duration))));
+        t.setSpan(new android.text.style.ForegroundColorSpan(getColor(R.color.text_secondary)), now.length(), t.length(),
+                android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        time.setText(t);
         long left = Math.max(0, duration - position);
         ends.setText(getString(R.string.player_ends_at, DateFormat.getTimeFormat(this)
                 .format(new Date(System.currentTimeMillis() + (long) (left / speed)))));

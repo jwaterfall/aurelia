@@ -79,17 +79,16 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:singleLine="true"
-                    android:textAppearance="@style/TextAppearance.Launcher.PanelTitle"
-                    android:textSize="24sp" />
+                    android:textAppearance="@style/TextAppearance.Launcher.PlayerTitle" />
 
                 <TextView
                     android:id="@+id/playerSubtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_2xs"
+                    android:layout_marginTop="@dimen/space_xs"
                     android:singleLine="true"
-                    android:textAppearance="@style/TextAppearance.Launcher.Body"
-                    android:textSize="15sp" />
+                    android:textAppearance="@style/TextAppearance.Launcher.PlayerTime"
+                    android:textColor="@color/text_secondary" />
             </LinearLayout>
 
             <!-- The clock as on Home. -->
@@ -114,8 +113,7 @@
                     android:format12Hour="EEE d MMM"
                     android:format24Hour="EEE d MMM"
                     android:includeFontPadding="false"
-                    android:textAppearance="@style/TextAppearance.Launcher.Caption"
-                    android:textSize="12sp" />
+                    android:textAppearance="@style/TextAppearance.Launcher.PlayerNote" />
             </LinearLayout>
         </LinearLayout>
 
@@ -241,22 +239,30 @@
                     android:layout_height="0dp"
                     android:layout_weight="1" />
 
-                <TextView
-                    android:id="@+id/playerTime"
+                <!-- The time, set like the clock at the top: the figure, and a quieter line under it. -->
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFeatureSettings="tnum"
-                    android:textAppearance="@style/TextAppearance.Launcher.Control"
-                    android:textColor="@color/text_primary" />
+                    android:gravity="end"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/playerEnds"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_md"
-                    android:fontFeatureSettings="tnum"
-                    android:textAppearance="@style/TextAppearance.Launcher.Control"
-                    android:textColor="@color/text_secondary" />
+                    <TextView
+                        android:id="@+id/playerTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFeatureSettings="tnum"
+                        android:includeFontPadding="false"
+                        android:textAppearance="@style/TextAppearance.Launcher.PlayerTime" />
+
+                    <TextView
+                        android:id="@+id/playerEnds"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:fontFeatureSettings="tnum"
+                        android:includeFontPadding="false"
+                        android:textAppearance="@style/TextAppearance.Launcher.PlayerNote" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </FrameLayout>
