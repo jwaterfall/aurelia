@@ -336,6 +336,7 @@ final class LibraryPage {
         updatePills();
         focus = 0;
         grid.scrollToPosition(0);
+        clearPreview();
         reload();
     }
 
@@ -422,7 +423,7 @@ final class LibraryPage {
                 apply();
             }));
         }
-        m.add(GlassMenu.Item.heading(""))
+        m.add(GlassMenu.Item.divider())
                 .add(GlassMenu.Item.option(get(R.string.filter_favourites), null, query.favourites, () -> {
                     query.favourites = !query.favourites;
                     apply();

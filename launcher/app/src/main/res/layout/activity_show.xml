@@ -47,21 +47,24 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
+        <!-- Many seasons scroll. The strip runs to the screen's edges and fades there; its margin is on the tabs,
+             so they start on the margin line, and the fade keeps the focused tab clear of the edge. -->
         <HorizontalScrollView
             android:id="@+id/seasonScroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clipToPadding="false"
+            android:fadingEdgeLength="@dimen/screen_margin"
             android:fillViewport="false"
             android:overScrollMode="never"
-            android:paddingStart="@dimen/screen_margin"
-            android:paddingEnd="@dimen/screen_margin"
+            android:requiresFadingEdge="horizontal"
             android:scrollbars="none">
 
             <com.gathin.tvhome.ui.SegmentedControl
                 android:id="@+id/seasons"
                 style="@style/Widget.Launcher.TabBar"
-                android:layout_width="wrap_content" />
+                android:layout_width="wrap_content"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin" />
         </HorizontalScrollView>
 
         <!-- The episode with focus. -->

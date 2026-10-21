@@ -50,6 +50,11 @@ public class GlassMenu extends FrameLayout {
         public static Item heading(CharSequence label) {
             return new Item(label, null, false, null);
         }
+
+        /** A thin line between groups of options that need no heading. */
+        public static Item divider() {
+            return new Item("", null, false, null);
+        }
     }
 
     public static final class Builder {
@@ -111,6 +116,10 @@ public class GlassMenu extends FrameLayout {
         View first = null;
         LayoutInflater inflater = LayoutInflater.from(getContext());
         for (Item item : menu.items) {
+            if (item.action == null && item.label.length() == 0) {
+                rows.addView(inflater.inflate(R.layout.item_menu_divider, rows, false));
+                continue;
+            }
             if (item.action == null) {
                 TextView heading = (TextView) inflater.inflate(R.layout.item_menu_heading, rows, false);
                 heading.setText(item.label);

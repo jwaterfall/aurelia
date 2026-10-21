@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Between groups of options in a GlassMenu. -->
+<View xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/hairline"
+    android:layout_marginStart="@dimen/space_sm"
+    android:layout_marginTop="@dimen/space_xs"
+    android:layout_marginEnd="@dimen/space_sm"
+    android:layout_marginBottom="@dimen/space_xs"
+    android:background="@color/card_hairline" />
