@@ -110,6 +110,11 @@ public final class Library {
         }
     }
 
+    /** The Jellyfin app is installed, to fall back on for what the launcher does not do. */
+    public static boolean hasApp(Context context) {
+        return context.getPackageManager().getLeanbackLaunchIntentForPackage(JELLYFIN_APP) != null;
+    }
+
     /** Opens the Jellyfin app itself, or returns false when it is not installed. */
     public static boolean openApp(Context context) {
         Intent intent = context.getPackageManager().getLeanbackLaunchIntentForPackage(JELLYFIN_APP);

@@ -363,7 +363,10 @@ public class MainActivity extends Activity {
                     cwCaption.setText(null);
                     updateRow(() -> cwAdapter.showMessage(new ContinueWatchingAdapter.Message(R.drawable.ic_check,
                             getString(R.string.cw_empty_title), getString(R.string.cw_empty_body),
-                            getString(R.string.jellyfin_open_app), () -> Library.openApp(MainActivity.this))));
+                            getString(R.string.cw_browse_movies), () -> {
+                                showPage(PAGE_MOVIES, animations);
+                                movies.focusIn();
+                            })));
                     return;
                 }
                 cwCaption.setText(getString(R.string.jellyfin_items, items.size()));

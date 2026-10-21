@@ -163,4 +163,5 @@
     <string name="details_season">S%1$d</string>
     <string name="details_failed">Couldn’t load this from %1$s.</string>
     <string name="watched_mark" translatable="false">✓</string>
+    <string name="cw_browse_movies">Browse movies</string>
 </resources>

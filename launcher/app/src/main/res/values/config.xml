@@ -28,6 +28,8 @@
         <item>com.mitv.gallery</item>
         <!-- The Settings button in the top bar already opens it. -->
         <item>com.android.tv.settings</item>
+        <!-- The launcher plays Jellyfin itself; the app, when installed, opens from the profile button's panel. -->
+        <item>org.jellyfin.androidtv</item>
     </string-array>
 
     <!-- The TV's Live TV / tuner app, offered at the end of the Inputs menu. Leave empty to omit. -->

@@ -506,7 +506,11 @@ public final class PlayerActivity extends Activity {
         errorBody.setText(detail == null ? "" : detail);
         errorBody.setVisibility(detail == null || detail.isEmpty() ? View.GONE : View.VISIBLE);
         error.setVisibility(View.VISIBLE);
-        findViewById(R.id.playerOpenApp).requestFocus();
+        // The Jellyfin app, when there is one, may play what this cannot.
+        View openApp = findViewById(R.id.playerOpenApp);
+        openApp.setVisibility(Library.hasApp(this) ? View.VISIBLE : View.GONE);
+        if (openApp.getVisibility() == View.VISIBLE) openApp.requestFocus();
+        else findViewById(R.id.playerClose).requestFocus();
     }
 
     // ---- the end, and what comes next ------------------------------------------------------------------

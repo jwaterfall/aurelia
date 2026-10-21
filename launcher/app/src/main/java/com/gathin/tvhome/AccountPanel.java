@@ -244,10 +244,12 @@ final class AccountPanel {
         s.avatar(null)
                 .title(account.userName())
                 .body(activity.getString(R.string.jellyfin_signed_in_to, server));
-        s.row(activity.getString(R.string.jellyfin_open_app), null, () -> {
-            close();
-            Library.openApp(activity);
-        });
+        if (Library.hasApp(activity)) {
+            s.row(activity.getString(R.string.jellyfin_open_app), null, () -> {
+                close();
+                Library.openApp(activity);
+            });
+        }
         s.row(activity.getString(R.string.jellyfin_sign_out), null, this::signOut);
         show(s);
         int mine = step;
