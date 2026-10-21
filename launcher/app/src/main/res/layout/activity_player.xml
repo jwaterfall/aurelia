@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- PlayerActivity: the video, and over it the controls, shown on any key and hidden again while playing:
-     at the top the show's logo (or its title) and the episode, with the clock and the signed-in user; at the
+     at the top the show's logo (or its title) and the episode, with the clock; at the
      bottom the seek bar between two rows of small buttons (playing, subtitles and audio above it with when it
      ends; the other options below it with the time), each option opening a menu above it. A skip button or the next episode rises in the corner when there is something to skip to. A glass
      card replaces it all when something cannot be played. -->
@@ -89,26 +89,34 @@
                     android:layout_marginTop="@dimen/space_2xs"
                     android:singleLine="true"
                     android:textAppearance="@style/TextAppearance.Launcher.Body"
-                    android:textSize="14sp" />
+                    android:textSize="15sp" />
             </LinearLayout>
 
-            <TextClock
-                android:id="@+id/playerClock"
+            <!-- The clock as on Home. -->
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/player_avatar"
-                android:gravity="center_vertical"
-                android:textAppearance="@style/TextAppearance.Launcher.Clock" />
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/playerAvatar"
-                android:layout_width="@dimen/player_avatar"
-                android:layout_height="@dimen/player_avatar"
-                android:layout_marginStart="@dimen/space_sm"
-                android:background="@drawable/avatar"
-                android:importantForAccessibility="no"
-                android:padding="6dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_person" />
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:format12Hour="h:mm"
+                    android:format24Hour="HH:mm"
+                    android:includeFontPadding="false"
+                    android:textAppearance="@style/TextAppearance.Launcher.Clock" />
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:format12Hour="EEE d MMM"
+                    android:format24Hour="EEE d MMM"
+                    android:includeFontPadding="false"
+                    android:textAppearance="@style/TextAppearance.Launcher.Caption"
+                    android:textSize="12sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -136,7 +144,6 @@
                 <ImageView
                     android:id="@+id/buttonPlay"
                     style="@style/Widget.Launcher.PlayerIcon"
-                    android:layout_marginStart="-8dp"
                     android:contentDescription="@string/player_play_pause"
                     android:src="@drawable/ic_pause" />
 
@@ -174,7 +181,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFeatureSettings="tnum"
-                    android:textAppearance="@style/TextAppearance.Launcher.Caption"
+                    android:textAppearance="@style/TextAppearance.Launcher.Control"
                     android:textColor="@color/text_secondary" />
             </LinearLayout>
 
@@ -183,6 +190,8 @@
                 android:id="@+id/playerTrack"
                 android:layout_width="match_parent"
                 android:layout_height="14dp"
+                android:layout_marginTop="@dimen/space_xs"
+                android:layout_marginBottom="@dimen/space_xs"
                 android:clipChildren="false"
                 android:focusable="true">
 
@@ -220,7 +229,6 @@
                 <ImageView
                     android:id="@+id/buttonNext"
                     style="@style/Widget.Launcher.PlayerIcon"
-                    android:layout_marginStart="-8dp"
                     android:contentDescription="@string/player_next_episode"
                     android:src="@drawable/ic_skip_next"
                     android:visibility="gone" />

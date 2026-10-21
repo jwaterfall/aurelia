@@ -47,11 +47,10 @@
     <dimen name="menu_row_radius">8dp</dimen>
     <!-- The rows' radius plus the card's padding, so the corners nest. -->
     <dimen name="menu_radius">12dp</dimen>
-    <!-- The player: its small round buttons, the show's logo, and the user's picture by the clock. -->
-    <dimen name="player_button">36dp</dimen>
+    <!-- The player: its round buttons, and the show's logo. -->
+    <dimen name="player_button">38dp</dimen>
     <dimen name="player_logo_height">56dp</dimen>
     <dimen name="player_logo_width">360dp</dimen>
-    <dimen name="player_avatar">32dp</dimen>
     <!-- Between stacked controls in a panel (rows, fields), whatever they are. -->
     <dimen name="control_stack_gap">@dimen/space_sm</dimen>
 

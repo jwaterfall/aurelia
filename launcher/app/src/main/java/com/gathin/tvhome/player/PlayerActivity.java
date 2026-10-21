@@ -130,7 +130,6 @@ public final class PlayerActivity extends Activity {
     private TextView ends;
     private TextView time;
     private ImageView logo;
-    private ImageView avatar;
     private ProgressBar seek;
     private View thumb;
     private ImageView playButton;
@@ -184,8 +183,6 @@ public final class PlayerActivity extends Activity {
         ends = findViewById(R.id.playerEnds);
         time = findViewById(R.id.playerTime);
         logo = findViewById(R.id.playerLogo);
-        avatar = findViewById(R.id.playerAvatar);
-        avatar.setClipToOutline(true);
         seek = findViewById(R.id.playerSeek);
         thumb = findViewById(R.id.playerThumb);
         playButton = findViewById(R.id.buttonPlay);
@@ -224,24 +221,7 @@ public final class PlayerActivity extends Activity {
             finish();
             return;
         }
-        loadAvatar();
         open(itemId, firstOptions());
-    }
-
-    private void loadAvatar() {
-        Api.async(() -> Library.avatar(account), new Api.Callback<android.graphics.Bitmap>() {
-            @Override
-            public void onResult(android.graphics.Bitmap picture) {
-                if (picture == null) return;
-                avatar.setPadding(0, 0, 0, 0);
-                avatar.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                avatar.setImageBitmap(picture);
-            }
-
-            @Override
-            public void onError(Exception e) {
-            }
-        });
     }
 
     /** The show's logo in place of its title, once it arrives; the title stays when there is none. */

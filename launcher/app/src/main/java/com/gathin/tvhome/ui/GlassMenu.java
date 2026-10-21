@@ -111,8 +111,6 @@ public class GlassMenu extends FrameLayout {
             if (item.action == null) {
                 TextView heading = (TextView) inflater.inflate(R.layout.item_menu_heading, rows, false);
                 heading.setText(item.label);
-                if (rows.getChildCount() == 0) heading.setPadding(heading.getPaddingLeft(), 0,
-                        heading.getPaddingRight(), heading.getPaddingBottom());
                 rows.addView(heading);
                 continue;
             }
