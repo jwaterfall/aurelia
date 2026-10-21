@@ -104,4 +104,7 @@
     <string name="player_level_volume_detail">Quiet dialogue louder, loud scenes softer</string>
     <string name="player_on">On</string>
     <string name="player_tracks">Tracks</string>
+    <string name="player_play_pause">Play or pause</string>
+    <string name="player_rewind">Back 10 seconds</string>
+    <string name="player_forward">Forward 10 seconds</string>
 </resources>

@@ -103,4 +103,7 @@
     <string name="player_level_volume_detail">דיאלוג שקט חזק יותר, סצנות רועשות רכות יותר</string>
     <string name="player_on">מופעל</string>
     <string name="player_tracks">רצועות</string>
+    <string name="player_play_pause">הפעלה או השהיה</string>
+    <string name="player_rewind">10 שניות אחורה</string>
+    <string name="player_forward">10 שניות קדימה</string>
 </resources>

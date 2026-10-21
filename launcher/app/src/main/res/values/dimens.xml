@@ -40,8 +40,10 @@
     <dimen name="panel_padding">32dp</dimen>
     <dimen name="panel_margin">@dimen/space_lg</dimen>
     <dimen name="row_height">52dp</dimen>
-    <!-- How far a panel's scrolling rows reach past them (space_xs), for the focused row's lift. -->
-    <dimen name="panel_row_bleed_negative">-8dp</dimen>
+    <!-- A GlassMenu over the player. -->
+    <dimen name="menu_width">300dp</dimen>
+    <!-- The round buttons under the player's seek bar. -->
+    <dimen name="player_button">44dp</dimen>
     <!-- Between stacked controls in a panel (rows, fields), whatever they are. -->
     <dimen name="control_stack_gap">@dimen/space_sm</dimen>
 

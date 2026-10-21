@@ -28,10 +28,10 @@ import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.Tracks;
 import androidx.media3.common.util.UnstableApi;
-import androidx.media3.common.util.Util;
 import androidx.media3.datasource.DefaultDataSource;
 import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.exoplayer.DefaultRenderersFactory;
+import androidx.media3.exoplayer.ExoPlaybackException;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.ui.CaptionStyleCompat;
@@ -45,8 +45,7 @@ import com.gathin.tvhome.jellyfin.Api;
 import com.gathin.tvhome.jellyfin.DeviceProfile;
 import com.gathin.tvhome.jellyfin.Library;
 import com.gathin.tvhome.jellyfin.Playback;
-import com.gathin.tvhome.ui.GlassSheet;
-import com.gathin.tvhome.ui.PanelStep;
+import com.gathin.tvhome.ui.GlassMenu;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,8 +59,9 @@ import java.util.Locale;
  *
  * Remote, controls hidden: OK pauses, Left and Right skip (further while held), Up or Down shows the controls.
  * When a skip button or the next episode is showing in the corner, OK takes it. Controls showing: the seek bar
- * has focus (Left and Right scrub, OK pauses), and Down reaches the options under it: subtitles, audio (with
- * volume levelling), speed, quality and the next episode. Back hides what is showing, then leaves.
+ * has focus (Left and Right scrub, OK pauses), and Down reaches the round buttons under it: play, back, forward
+ * and the next episode on the left; subtitles, audio (with volume levelling), speed and quality on the right,
+ * each opening a menu above it. Back closes what is showing, then leaves.
  *
  * Changing something the player cannot change by itself (another audio track of a converted stream, subtitles
  * the server burns in, the quality) opens the stream again where it was.
@@ -128,19 +128,17 @@ public final class PlayerActivity extends Activity {
     private TextView title;
     private TextView subtitle;
     private TextView ends;
-    private ImageView state;
     private TextView elapsed;
     private TextView remaining;
     private ProgressBar seek;
     private View thumb;
-    private TextView speedButton;
-    private View audioButton;
-    private View subtitlesButton;
+    private ImageView playButton;
     private View nextButton;
+    private TextView buttonLabel;
     private TextView skip;
     private View upNext;
     private TextView upNextDetail;
-    private GlassSheet sheet;
+    private GlassMenu menu;
     private PlayerView video;
     private View error;
     private TextView errorBody;
@@ -185,29 +183,37 @@ public final class PlayerActivity extends Activity {
         title = findViewById(R.id.playerTitle);
         subtitle = findViewById(R.id.playerSubtitle);
         ends = findViewById(R.id.playerEnds);
-        state = findViewById(R.id.playerState);
         elapsed = findViewById(R.id.playerElapsed);
         remaining = findViewById(R.id.playerRemaining);
         seek = findViewById(R.id.playerSeek);
         thumb = findViewById(R.id.playerThumb);
-        subtitlesButton = findViewById(R.id.buttonSubtitles);
-        audioButton = findViewById(R.id.buttonAudio);
-        speedButton = findViewById(R.id.buttonSpeed);
+        playButton = findViewById(R.id.buttonPlay);
         nextButton = findViewById(R.id.buttonNext);
+        buttonLabel = findViewById(R.id.playerButtonLabel);
         skip = findViewById(R.id.playerSkip);
         upNext = findViewById(R.id.playerUpNext);
         upNextDetail = findViewById(R.id.upNextDetail);
-        sheet = findViewById(R.id.playerSheet);
-        sheet.setOverVideo(true);
+        menu = findViewById(R.id.playerMenu);
         error = findViewById(R.id.playerError);
         errorBody = findViewById(R.id.playerErrorBody);
 
-        track.setOnFocusChangeListener((v, focused) -> thumb.setVisibility(focused ? View.VISIBLE : View.INVISIBLE));
-        subtitlesButton.setOnClickListener(v -> showSubtitles());
-        audioButton.setOnClickListener(v -> showAudio());
-        speedButton.setOnClickListener(v -> showSpeed());
-        findViewById(R.id.buttonQuality).setOnClickListener(v -> showQuality());
+        track.setOnFocusChangeListener((v, focused) -> {
+            float scale = focused ? 1f : 0.6f;
+            thumb.animate().scaleX(scale).scaleY(scale).setDuration(FADE_MS).setInterpolator(ease).start();
+        });
+        playButton.setOnClickListener(v -> togglePause());
+        findViewById(R.id.buttonRewind).setOnClickListener(v -> scrub(-SKIP_MS));
+        findViewById(R.id.buttonForward).setOnClickListener(v -> scrub(SKIP_MS));
         nextButton.setOnClickListener(v -> playNext());
+        findViewById(R.id.buttonSubtitles).setOnClickListener(this::showSubtitles);
+        findViewById(R.id.buttonAudio).setOnClickListener(this::showAudio);
+        findViewById(R.id.buttonSpeed).setOnClickListener(this::showSpeed);
+        findViewById(R.id.buttonQuality).setOnClickListener(this::showQuality);
+        ViewGroup buttons = findViewById(R.id.playerButtons);
+        for (int i = 0; i < buttons.getChildCount(); i++) {
+            View b = buttons.getChildAt(i);
+            if (b.isFocusable()) b.setOnFocusChangeListener((v, focused) -> labelButton(v, focused));
+        }
         skip.setOnClickListener(v -> skipSegment());
         upNext.setOnClickListener(v -> playNext());
         findViewById(R.id.playerOpenApp).setOnClickListener(v -> {
@@ -221,7 +227,14 @@ public final class PlayerActivity extends Activity {
             finish();
             return;
         }
-        open(itemId, new Playback.Options());
+        open(itemId, firstOptions());
+    }
+
+    /** Levelling needs audio the TV decodes, so with it on, Dolby and DTS are converted from the start. */
+    private Playback.Options firstOptions() {
+        Playback.Options o = new Playback.Options();
+        o.compatibleAudio = prefs.getBoolean(PREF_LEVEL, false);
+        return o;
     }
 
     // ---- opening a stream ------------------------------------------------------------------------------
@@ -282,8 +295,7 @@ public final class PlayerActivity extends Activity {
         title.setText(s.title);
         subtitle.setText(s.subtitle);
         subtitle.setVisibility(s.subtitle.isEmpty() ? View.GONE : View.VISIBLE);
-        subtitlesButton.setVisibility(s.subtitles.isEmpty() ? View.GONE : View.VISIBLE);
-        speedButton.setText(speedLabel());
+        findViewById(R.id.buttonSubtitles).setVisibility(s.subtitles.isEmpty() ? View.GONE : View.VISIBLE);
 
         DefaultHttpDataSource.Factory http = new DefaultHttpDataSource.Factory()
                 .setUserAgent("TvHome/" + BuildConfig.VERSION_NAME)
@@ -294,7 +306,6 @@ public final class PlayerActivity extends Activity {
                 .setAudioAttributes(new androidx.media3.common.AudioAttributes.Builder()
                         .setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(), true)
                 .build();
-        player.setAudioSessionId(Util.generateAudioSessionIdV21(this));
         leveler.apply(player.getAudioSessionId(), prefs.getBoolean(PREF_LEVEL, false));
         video.setPlayer(player);
         player.addListener(new Player.Listener() {
@@ -306,7 +317,7 @@ public final class PlayerActivity extends Activity {
 
             @Override
             public void onIsPlayingChanged(boolean isPlaying) {
-                state.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+                playButton.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
                 // Paused: the controls stay, so it is clear why nothing moves.
                 if (isPlaying) scheduleHide();
                 else if (player.getPlaybackState() == Player.STATE_READY) showChrome(true);
@@ -328,6 +339,11 @@ public final class PlayerActivity extends Activity {
             @Override
             public void onPlayerError(@NonNull PlaybackException e) {
                 Log.w(TAG, "Playback failed for " + itemId + " (" + stream.method + ")", e);
+                // Audio the TV turned down (Dolby it cannot pass through after all): once more, converted.
+                if (isAudioFailure(e) && !stream.compatibleAudio) {
+                    reopen(o -> o.compatibleAudio = true);
+                    return;
+                }
                 fail(e.getErrorCodeName());
             }
         });
@@ -426,6 +442,13 @@ public final class PlayerActivity extends Activity {
         if (subOk) s.subtitleIndex = sub;
     }
 
+    private static boolean isAudioFailure(PlaybackException e) {
+        return e instanceof ExoPlaybackException
+                && ((ExoPlaybackException) e).type == ExoPlaybackException.TYPE_RENDERER
+                && ((ExoPlaybackException) e).rendererFormat != null
+                && MimeTypes.isAudio(((ExoPlaybackException) e).rendererFormat.sampleMimeType);
+    }
+
     private String methodLabel(Playback.Stream s) {
         switch (s.method) {
             case DirectPlay: return getString(R.string.player_direct_play);
@@ -461,7 +484,7 @@ public final class PlayerActivity extends Activity {
     private void fail(String detail) {
         stopPlayer();
         handler.removeCallbacksAndMessages(null);
-        sheet.hide();
+        menu.hide();
         hideCorner();
         buffering.setVisibility(View.INVISIBLE);
         chrome.setVisibility(View.GONE);
@@ -483,18 +506,18 @@ public final class PlayerActivity extends Activity {
         if (next == null) return;
         Playback.Next n = next;
         retriedTracks = false;
-        sheet.hide();
+        menu.hide();
         hideCorner();
         stopPlayer();
-        Playback.Options o = new Playback.Options();
+        Playback.Options o = firstOptions();
         o.maxBitrate = stream.maxBitrate;
-        o.compatibleAudio = stream.compatibleAudio;
+        o.compatibleAudio |= stream.compatibleAudio;
         open(n.itemId, o);
     }
 
     /** The skip button or the next episode, in the corner, for the part playing now. */
     private void updateCorner() {
-        if (stream == null || sheet.isShowing()) return;
+        if (stream == null || menu.isShowing()) return;
         long pos = player.getCurrentPosition();
         Playback.Segment now = null;
         for (Playback.Segment seg : segments) if (seg.contains(pos)) now = seg;
@@ -577,39 +600,27 @@ public final class PlayerActivity extends Activity {
 
     // ---- menus -----------------------------------------------------------------------------------------
 
-    private PanelStep newMenu(int titleRes) {
-        PanelStep step = new PanelStep(this, sheet);
-        step.title(getString(titleRes));
-        return step;
-    }
-
-    private void showMenu(PanelStep step, View chosen) {
+    private void showMenu(View from, GlassMenu.Builder items) {
         handler.removeCallbacks(hideChrome);
-        sheet.show(step.view(), (ViewGroup) chrome);
-        if (chosen != null) chosen.post(chosen::requestFocus);
+        menu.show(from, items, (ViewGroup) chrome);
     }
 
-    private void closeMenu() {
-        sheet.hide();
-        scheduleHide();
-    }
-
-    private void showSubtitles() {
+    private void showSubtitles(View from) {
         if (stream == null) return;
-        PanelStep step = newMenu(R.string.player_subtitles);
-        View chosen = step.choice(getString(R.string.player_off), null, stream.subtitleIndex == Playback.OFF,
-                () -> chooseSubtitle(Playback.OFF));
+        GlassMenu.Builder m = new GlassMenu.Builder()
+                .add(GlassMenu.Item.heading(getString(R.string.player_subtitles)))
+                .add(GlassMenu.Item.option(getString(R.string.player_off), null, stream.subtitleIndex == Playback.OFF,
+                        () -> chooseSubtitle(Playback.OFF)));
         for (Playback.Track t : stream.subtitles) {
             String detail = "Encode".equals(t.delivery) && stream.method == Playback.Method.DirectPlay
                     ? getString(R.string.player_burned_in) : null;
-            View row = step.choice(t.title, detail, t.index == stream.subtitleIndex, () -> chooseSubtitle(t.index));
-            if (t.index == stream.subtitleIndex) chosen = row;
+            m.add(GlassMenu.Item.option(t.title, detail, t.index == stream.subtitleIndex, () -> chooseSubtitle(t.index)));
         }
-        showMenu(step, chosen);
+        showMenu(from, m);
     }
 
     private void chooseSubtitle(int index) {
-        closeMenu();
+        scheduleHide();
         Playback.Track t = stream.subtitle(index);
         subtitleLanguage = t == null ? "" : t.language.isEmpty() ? null : t.language;
         if (TrackMatcher.selectSubtitle(player, stream, index)) {
@@ -621,24 +632,25 @@ public final class PlayerActivity extends Activity {
         }
     }
 
-    private void showAudio() {
+    private void showAudio(View from) {
         if (stream == null) return;
-        PanelStep step = newMenu(R.string.player_audio);
-        View chosen = null;
+        GlassMenu.Builder m = new GlassMenu.Builder();
         if (stream.audio.size() > 1) {
+            m.add(GlassMenu.Item.heading(getString(R.string.player_audio)));
             for (Playback.Track t : stream.audio) {
-                View row = step.choice(t.title, null, t.index == stream.audioIndex, () -> chooseAudio(t.index));
-                if (t.index == stream.audioIndex) chosen = row;
+                m.add(GlassMenu.Item.option(t.title, null, t.index == stream.audioIndex, () -> chooseAudio(t.index)));
             }
         }
         boolean level = prefs.getBoolean(PREF_LEVEL, false);
-        View levelRow = step.choice(getString(R.string.player_level_volume),
-                getString(R.string.player_level_volume_detail), level, () -> setLevelling(!level));
-        showMenu(step, chosen != null ? chosen : levelRow);
+        m.add(GlassMenu.Item.heading(getString(R.string.player_level_volume)))
+                .add(GlassMenu.Item.option(getString(R.string.player_off), null, !level, () -> setLevelling(false)))
+                .add(GlassMenu.Item.option(getString(R.string.player_on), getString(R.string.player_level_volume_detail),
+                        level, () -> setLevelling(true)));
+        showMenu(from, m);
     }
 
     private void chooseAudio(int index) {
-        closeMenu();
+        scheduleHide();
         Playback.Track t = stream.audioTrack(index);
         audioLanguage = t == null || t.language.isEmpty() ? null : t.language;
         if (TrackMatcher.selectAudio(player, stream, index)) {
@@ -650,9 +662,12 @@ public final class PlayerActivity extends Activity {
         }
     }
 
-    /** Levelling needs audio the TV decodes: Dolby passed through to an amplifier is converted first. */
+    /**
+     * Levelling works on audio the TV decodes, so turning it on converts Dolby or DTS that was being passed
+     * through to an amplifier. Turning it off leaves the stream as it is.
+     */
     private void setLevelling(boolean on) {
-        closeMenu();
+        scheduleHide();
         prefs.edit().putBoolean(PREF_LEVEL, on).apply();
         if (on && !stream.compatibleAudio && TrackMatcher.isPassthroughAudio(player)) {
             reopen(o -> o.compatibleAudio = true);
@@ -661,22 +676,19 @@ public final class PlayerActivity extends Activity {
         leveler.apply(player.getAudioSessionId(), on);
     }
 
-    private void showSpeed() {
-        PanelStep step = newMenu(R.string.player_speed);
-        View chosen = null;
+    private void showSpeed(View from) {
+        GlassMenu.Builder m = new GlassMenu.Builder().add(GlassMenu.Item.heading(getString(R.string.player_speed)));
         for (float s : SPEEDS) {
             String label = s == 1f ? getString(R.string.player_speed_normal) : speedText(s) + "×";
-            View row = step.choice(label, null, s == speed, () -> chooseSpeed(s));
-            if (s == speed) chosen = row;
+            m.add(GlassMenu.Item.option(label, null, s == speed, () -> chooseSpeed(s)));
         }
-        showMenu(step, chosen);
+        showMenu(from, m);
     }
 
     /** Dolby passed through to an amplifier plays at one speed only, so it is converted for any other. */
     private void chooseSpeed(float s) {
-        closeMenu();
+        scheduleHide();
         speed = s;
-        speedButton.setText(speedLabel());
         if (s != 1f && !stream.compatibleAudio && TrackMatcher.isPassthroughAudio(player)) {
             reopen(o -> o.compatibleAudio = true);
             return;
@@ -684,28 +696,23 @@ public final class PlayerActivity extends Activity {
         player.setPlaybackSpeed(s);
     }
 
-    private String speedLabel() {
-        return speed == 1f ? getString(R.string.player_speed) : getString(R.string.player_speed_value, speedText(speed));
-    }
-
     private static String speedText(float s) {
         return s == (int) s ? String.valueOf((int) s) : String.valueOf(s);
     }
 
-    private void showQuality() {
+    private void showQuality(View from) {
         if (stream == null) return;
-        PanelStep step = newMenu(R.string.player_quality);
-        boolean original = stream.maxBitrate >= DeviceProfile.MAX_BITRATE;
-        View chosen = step.choice(getString(R.string.player_original), getString(R.string.player_original_detail),
-                original, () -> chooseQuality(DeviceProfile.MAX_BITRATE));
+        GlassMenu.Builder m = new GlassMenu.Builder()
+                .add(GlassMenu.Item.heading(getString(R.string.player_quality)))
+                .add(GlassMenu.Item.option(getString(R.string.player_original), getString(R.string.player_original_detail),
+                        stream.maxBitrate >= DeviceProfile.MAX_BITRATE, () -> chooseQuality(DeviceProfile.MAX_BITRATE)));
         for (int mbps : BITRATES_MBPS) {
             int bps = mbps * 1_000_000;
             if (stream.sourceBitrate > 0 && bps >= stream.sourceBitrate) continue;
-            View row = step.choice(getString(R.string.player_quality_value, String.valueOf(mbps)),
-                    resolutionFor(mbps), bps == stream.maxBitrate, () -> chooseQuality(bps));
-            if (bps == stream.maxBitrate) chosen = row;
+            m.add(GlassMenu.Item.option(getString(R.string.player_quality_value, String.valueOf(mbps)),
+                    resolutionFor(mbps), bps == stream.maxBitrate, () -> chooseQuality(bps)));
         }
-        showMenu(step, chosen);
+        showMenu(from, m);
     }
 
     /** What the server makes of a bitrate, roughly. */
@@ -717,9 +724,26 @@ public final class PlayerActivity extends Activity {
     }
 
     private void chooseQuality(int bps) {
-        closeMenu();
+        scheduleHide();
         if (bps == stream.maxBitrate) return;
         reopen(o -> o.maxBitrate = bps);
+    }
+
+    /** The focused button's name, centred under it. */
+    private void labelButton(View button, boolean focused) {
+        if (!focused) {
+            buttonLabel.animate().alpha(0f).setDuration(FADE_MS / 2).start();
+            return;
+        }
+        buttonLabel.setText(button.getContentDescription());
+        buttonLabel.post(() -> {
+            View row = (View) button.getParent();
+            float centre = row.getLeft() + button.getLeft() + button.getWidth() / 2f;
+            float x = centre - buttonLabel.getWidth() / 2f - buttonLabel.getLeft();
+            float max = row.getRight() - buttonLabel.getWidth() - buttonLabel.getLeft();
+            buttonLabel.setTranslationX(Math.max(row.getLeft() - buttonLabel.getLeft(), Math.min(x, max)));
+            buttonLabel.animate().alpha(1f).setDuration(FADE_MS).start();
+        });
     }
 
     // ---- controls --------------------------------------------------------------------------------------
@@ -729,7 +753,7 @@ public final class PlayerActivity extends Activity {
         chromeShown = show;
         if (show) {
             updateTimes();
-            if (!chrome.hasFocus() && !sheet.isShowing()) track.requestFocus();
+            if (!chrome.hasFocus() && !menu.isShowing()) track.requestFocus();
         } else if (chrome.hasFocus()) {
             // Nothing visible keeps focus; a skip button in the corner takes it if one is showing.
             if (skip.getVisibility() == View.VISIBLE) skip.requestFocus();
@@ -749,7 +773,7 @@ public final class PlayerActivity extends Activity {
 
     private void scheduleHide() {
         handler.removeCallbacks(hideChrome);
-        if (!sheet.isShowing()) handler.postDelayed(hideChrome, CHROME_MS);
+        if (!menu.isShowing()) handler.postDelayed(hideChrome, CHROME_MS);
     }
 
     private boolean chromeShowing() {
@@ -815,7 +839,7 @@ public final class PlayerActivity extends Activity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        if (player == null || error.getVisibility() == View.VISIBLE || sheet.isShowing()
+        if (player == null || error.getVisibility() == View.VISIBLE || menu.isShowing()
                 || event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
             return super.dispatchKeyEvent(event);
         }
@@ -893,8 +917,9 @@ public final class PlayerActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (sheet.isShowing()) {
-            closeMenu();
+        if (menu.isShowing()) {
+            menu.hide();
+            scheduleHide();
             return;
         }
         if (player != null && upNext.getVisibility() == View.VISIBLE) {

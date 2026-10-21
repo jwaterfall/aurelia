@@ -43,7 +43,6 @@ public class GlassSheet extends FrameLayout {
     private int behindFocusability;
     private View returnFocus;
     private boolean animate = true;
-    private boolean overVideo;
     /** Open, or opening; false as soon as it starts closing. */
     private boolean open;
 
@@ -79,15 +78,6 @@ public class GlassSheet extends FrameLayout {
 
     public void setAnimationsEnabled(boolean enabled) {
         animate = enabled;
-    }
-
-    /**
-     * Over playing video, which a snapshot cannot capture and which should keep playing in view: no frost, just a
-     * shade towards the panel, and a darker glass that text reads on over any picture.
-     */
-    public void setOverVideo(boolean video) {
-        overVideo = video;
-        panel.setBackgroundResource(video ? R.drawable.glass_panel_video : R.drawable.glass_panel_surface);
     }
 
     public boolean isShowing() {
@@ -131,11 +121,6 @@ public class GlassSheet extends FrameLayout {
 
     /** Blurs what is on screen now into the layer behind the panel; a plain dim if it cannot be drawn. */
     private void frost() {
-        if (overVideo) {
-            scrim.setImageDrawable(null);
-            scrim.setBackgroundResource(R.drawable.sheet_video_scrim);
-            return;
-        }
         View screen = (View) getParent();
         Bitmap blurred = screen == null ? null : Blur.snapshot(screen, 8, 4);
         if (blurred == null) {

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Behind a panel over video: the picture stays in view, shaded towards the panel on the right. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <gradient
-        android:angle="0"
-        android:startColor="#1A000000"
-        android:centerColor="#4D000000"
-        android:endColor="#A6000000" />
-</shape>

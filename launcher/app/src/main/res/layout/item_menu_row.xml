@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One of several options in a panel (a subtitle language, a speed): a panel row with a tick on the chosen one. -->
+<!-- An option in a GlassMenu: a pill that turns white with focus, with a tick on the chosen one. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Widget.Launcher.PanelRow"
-    android:orientation="horizontal">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/glass_row"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/control_height"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/space_md"
+    android:paddingTop="@dimen/space_2xs"
+    android:paddingEnd="@dimen/space_sm"
+    android:paddingBottom="@dimen/space_2xs"
+    android:stateListAnimator="@animator/row_lift">
 
     <LinearLayout
         android:layout_width="0dp"
@@ -24,7 +35,6 @@
             android:id="@+id/rowSubtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
             android:duplicateParentState="true"
             android:ellipsize="end"
             android:singleLine="true"
@@ -34,9 +44,9 @@
 
     <ImageView
         android:id="@+id/rowCheck"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginStart="@dimen/space_sm"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_marginStart="@dimen/space_xs"
         android:duplicateParentState="true"
         android:importantForAccessibility="no"
         android:src="@drawable/ic_tick"

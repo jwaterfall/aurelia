@@ -83,42 +83,25 @@
             android:textAppearance="@style/TextAppearance.Launcher.Caption" />
     </LinearLayout>
 
-    <!-- The controls: a text field if the step has one, then the choices, all control_stack_gap apart. They
-         scroll when there are more than fit (a film's subtitle languages); the scroller reaches a little past the
-         rows on every side, so a focused row's lift is not cut off. -->
-    <ScrollView
-        android:id="@+id/stepScroll"
+    <!-- The controls: a text field if the step has one, then the choices, all control_stack_gap apart. -->
+    <LinearLayout
+        android:id="@+id/stepRows"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginStart="@dimen/panel_row_bleed_negative"
-        android:layout_marginTop="@dimen/space_md"
-        android:layout_marginEnd="@dimen/panel_row_bleed_negative"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_lg"
+        android:clipChildren="false"
         android:clipToPadding="false"
-        android:fadingEdgeLength="@dimen/space_lg"
-        android:overScrollMode="never"
-        android:padding="@dimen/space_xs"
-        android:requiresFadingEdge="vertical"
-        android:scrollbars="none">
+        android:animateLayoutChanges="true"
+        android:divider="@drawable/control_stack_gap"
+        android:orientation="vertical"
+        android:showDividers="middle">
 
-        <LinearLayout
-            android:id="@+id/stepRows"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipChildren="false"
-            android:clipToPadding="false"
-            android:animateLayoutChanges="true"
-            android:divider="@drawable/control_stack_gap"
-            android:orientation="vertical"
-            android:showDividers="middle">
-
-            <EditText
-                android:id="@+id/stepField"
-                style="@style/Widget.Launcher.TextField"
-                android:imeOptions="actionGo"
-                android:importantForAutofill="no"
-                android:inputType="textUri"
-                android:visibility="gone" />
-        </LinearLayout>
-    </ScrollView>
+        <EditText
+            android:id="@+id/stepField"
+            style="@style/Widget.Launcher.TextField"
+            android:imeOptions="actionGo"
+            android:importantForAutofill="no"
+            android:inputType="textUri"
+            android:visibility="gone" />
+    </LinearLayout>
 </LinearLayout>
