@@ -52,6 +52,10 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         /** {@code art} is the card's artwork, or null while it is still loading. */
         void onItemFocused(Library.MediaItem item, Drawable art);
         void onItemClicked(Library.MediaItem item);
+        /** OK held on a card. True when it opened something, so the press does not also play the card. */
+        default boolean onItemLongClicked(Library.MediaItem item, View card) {
+            return false;
+        }
         /** Focus on a placeholder or a message: nothing to show behind it. */
         void onNothingFocused();
     }
@@ -187,6 +191,7 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         h.itemView.setBackgroundResource(R.drawable.glass_card);
         h.itemView.setOutlineProvider(null);
         h.itemView.setOnClickListener(null);
+        h.itemView.setOnLongClickListener(null);
         h.itemView.setOnFocusChangeListener((v, focused) -> {
             if (focused) listener.onNothingFocused();
         });
@@ -209,6 +214,7 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             if (focused) listener.onItemFocused(item, h.backdrop.getDrawable());
         });
         h.itemView.setOnClickListener(v -> listener.onItemClicked(item));
+        h.itemView.setOnLongClickListener(v -> listener.onItemLongClicked(item, v));
         loadImage(h, item);
         // Rebound under the focus (a placeholder turning into this card): no focus change will report it.
         if (h.itemView.isFocused()) listener.onItemFocused(item, h.backdrop.getDrawable());

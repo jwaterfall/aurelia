@@ -76,7 +76,8 @@ public final class LauncherSettingsActivity extends Activity {
         followThemeChoice = findViewById(R.id.followThemeChoice);
         followThemeChoice.setOnClickListener(v -> {
             if (!hasOnTvChoices()) return;
-            choices.edit().remove("columns").remove("animations").remove("advanced_effects").commit();
+            choices.edit().remove("columns").remove("animations").remove("advanced_effects")
+                    .remove(PinnedApps.KEY).commit();
             Config current = Config.load(this);
             columns = current.columns;
             animations = current.animations;
@@ -121,7 +122,7 @@ public final class LauncherSettingsActivity extends Activity {
 
     private boolean hasOnTvChoices() {
         return choices.contains("columns") || choices.contains("animations")
-                || choices.contains("advanced_effects");
+                || choices.contains("advanced_effects") || choices.contains(PinnedApps.KEY);
     }
 
     private void open(Intent intent) {

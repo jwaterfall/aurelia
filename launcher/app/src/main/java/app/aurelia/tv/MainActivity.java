@@ -7,8 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.provider.Settings;
 import android.view.KeyEvent;
 import android.view.View;
@@ -38,8 +40,12 @@ import app.aurelia.tv.ui.SegmentedControl;
 import app.aurelia.tv.ui.ShelfLayoutManager;
 import app.aurelia.tv.update.Updates;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * The launcher: a top bar (profile, Settings, Search, the tabs, the clock) over four pages. Home has the Jellyfin
@@ -88,6 +94,19 @@ public class MainActivity extends Activity {
     private final Account.Listener accountListener = this::onAccountChanged;
     private final PathInterpolator ease = new PathInterpolator(0.2f, 0f, 0f, 1f);
 
+    /** Every app, by name, and the packages pinned to Home in their order (the theme's until changed here). */
+    private List<InstalledApps.App> allApps = Collections.emptyList();
+    private List<String> pinned;
+    /** Continue Watching and Next Up as they show now, for the cards' menus. */
+    private Library.HomeRows homeRows;
+    /** Counts the requests for Home's rows, so an answer can be told from one asked for before a change. */
+    private int homeRequest;
+    /**
+     * Cards taken off Home from their menu, by id, with the first request for Home's rows whose answer may show
+     * them again: none while the server is still being told, then one asked for after it knew.
+     */
+    private final Map<String, Integer> takenOff = new HashMap<>();
+
     /** Where focus was in each row, so coming back to a row lands there again. */
     private int cwFocus, nuFocus, pinnedFocus, appsFocus;
 
@@ -107,6 +126,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         // config.xml, overlaid by config.json from a pushed theme (see Config and tools/theme.sh).
         cfg = Config.load(this);
+        pinned = new ArrayList<>(cfg.dockApps);
         animations = cfg.animations && !cfg.reducedMotion;
 
         ViewGroup root = findViewById(R.id.root);
@@ -188,6 +208,12 @@ public class MainActivity extends Activity {
             @Override
             public void onItemClicked(Library.MediaItem item) {
                 PlayerActivity.start(MainActivity.this, item.id);
+            }
+
+            @Override
+            public boolean onItemLongClicked(Library.MediaItem item, View card) {
+                showMediaOptions(item, card);
+                return true;
             }
 
             @Override
@@ -311,13 +337,158 @@ public class MainActivity extends Activity {
         public void onAppClicked(InstalledApps.App app) {
             open(app.launchIntent(), app.label);
         }
+
+        @Override
+        public boolean onAppLongClicked(InstalledApps.App app, View tile) {
+            showAppOptions(app, tile);
+            return true;
+        }
     };
 
     private void loadApps() {
-        List<InstalledApps.App> apps = InstalledApps.load(this, cfg.hiddenApps);
-        pinnedAdapter.setApps(InstalledApps.pinned(apps, cfg.dockApps));
-        appsAdapter.setApps(InstalledApps.pinnedFirst(apps, cfg.dockApps));
-        appsCaption.setText(getString(R.string.app_count, apps.size()));
+        allApps = InstalledApps.load(this, cfg.hiddenApps);
+        showApps();
+        appsCaption.setText(getString(R.string.app_count, allApps.size()));
+    }
+
+    private void showApps() {
+        pinnedAdapter.setApps(InstalledApps.pinned(allApps, pinned));
+        appsAdapter.setApps(InstalledApps.pinnedFirst(allApps, pinned));
+    }
+
+    // ---- quick options: OK held on a tile or card ----------------------------------------------------------
+
+    /**
+     * An app's menu: pin or unpin it, move it along the pinned row (from that row only, where left and right are
+     * plain), and Android's own pages for it. Disable and Force stop live in App info: a launcher cannot do them.
+     */
+    private void showAppOptions(InstalledApps.App app, View tile) {
+        List<String> shown = packages(pinnedAdapter.apps());
+        boolean isPinned = shown.contains(app.pkg);
+        RecyclerView list = isIn(tile, pinnedRow) ? pinnedRow : appsGrid;
+        GlassMenu.Builder m = new GlassMenu.Builder()
+                .add(GlassMenu.Item.heading(app.label))
+                .add(GlassMenu.Item.option(getString(isPinned ? R.string.menu_unpin : R.string.menu_pin), null, false,
+                        () -> changePinned(isPinned ? PinnedApps.unpin(pinned, app.pkg) : PinnedApps.pin(pinned, app.pkg),
+                                app, list)));
+        if (isPinned && list == pinnedRow) {
+            // The row mirrors for right-to-left languages: there, left is one place later.
+            int left = pinnedRow.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL ? 1 : -1;
+            int at = shown.indexOf(app.pkg);
+            if (at + left >= 0 && at + left < shown.size()) {
+                m.add(GlassMenu.Item.option(getString(R.string.menu_move_left), null, false,
+                        () -> changePinned(PinnedApps.move(pinned, shown, app.pkg, left), app, pinnedRow)));
+            }
+            if (at - left >= 0 && at - left < shown.size()) {
+                m.add(GlassMenu.Item.option(getString(R.string.menu_move_right), null, false,
+                        () -> changePinned(PinnedApps.move(pinned, shown, app.pkg, -left), app, pinnedRow)));
+            }
+        }
+        Uri pkg = Uri.fromParts("package", app.pkg, null);
+        m.add(GlassMenu.Item.divider())
+                .add(GlassMenu.Item.option(getString(R.string.menu_app_info), null, false,
+                        () -> open(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkg), app.label)));
+        // Android asks before it uninstalls; the package receiver then takes the tile away.
+        if (app.removable) {
+            m.add(GlassMenu.Item.option(getString(R.string.menu_uninstall), null, false,
+                    () -> open(new Intent(Intent.ACTION_DELETE, pkg), app.label)));
+        }
+        menu.show(tile, m, findViewById(R.id.content));
+    }
+
+    /**
+     * Saves {@code fresh} as the pinned apps and shows it. Focus stays with {@code app} in {@code list} (the tiles
+     * move rather than being rebuilt), or, unpinned from Home's row, goes to the tile now in its place.
+     */
+    private void changePinned(List<String> fresh, InstalledApps.App app, RecyclerView list) {
+        int was = positionIn(list, getCurrentFocus());
+        pinned = fresh;
+        PinnedApps.save(this, fresh);
+        // The row would keep the moved tile where it was on screen, which pushes the first tile off the edge when
+        // the first one moves; it keeps its scroll by position instead, still on its columns.
+        RecyclerView.LayoutManager lm = list.getLayoutManager();
+        Parcelable scrolled = lm != null ? lm.onSaveInstanceState() : null;
+        showApps();
+        if (scrolled != null) lm.onRestoreInstanceState(scrolled);
+        AppTileAdapter adapter = (AppTileAdapter) list.getAdapter();
+        int now = packages(adapter.apps()).indexOf(app.pkg);
+        list.post(() -> {
+            if (now >= 0) focusRow(list, now);
+            else if (adapter.getItemCount() > 0) focusRow(list, Math.max(0, was));
+            else if (nuSection.getVisibility() == View.VISIBLE) focusRow(nuRow, nuFocus);
+            else focusRow(cwRow, cwFocus);
+        });
+    }
+
+    private static List<String> packages(List<InstalledApps.App> apps) {
+        List<String> out = new ArrayList<>();
+        for (InstalledApps.App a : apps) out.add(a.pkg);
+        return out;
+    }
+
+    /**
+     * A card's menu. In progress: mark it watched, take it off Continue Watching (its place goes back to the start),
+     * play it from the start. Next up: mark it watched. An episode can also open its show.
+     */
+    private void showMediaOptions(Library.MediaItem item, View card) {
+        boolean resuming = homeRows != null && homeRows.isResuming(item.id);
+        GlassMenu.Builder m = new GlassMenu.Builder()
+                .add(GlassMenu.Item.heading(item.title))
+                .add(GlassMenu.Item.option(getString(R.string.menu_mark_watched), null, false,
+                        () -> takeOff(item, () -> {
+                            Catalog.setPlayed(account, item.id, true);
+                            return null;
+                        })));
+        if (resuming) {
+            m.add(GlassMenu.Item.option(getString(R.string.menu_remove_resume), null, false,
+                    () -> takeOff(item, () -> {
+                        Library.clearResume(account, item.id);
+                        return null;
+                    })));
+            m.add(GlassMenu.Item.option(getString(R.string.menu_play_from_start), null, false,
+                    () -> PlayerActivity.start(this, item.id, true)));
+        }
+        if (!item.seriesId.isEmpty()) {
+            m.add(GlassMenu.Item.option(getString(R.string.menu_go_to_show), null, false,
+                    () -> ShowActivity.start(this, item.seriesId)));
+        }
+        menu.show(card, m, findViewById(R.id.content));
+    }
+
+    /**
+     * Takes {@code item}'s card off Home at once, and off the rows kept for the next start, while {@code change}
+     * tells the server. Answers already on their way leave it off; once the server knows, Home asks again, as
+     * marking an episode watched brings on the next one. If the server says no, the card comes back.
+     */
+    private void takeOff(Library.MediaItem item, Callable<Void> change) {
+        if (homeRows == null) return;
+        Library.HomeRows before = homeRows;
+        takenOff.put(item.id, Integer.MAX_VALUE);
+        showHomeRows(homeRows.without(item.id));
+        Library.keepHomeRows(getApplicationContext(), account, homeRows);
+        Api.async(change, new Api.Callback<Void>() {
+            @Override
+            public void onResult(Void done) {
+                takenOff.put(item.id, homeRequest + 1);
+                refreshJellyfin();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                takenOff.remove(item.id);
+                showHomeRows(before);
+                Library.keepHomeRows(getApplicationContext(), account, before);
+            }
+        });
+    }
+
+    /** {@code rows} without the cards taken off before request {@code request} could know of it. */
+    private Library.HomeRows withoutTakenOff(Library.HomeRows rows, int request) {
+        for (Map.Entry<String, Integer> e : new ArrayList<>(takenOff.entrySet())) {
+            if (request >= e.getValue()) takenOff.remove(e.getKey());
+            else rows = rows.without(e.getKey());
+        }
+        return rows;
     }
 
     // ---- Jellyfin ------------------------------------------------------------------------------------
@@ -377,6 +548,7 @@ public class MainActivity extends Activity {
      */
     private void refreshJellyfin() {
         if (!account.isSignedIn()) {
+            homeRows = null;
             showNextUp(Collections.emptyList());
             cwTitle.setText(R.string.continue_watching);
             cwCaption.setText(null);
@@ -385,9 +557,11 @@ public class MainActivity extends Activity {
                     getString(R.string.jellyfin_connect_title), accountPanel::open)));
             return;
         }
+        int request = ++homeRequest;
         Library.homeRows(account, new Api.Callback<Library.HomeRows>() {
             @Override
-            public void onResult(Library.HomeRows rows) {
+            public void onResult(Library.HomeRows answer) {
+                Library.HomeRows rows = withoutTakenOff(answer, request);
                 showHomeRows(rows);
                 Library.keepHomeRows(getApplicationContext(), account, rows);
             }
@@ -416,6 +590,7 @@ public class MainActivity extends Activity {
     /** Next Up's row, gone when there is nothing in it; focus in it moves up a row if it goes. */
     /** Continue Watching and Next Up from {@code rows}: fresh from the server, or kept from last time. */
     private void showHomeRows(Library.HomeRows rows) {
+        homeRows = rows;
         // Nothing in progress: the next episodes take the first row.
         boolean nextFirst = rows.resume.isEmpty() && !rows.nextUp.isEmpty();
         List<Library.MediaItem> items = nextFirst ? rows.nextUp : rows.resume;

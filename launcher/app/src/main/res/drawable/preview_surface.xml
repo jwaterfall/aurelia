@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Behind the scrubbing preview's frame, set just inside its menu glass: the menu rows' corners, so they nest. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/surface_card" />
+    <corners android:radius="@dimen/menu_row_radius" />
+</shape>

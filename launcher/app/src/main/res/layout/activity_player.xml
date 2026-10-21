@@ -287,6 +287,51 @@
                 </LinearLayout>
             </FrameLayout>
         </LinearLayout>
+
+        <!-- While scrubbing, when the server has preview frames: the frame at the scrub point and its time, on
+             the menus' glass, following the point along the bar (player.TrickplayPreview places it). A skeleton
+             stands in until the first frame arrives. -->
+        <LinearLayout
+            android:id="@+id/playerPreview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0"
+            android:background="@drawable/glass_menu_surface"
+            android:orientation="vertical"
+            android:padding="@dimen/space_2xs"
+            android:visibility="invisible">
+
+            <FrameLayout
+                android:id="@+id/previewFrame"
+                android:layout_width="@dimen/player_preview_width"
+                android:layout_height="@dimen/player_preview_height">
+
+                <ImageView
+                    android:id="@+id/previewImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/preview_surface"
+                    android:importantForAccessibility="no"
+                    android:scaleType="centerCrop" />
+
+                <app.aurelia.tv.ui.Placeholder
+                    android:id="@+id/previewSkeleton"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:placeholderRadius="@dimen/menu_row_radius" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/previewTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:paddingTop="@dimen/space_xs"
+                android:paddingBottom="@dimen/space_2xs"
+                android:textAppearance="@style/TextAppearance.Launcher.Meta"
+                android:textColor="@color/text_primary" />
+        </LinearLayout>
     </FrameLayout>
 
     <!-- Skip intro, recap or credits: rises in the corner while that part plays. -->

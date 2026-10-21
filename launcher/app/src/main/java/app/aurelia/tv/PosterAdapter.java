@@ -32,6 +32,10 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         /** {@code art} is the poster, or null while it is still loading. */
         void onFocused(Catalog.Item item, Drawable art);
         void onClicked(Catalog.Item item);
+        /** OK held on a poster. True when it opened something, so the press does not also open the poster. */
+        default boolean onLongClicked(Catalog.Item item, View poster) {
+            return false;
+        }
         /** Focus is within a few rows of the last poster fetched. */
         void onNearEnd();
     }
@@ -42,6 +46,8 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     private static final int POSTER_PX = 330;
     private static final int TYPE_POSTER = 0;
     private static final int TYPE_PLACEHOLDER = 1;
+    /** A rebind for new watched or favourite marks only: the artwork stays as it is. */
+    private static final Object MARKS = new Object();
 
     private final Account account;
     private final int columns;
@@ -86,6 +92,16 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         return items.get(position);
     }
 
+    /** Puts {@code item} in place of the poster with its id, if there is one, redrawing only its marks. */
+    void update(Catalog.Item item) {
+        for (int i = 0; i < items.size(); i++) {
+            if (!items.get(i).id.equals(item.id)) continue;
+            items.set(i, item);
+            notifyItemChanged(i, MARKS);
+            return;
+        }
+    }
+
     @Override
     public int getItemCount() {
         return items.isEmpty() ? placeholders : items.size();
@@ -104,6 +120,12 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 .inflate(poster ? R.layout.item_poster : R.layout.item_poster_placeholder, parent, false);
         v.getLayoutParams().width = GridSpacing.itemWidth(parent, columns, gutter);
         return poster ? new Holder(v) : new RecyclerView.ViewHolder(v) { };
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (holder instanceof Holder && payloads.contains(MARKS)) bindMarks((Holder) holder, items.get(position));
+        else super.onBindViewHolder(holder, position, payloads);
     }
 
     @Override
@@ -129,6 +151,11 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 h.name.setVisibility(View.VISIBLE);
             }
         });
+        bindMarks(h, item);
+    }
+
+    /** The watched mark or episodes-left count, the progress bar, and what the poster does with this item. */
+    private void bindMarks(Holder h, Catalog.Item item) {
         if (item.isSeries() && !item.played && item.unplayed > 0) {
             h.badge.setText(String.valueOf(item.unplayed));
             h.badge.setVisibility(View.VISIBLE);
@@ -141,6 +168,7 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         h.progress.setVisibility(item.inProgress() ? View.VISIBLE : View.GONE);
         h.progress.setProgress(item.progressPercent());
         h.itemView.setOnClickListener(v -> listener.onClicked(item));
+        h.itemView.setOnLongClickListener(v -> listener.onLongClicked(item, v));
         h.itemView.setOnFocusChangeListener((v, focused) -> {
             if (!focused) return;
             listener.onFocused(item, h.art.getDrawable());

@@ -19,6 +19,7 @@ import app.aurelia.tv.ui.GlassMenu;
 import app.aurelia.tv.ui.GridShelfLayoutManager;
 import app.aurelia.tv.ui.GridSpacing;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -114,6 +115,12 @@ final class LibraryPage {
             @Override
             public void onClicked(Catalog.Item item) {
                 host.onOpen(item);
+            }
+
+            @Override
+            public boolean onLongClicked(Catalog.Item item, View poster) {
+                showOptions(item, poster);
+                return true;
             }
 
             @Override
@@ -465,6 +472,47 @@ final class LibraryPage {
             }));
         }
         host.menu().show(from, m, host.background());
+    }
+
+    // ---- a poster's quick options ----------------------------------------------------------------------
+
+    /** OK held on a poster: watched and favourite, as they are now. */
+    private void showOptions(Catalog.Item item, View poster) {
+        GlassMenu.Builder m = new GlassMenu.Builder()
+                .add(GlassMenu.Item.heading(item.name))
+                .add(GlassMenu.Item.option(get(item.played ? R.string.menu_mark_unwatched : R.string.menu_mark_watched),
+                        null, false, () -> mark(item, item.withUserData(!item.played, item.favourite))))
+                .add(GlassMenu.Item.option(get(item.favourite ? R.string.menu_remove_favourite : R.string.menu_add_favourite),
+                        null, false, () -> mark(item, item.withUserData(item.played, !item.favourite))));
+        host.menu().show(poster, m, host.background());
+    }
+
+    /**
+     * Shows {@code after}'s marks on the poster at once and tells the server. The poster then takes the server's
+     * own copy (a show's count of episodes left), or goes back to {@code before} if the server said no.
+     */
+    private void mark(Catalog.Item before, Catalog.Item after) {
+        adapter.update(after);
+        boolean played = after.played != before.played;
+        Api.async(() -> {
+            if (played) Catalog.setPlayed(account, after.id, after.played);
+            else Catalog.setFavourite(account, after.id, after.favourite);
+            try {
+                return Catalog.item(account, after.id);
+            } catch (IOException e) {
+                return after;   // the mark is made; only the fresh copy is missing
+            }
+        },new Api.Callback<Catalog.Item>() {
+            @Override
+            public void onResult(Catalog.Item fresh) {
+                adapter.update(fresh);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                adapter.update(before);
+            }
+        });
     }
 
     // ---- focus ---------------------------------------------------------------------------------------

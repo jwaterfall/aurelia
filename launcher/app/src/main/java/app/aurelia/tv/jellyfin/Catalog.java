@@ -180,6 +180,51 @@ public final class Catalog {
             born = "Person".equals(type) && premiere.length() >= 10 ? premiere.substring(0, 10) : "";
         }
 
+        /**
+         * This item as it will be once the server has the new marks, to show at once. Watched or unwatched, it
+         * starts from the beginning; a show's count of episodes left is only known again when it is fetched.
+         */
+        public Item withUserData(boolean played, boolean favourite) {
+            return new Item(this, played, favourite);
+        }
+
+        private Item(Item from, boolean played, boolean favourite) {
+            id = from.id;
+            type = from.type;
+            name = from.name;
+            overview = from.overview;
+            year = from.year;
+            endYear = from.endYear;
+            continuing = from.continuing;
+            officialRating = from.officialRating;
+            communityRating = from.communityRating;
+            criticRating = from.criticRating;
+            runtimeMs = from.runtimeMs;
+            genres = from.genres;
+            this.played = played;
+            this.favourite = favourite;
+            positionMs = played == from.played ? from.positionMs : 0;
+            unplayed = played ? 0 : from.unplayed;
+            index = from.index;
+            parentIndex = from.parentIndex;
+            seriesId = from.seriesId;
+            seriesName = from.seriesName;
+            seasonId = from.seasonId;
+            primaryTag = from.primaryTag;
+            logoId = from.logoId;
+            logoTag = from.logoTag;
+            backdropId = from.backdropId;
+            backdropTag = from.backdropTag;
+            thumbId = from.thumbId;
+            thumbTag = from.thumbTag;
+            childCount = from.childCount;
+            directors = from.directors;
+            cast = from.cast;
+            people = from.people;
+            birthplace = from.birthplace;
+            born = from.born;
+        }
+
         public boolean isSeries() {
             return "Series".equals(type);
         }

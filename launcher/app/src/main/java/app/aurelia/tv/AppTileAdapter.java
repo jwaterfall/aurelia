@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import app.aurelia.tv.ui.GridSpacing;
@@ -20,6 +21,11 @@ final class AppTileAdapter extends RecyclerView.Adapter<AppTileAdapter.Holder> {
     interface Listener {
         void onAppFocused(InstalledApps.App app, View tile);
         void onAppClicked(InstalledApps.App app);
+
+        /** OK held on a tile. True when it opened something, so the press does not also open the app. */
+        default boolean onAppLongClicked(InstalledApps.App app, View tile) {
+            return false;
+        }
     }
 
     private final int columns;
@@ -34,10 +40,40 @@ final class AppTileAdapter extends RecyclerView.Adapter<AppTileAdapter.Holder> {
         setHasStableIds(true);
     }
 
+    /**
+     * Shows {@code fresh}, as moves, insertions and removals rather than a rebuild: a tile pinned, unpinned or moved
+     * from its menu keeps its view, and with it the focus.
+     */
     void setApps(List<InstalledApps.App> fresh) {
+        List<InstalledApps.App> old = new ArrayList<>(apps);
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() {
+                return old.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return fresh.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int o, int n) {
+                return old.get(o).component.equals(fresh.get(n).component);
+            }
+
+            @Override
+            public boolean areContentsTheSame(int o, int n) {
+                return old.get(o) == fresh.get(n);
+            }
+        });
         apps.clear();
         apps.addAll(fresh);
-        notifyDataSetChanged();
+        diff.dispatchUpdatesTo(this);
+    }
+
+    List<InstalledApps.App> apps() {
+        return apps;
     }
 
     @Override
@@ -67,6 +103,7 @@ final class AppTileAdapter extends RecyclerView.Adapter<AppTileAdapter.Holder> {
             if (focused) listener.onAppFocused(app, v);
         });
         h.itemView.setOnClickListener(v -> listener.onAppClicked(app));
+        h.itemView.setOnLongClickListener(v -> listener.onAppLongClicked(app, v));
     }
 
     @Override

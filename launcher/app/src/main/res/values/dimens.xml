@@ -67,6 +67,9 @@
     <dimen name="pulse_core">10dp</dimen>
     <dimen name="pulse_line">1.5dp</dimen>
     <dimen name="player_logo_width">360dp</dimen>
+    <!-- The frame previewed over the seek bar while scrubbing (16:9; other shapes keep this width). -->
+    <dimen name="player_preview_width">224dp</dimen>
+    <dimen name="player_preview_height">126dp</dimen>
     <!-- How far ui.ScrollEdge's shadow reaches down over the content. -->
     <dimen name="scroll_edge_shadow">96dp</dimen>
     <!-- A poster's badge. -->

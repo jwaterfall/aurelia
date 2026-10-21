@@ -59,6 +59,23 @@ public final class Library {
             this.resume = resume;
             this.nextUp = nextUp;
         }
+
+        /** These rows without the card for {@code itemId}, in either row. */
+        public HomeRows without(String itemId) {
+            return new HomeRows(without(resume, itemId), without(nextUp, itemId));
+        }
+
+        /** {@code itemId} is in progress (its card is in Continue Watching), not just next up. */
+        public boolean isResuming(String itemId) {
+            for (MediaItem m : resume) if (m.id.equals(itemId)) return true;
+            return false;
+        }
+
+        private static List<MediaItem> without(List<MediaItem> items, String itemId) {
+            List<MediaItem> out = new ArrayList<>(items);
+            out.removeIf(m -> m.id.equals(itemId));
+            return out;
+        }
     }
 
     /** No one is signed in, or the server no longer accepts the token (which signs the launcher out). */
@@ -107,6 +124,27 @@ public final class Library {
                 throw e;
             }
         }, callback);
+    }
+
+    /**
+     * Takes {@code itemId} out of Continue Watching without marking it watched: its resume point goes back to the
+     * start. Jellyfin 10.9 and later take this at /UserItems, older servers at the per-user address. Blocks.
+     */
+    public static void clearResume(Account account, String itemId) throws IOException {
+        String server = account.server();
+        String user = account.userId();
+        JSONObject body;
+        try {
+            body = new JSONObject().put("PlaybackPositionTicks", 0);
+        } catch (JSONException e) {
+            throw new IOException(e);
+        }
+        try {
+            Api.postJson(server + "/UserItems/" + itemId + "/UserData?userId=" + user, auth(account), body);
+        } catch (Api.HttpError e) {
+            if (e.code != 404 && e.code != 405) throw e;
+            Api.postJson(server + "/Users/" + user + "/Items/" + itemId + "/UserData", auth(account), body);
+        }
     }
 
     // ---- Home's rows as last seen, to show at once on the next start --------------------------------------

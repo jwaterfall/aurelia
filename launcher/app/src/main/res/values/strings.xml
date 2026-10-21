@@ -195,4 +195,18 @@
     <string name="details_failed">Couldn’t load this from %1$s.</string>
     <string name="watched_mark" translatable="false">✓</string>
     <string name="cw_browse_movies">Browse movies</string>
+    <!-- Quick options: OK held on a tile, card or poster -->
+    <string name="menu_pin">Pin to Home</string>
+    <string name="menu_unpin">Unpin from Home</string>
+    <string name="menu_move_left">Move left</string>
+    <string name="menu_move_right">Move right</string>
+    <string name="menu_app_info">App info</string>
+    <string name="menu_uninstall">Uninstall</string>
+    <string name="menu_mark_watched">Mark as watched</string>
+    <string name="menu_mark_unwatched">Mark as unwatched</string>
+    <string name="menu_remove_resume">Reset progress</string>
+    <string name="menu_play_from_start">Play from the start</string>
+    <string name="menu_go_to_show">Go to show</string>
+    <string name="menu_add_favourite">Add to favourites</string>
+    <string name="menu_remove_favourite">Remove from favourites</string>
 </resources>

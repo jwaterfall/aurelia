@@ -52,7 +52,7 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.Launcher.Heading" />
+            android:textAppearance="@style/TextAppearance.Launcher.Heading.Card" />
 
         <TextView
             android:id="@+id/subtitle"
@@ -60,7 +60,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.Launcher.Meta" />
+            android:textAppearance="@style/TextAppearance.Launcher.Meta.Card" />
 
         <ProgressBar
             android:id="@+id/progress"

@@ -7,7 +7,9 @@
 -->
 <resources>
 
-    <!-- Apps pinned to the dock row at the bottom, in this order. Missing apps are skipped. -->
+    <!-- Apps pinned to the dock row at the bottom, in this order. Missing apps are skipped. Pinning, unpinning or
+         moving an app on the TV (hold OK on its tile) replaces this list there, until a theme is pushed or reset
+         or Launcher settings' Follow theme is chosen. -->
     <string-array name="dock_apps">
         <item>org.jellyfin.androidtv</item>
         <item>com.google.android.youtube.tv</item>

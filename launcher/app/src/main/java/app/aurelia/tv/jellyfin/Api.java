@@ -113,11 +113,16 @@ public final class Api {
     }
 
     public static Bitmap getImage(String url, String auth) throws IOException {
+        return getImage(url, auth, null);
+    }
+
+    /** An image decoded with {@code options}: smaller, or in fewer bytes a pixel, for a very large one. */
+    public static Bitmap getImage(String url, String auth, BitmapFactory.Options options) throws IOException {
         HttpURLConnection conn = open("GET", url, auth);
         try {
             check(conn, url);
             try (InputStream in = conn.getInputStream()) {
-                return BitmapFactory.decodeStream(in);
+                return BitmapFactory.decodeStream(in, null, options);
             }
         } finally {
             conn.disconnect();

@@ -196,4 +196,18 @@
     <string name="details_season">עונה %1$d</string>
     <string name="details_failed">לא ניתן לטעון את זה מ-%1$s.</string>
     <string name="cw_browse_movies">לעיון בסרטים</string>
+    <!-- אפשרויות מהירות: לחיצה ארוכה על OK -->
+    <string name="menu_pin">הצמדה למסך הבית</string>
+    <string name="menu_unpin">ביטול ההצמדה</string>
+    <string name="menu_move_left">הזזה שמאלה</string>
+    <string name="menu_move_right">הזזה ימינה</string>
+    <string name="menu_app_info">פרטי האפליקציה</string>
+    <string name="menu_uninstall">הסרת ההתקנה</string>
+    <string name="menu_mark_watched">סימון כנצפה</string>
+    <string name="menu_mark_unwatched">סימון כלא נצפה</string>
+    <string name="menu_remove_resume">איפוס התקדמות</string>
+    <string name="menu_play_from_start">ניגון מההתחלה</string>
+    <string name="menu_go_to_show">מעבר לסדרה</string>
+    <string name="menu_add_favourite">הוספה למועדפים</string>
+    <string name="menu_remove_favourite">הסרה מהמועדפים</string>
 </resources>

@@ -67,7 +67,8 @@ import java.util.Locale;
  * When a skip button or the next episode is showing in the corner, OK takes it. Controls showing: the seek bar
  * has focus (Left and Right scrub, OK pauses), and Down reaches the round buttons under it: play, back, forward
  * and the next episode on the left; subtitles, audio (with volume levelling), speed and quality on the right,
- * each opening a menu above it. Back closes what is showing, then leaves.
+ * each opening a menu above it. Back closes what is showing, then leaves. While scrubbing, the frame at the
+ * scrub point shows over the bar when the server has preview frames for the item ({@link TrickplayPreview}).
  *
  * Changing something the player cannot change by itself (another audio track of a converted stream, subtitles
  * the server burns in, the quality) opens the stream again where it was.
@@ -145,6 +146,7 @@ public final class PlayerActivity extends Activity {
     private ImageView logo;
     private ProgressBar seek;
     private View thumb;
+    private TrickplayPreview preview;
     private ImageView playButton;
     private View nextButton;
     private TextView skip;
@@ -171,6 +173,7 @@ public final class PlayerActivity extends Activity {
     private final Runnable commitScrub = () -> {
         if (player != null && scrubTo >= 0) player.seekTo(scrubTo);
         scrubTo = -1;
+        preview.hide();
     };
 
     private final Runnable tick = new Runnable() {
@@ -205,6 +208,7 @@ public final class PlayerActivity extends Activity {
         logo = findViewById(R.id.playerLogo);
         seek = findViewById(R.id.playerSeek);
         thumb = findViewById(R.id.playerThumb);
+        preview = new TrickplayPreview(findViewById(R.id.playerPreview), track);
         playButton = findViewById(R.id.buttonPlay);
         nextButton = findViewById(R.id.buttonNext);
         skip = findViewById(R.id.playerSkip);
@@ -367,6 +371,7 @@ public final class PlayerActivity extends Activity {
             loadExtras(s);
             loadLogo(s);
         }
+        preview.setSource(s.trickplay, account.server(), Library.auth(account));
         title.setText(s.title);
         subtitle.setText(s.subtitle);
         subtitle.setVisibility(s.subtitle.isEmpty() ? View.GONE : View.VISIBLE);
@@ -916,10 +921,13 @@ public final class PlayerActivity extends Activity {
         if (show) {
             updateTimes();
             if (appearing && !menu.isShowing()) focus.requestFocus();
-        } else if (chrome.hasFocus()) {
-            // Nothing visible keeps focus; a skip button in the corner takes it if one is showing.
-            if (skip.getVisibility() == View.VISIBLE) skip.requestFocus();
-            else if (upNext.getVisibility() == View.VISIBLE) upNext.requestFocus();
+        } else {
+            preview.hide();
+            if (chrome.hasFocus()) {
+                // Nothing visible keeps focus; a skip button in the corner takes it if one is showing.
+                if (skip.getVisibility() == View.VISIBLE) skip.requestFocus();
+                else if (upNext.getVisibility() == View.VISIBLE) upNext.requestFocus();
+            }
         }
         chrome.animate().alpha(show ? 1f : 0f).setDuration(FADE_MS).setInterpolator(ease).start();
         // Subtitles rise above the controls while they show.
@@ -981,6 +989,7 @@ public final class PlayerActivity extends Activity {
         return 60_000;
     }
 
+    /** Scrubs, previewing the frame there when the server has frames; the seek waits for the last press. */
     private void scrub(long byMs) {
         long duration = player.getDuration();
         long from = scrubTo >= 0 ? scrubTo : player.getCurrentPosition();
@@ -988,6 +997,8 @@ public final class PlayerActivity extends Activity {
         if (duration != C.TIME_UNSET) to = Math.min(to, Math.max(0, duration - 1000));
         scrubTo = to;
         updateTimes();
+        long length = duration != C.TIME_UNSET ? duration : stream.durationMs;
+        if (length > 0) preview.show(to, (float) to / length);
         handler.removeCallbacks(commitScrub);
         handler.postDelayed(commitScrub, SCRUB_SETTLE_MS);
     }
@@ -1138,6 +1149,7 @@ public final class PlayerActivity extends Activity {
     private void stopPlayer() {
         handler.removeCallbacks(commitScrub);
         scrubTo = -1;
+        preview.hide();
         if (player != null) {
             reportStop(player.getCurrentPosition());
             leveler.release();

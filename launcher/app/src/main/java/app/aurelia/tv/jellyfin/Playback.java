@@ -101,6 +101,8 @@ public final class Playback {
         /** Chapters: where each starts (ms), and its name. */
         public final List<Long> chapterStarts;
         public final List<String> chapterNames;
+        /** Preview frames for scrubbing, null when the server has none for it. */
+        public final Trickplay trickplay;
         /** What is playing now; the player changes them as the user chooses. */
         public int audioIndex;
         public int subtitleIndex;
@@ -108,7 +110,8 @@ public final class Playback {
         Stream(String itemId, String type, String seriesId, String title, String subtitle, long startMs,
                long durationMs, String url, Method method, String reasons, String mediaSourceId, String playSessionId,
                int sourceBitrate, Options options, List<Track> audio, List<Track> subtitles, int audioIndex,
-               int subtitleIndex, String logoUrl, float frameRate, List<Long> chapterStarts, List<String> chapterNames) {
+               int subtitleIndex, String logoUrl, float frameRate, List<Long> chapterStarts, List<String> chapterNames,
+               Trickplay trickplay) {
             this.itemId = itemId;
             this.type = type;
             this.seriesId = seriesId;
@@ -133,6 +136,7 @@ public final class Playback {
             this.frameRate = frameRate;
             this.chapterStarts = chapterStarts;
             this.chapterNames = chapterNames;
+            this.trickplay = trickplay;
         }
 
         public boolean isEpisode() {
@@ -199,7 +203,7 @@ public final class Playback {
         String user = account.userId();
         String auth = Library.auth(account);
         try {
-            JSONObject item = Api.getJson(server + "/Users/" + user + "/Items/" + itemId + "?fields=Chapters", auth);
+            JSONObject item = item(server, user, itemId, auth);
             JSONObject userData = item.optJSONObject("UserData");
             long startTicks = options.startMs >= 0 ? options.startMs * TICKS_PER_MS
                     : userData != null ? userData.optLong("PlaybackPositionTicks", 0) : 0;
@@ -266,9 +270,24 @@ public final class Playback {
             return new Stream(itemId, item.optString("Type", ""), item.optString("SeriesId", ""), title(item),
                     subtitle(item), startTicks / TICKS_PER_MS, item.optLong("RunTimeTicks", 0) / TICKS_PER_MS, url,
                     method, reasons, sourceId, session, source.optInt("Bitrate", 0), options, audio, subtitles,
-                    audioIndex, subtitleIndex, logoUrl(server, item), frameRate(source), chapterStarts, chapterNames);
+                    audioIndex, subtitleIndex, logoUrl(server, item), frameRate(source), chapterStarts, chapterNames,
+                    Trickplay.parse(item, itemId, sourceId, Trickplay.PREFERRED_WIDTH));
         } catch (JSONException e) {
             throw new IOException("Unexpected answer from the server", e);
+        }
+    }
+
+    /**
+     * The item, with its chapters and preview frames. A server that does not know a field leaves it out, but in case
+     * one turns the request away instead, it is asked again for the chapters alone.
+     */
+    private static JSONObject item(String server, String user, String itemId, String auth) throws IOException {
+        String url = server + "/Users/" + user + "/Items/" + itemId + "?fields=Chapters";
+        try {
+            return Api.getJson(url + ",Trickplay", auth);
+        } catch (Api.HttpError e) {
+            if (e.code != 400) throw e;
+            return Api.getJson(url, auth);
         }
     }
 

@@ -34,6 +34,14 @@
         <item name="android:fontFamily">@font/outfit_medium</item>
         <item name="android:textColor">@color/text_primary</item>
     </style>
+    <!-- A title on a landscape card: a step under the row's heading, so a long name fits the card. -->
+    <style name="TextAppearance.Launcher.Heading.Card">
+        <item name="android:textSize">14sp</item>
+    </style>
+    <!-- The line under it: what episode, how long is left. -->
+    <style name="TextAppearance.Launcher.Meta.Card">
+        <item name="android:textSize">12sp</item>
+    </style>
     <!-- Anything read as sentences: overviews, explanations, messages. -->
     <style name="TextAppearance.Launcher.Body" parent="">
         <item name="android:textSize">14sp</item>

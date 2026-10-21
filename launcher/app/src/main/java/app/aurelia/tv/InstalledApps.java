@@ -3,6 +3,7 @@ package app.aurelia.tv;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
@@ -25,13 +26,16 @@ final class InstalledApps {
         /** Null when the app has no usable banner: its tile shows the icon and name instead. */
         final Drawable banner;
         final Drawable icon;
+        /** Can be uninstalled: not part of the system image (an updated system app can only lose its updates). */
+        final boolean removable;
 
-        App(String pkg, String label, ComponentName component, Drawable banner, Drawable icon) {
+        App(String pkg, String label, ComponentName component, Drawable banner, Drawable icon, boolean removable) {
             this.pkg = pkg;
             this.label = label;
             this.component = component;
             this.banner = banner;
             this.icon = icon;
+            this.removable = removable;
         }
 
         Intent launchIntent() {
@@ -56,8 +60,9 @@ final class InstalledApps {
             String pkg = ri.activityInfo.packageName;
             if (!seen.add(pkg)) continue;
             String label = Cards.cleanLabel(String.valueOf(ri.loadLabel(pm)), pkg);
+            boolean system = (ri.activityInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
             apps.add(new App(pkg, label, new ComponentName(pkg, ri.activityInfo.name),
-                    loadBanner(context, pm, ri), ri.loadIcon(pm)));
+                    loadBanner(context, pm, ri), ri.loadIcon(pm), !system));
         }
         apps.sort((a, b) -> a.label.compareToIgnoreCase(b.label));
         return apps;
