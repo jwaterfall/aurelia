@@ -22,6 +22,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import androidx.media3.common.C;
+import androidx.media3.common.text.Cue;
+import androidx.media3.common.text.CueGroup;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
@@ -47,11 +49,16 @@ import app.aurelia.tv.BuildConfig;
 import app.aurelia.tv.R;
 import app.aurelia.tv.jellyfin.Account;
 import app.aurelia.tv.jellyfin.Api;
+import app.aurelia.tv.jellyfin.Catalog;
 import app.aurelia.tv.jellyfin.DeviceProfile;
 import app.aurelia.tv.jellyfin.Library;
 import app.aurelia.tv.jellyfin.Playback;
 import app.aurelia.tv.ui.GlassMenu;
+import app.aurelia.tv.ui.ImageDisk;
+import app.aurelia.tv.ui.Images;
+import app.aurelia.tv.ui.Logos;
 import app.aurelia.tv.ui.PulseIndicator;
+import app.aurelia.tv.ui.SubtitleText;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,6 +88,12 @@ public final class PlayerActivity extends Activity {
     private static final String TAG = "Player";
     private static final String PREFS = "player";
     private static final String PREF_LEVEL = "levelVolume";
+    /** How text subtitles look, SubtitleText.SHADOW, GLASS or CLASSIC. */
+    private static final String PREF_SUBTITLE_STYLE = "subtitleStyle";
+    /** How long the logo is waited for before the name shows instead, for good. */
+    private static final long LOGO_WAIT_MS = 1500;
+    /** How long the opening screen waits, once playback is ready, for a first frame that may never come. */
+    private static final long CURTAIN_WAIT_MS = 2000;
 
     private static final long SKIP_MS = 10_000;
     private static final long CHROME_MS = 4_000;
@@ -139,6 +152,16 @@ public final class PlayerActivity extends Activity {
     private View controls;
     private View track;
     private PulseIndicator buffering;
+    /** Text subtitles drawn here; subtitles that are pictures, in media3's view. */
+    private SubtitleText subs;
+    private SubtitleView pictureSubs;
+    /** The opening screen, and which item it is up for. */
+    private View curtain;
+    private ImageView curtainArt, curtainLogo;
+    private TextView curtainTitle;
+    private String curtainFor;
+    /** Lifts the opening screen when playback is ready but no frame comes (a stream with sound only). */
+    private final Runnable liftCurtain = () -> lowerCurtain(true);
     private TextView title;
     private TextView subtitle;
     private TextView ends;
@@ -191,6 +214,8 @@ public final class PlayerActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Home sets up the image cache, but the player can be the first screen to open (after an install, say).
+        ImageDisk.init(this);
         setContentView(R.layout.activity_player);
         account = Account.get(this);
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
@@ -201,6 +226,12 @@ public final class PlayerActivity extends Activity {
         controls = findViewById(R.id.controls);
         track = findViewById(R.id.playerTrack);
         buffering = findViewById(R.id.buffering);
+        subs = findViewById(R.id.playerSubs);
+        pictureSubs = findViewById(R.id.playerPictureSubs);
+        curtain = findViewById(R.id.playerCurtain);
+        curtainArt = findViewById(R.id.curtainArt);
+        curtainLogo = findViewById(R.id.curtainLogo);
+        curtainTitle = findViewById(R.id.curtainTitle);
         title = findViewById(R.id.playerTitle);
         subtitle = findViewById(R.id.playerSubtitle);
         ends = findViewById(R.id.playerEnds);
@@ -217,6 +248,8 @@ public final class PlayerActivity extends Activity {
         upNextStill = findViewById(R.id.upNextStill);
         upNextStill.setClipToOutline(true);
         menu = findViewById(R.id.playerMenu);
+        // Video draws on its own surface, which a snapshot cannot frost: its menus sit on a dark fill.
+        menu.setFrostBehind(false);
         error = findViewById(R.id.playerError);
         errorBody = findViewById(R.id.playerErrorBody);
 
@@ -232,8 +265,8 @@ public final class PlayerActivity extends Activity {
         findViewById(R.id.buttonAudio).setOnClickListener(this::showAudio);
         findViewById(R.id.buttonSpeed).setOnClickListener(this::showSpeed);
         findViewById(R.id.buttonQuality).setOnClickListener(this::showQuality);
-        findViewById(R.id.buttonChapters).setOnClickListener(this::showChapters);
         findViewById(R.id.buttonZoom).setOnClickListener(this::showZoom);
+        findViewById(R.id.buttonChapters).setOnClickListener(this::showChapters);
         skip.setOnClickListener(v -> skipSegment());
         upNext.setOnClickListener(v -> playNext());
         findViewById(R.id.playerOpenApp).setOnClickListener(v -> {
@@ -249,28 +282,100 @@ public final class PlayerActivity extends Activity {
         }
         Playback.Options first = firstOptions();
         if (getIntent().getBooleanExtra(EXTRA_FROM_START, false)) first.startMs = 0;
+        raiseCurtain(itemId);
         open(itemId, first);
     }
 
-    /** The show's logo in place of its title, once it arrives; the title stays when there is none. */
-    private void loadLogo(Playback.Stream s) {
-        logo.setVisibility(View.GONE);
-        title.setVisibility(View.VISIBLE);
-        if (s.logoUrl.isEmpty()) return;
-        String auth = Library.auth(account);
-        Api.async(() -> Api.getImage(s.logoUrl, auth), new Api.Callback<android.graphics.Bitmap>() {
+    /**
+     * The opening screen for {@code id}: black at once, then its backdrop, dimmed, and its logo (or its
+     * name), through Home's image cache, so what Home has shown is there straight away.
+     */
+    private void raiseCurtain(String id) {
+        handler.removeCallbacks(liftCurtain);
+        curtainFor = id;
+        curtain.animate().cancel();
+        curtain.setAlpha(1f);
+        curtain.setVisibility(View.VISIBLE);
+        curtainArt.setImageDrawable(null);
+        curtainLogo.setVisibility(View.GONE);
+        curtainTitle.setVisibility(View.INVISIBLE);
+        Api.async(() -> Catalog.item(account, id), new Api.Callback<Catalog.Item>() {
             @Override
-            public void onResult(android.graphics.Bitmap picture) {
-                if (picture == null || stream == null || !stream.itemId.equals(s.itemId)) return;
-                logo.setImageBitmap(picture);
-                logo.setVisibility(View.VISIBLE);
-                title.setVisibility(View.GONE);
+            public void onResult(Catalog.Item item) {
+                if (item == null || !id.equals(curtainFor) || isFinishing()) return;
+                String auth = Library.auth(account);
+                Images.load(curtainArt, Catalog.backdrop(account, item, 1280), auth);
+                curtainTitle.setText(item.seriesName.isEmpty() ? item.name : item.seriesName);
+                logoOrName(curtainLogo, curtainTitle, Catalog.logo(account, item, 160), () -> id.equals(curtainFor));
             }
 
             @Override
             public void onError(Exception e) {
             }
         });
+    }
+
+    /** The opening screen goes: faded with the first frame, at once for an error. */
+    private void lowerCurtain(boolean fade) {
+        if (curtain.getVisibility() != View.VISIBLE) return;
+        curtainFor = null;
+        curtain.animate().cancel();
+        if (!fade) {
+            curtain.setVisibility(View.GONE);
+            return;
+        }
+        curtain.animate().alpha(0f).setDuration(400).setInterpolator(ease)
+                .withEndAction(() -> curtain.setVisibility(View.GONE)).start();
+    }
+
+    /** The show's logo in place of its title; the title when there is none, or it is slow to come. */
+    private void loadLogo(Playback.Stream s) {
+        logoOrName(logo, title, s.logoUrl, () -> stream != null && stream.itemId.equals(s.itemId));
+    }
+
+    /**
+     * {@code logoView} or {@code nameView}, never one and then the other: neither shows until the logo
+     * arrives (through Home's image cache, cropped as on Home) and fades in; if there is none, or it takes longer
+     * than {@link #LOGO_WAIT_MS}, the name fades in instead and stays. Nothing changes once {@code wanted} is false.
+     */
+    private void logoOrName(ImageView logoView, TextView nameView, String url, java.util.function.BooleanSupplier wanted) {
+        logoView.setVisibility(View.GONE);
+        nameView.setVisibility(View.INVISIBLE);
+        boolean[] settled = {false};
+        Runnable name = () -> {
+            if (settled[0] || !wanted.getAsBoolean()) return;
+            settled[0] = true;
+            fadeIn(nameView);
+        };
+        if (url.isEmpty()) {
+            name.run();
+            return;
+        }
+        handler.postDelayed(name, LOGO_WAIT_MS);
+        Images.load(logoView, url, Library.auth(account), new Images.Loaded() {
+            @Override
+            public void onLoaded(android.graphics.Bitmap picture) {
+                if (settled[0] || !wanted.getAsBoolean()) return;
+                settled[0] = true;
+                handler.removeCallbacks(name);
+                logoView.setImageBitmap(Logos.trimmed(url, picture));
+                nameView.setVisibility(View.GONE);
+                fadeIn(logoView);
+            }
+
+            @Override
+            public void onFailed() {
+                handler.removeCallbacks(name);
+                name.run();
+            }
+        });
+    }
+
+    private void fadeIn(View v) {
+        v.animate().cancel();
+        v.setAlpha(0f);
+        v.setVisibility(View.VISIBLE);
+        v.animate().alpha(1f).setDuration(FADE_MS).setInterpolator(ease).start();
     }
 
     /** Levelling needs audio the TV decodes, so with it on, Dolby and DTS are decoded here from the start. */
@@ -391,8 +496,19 @@ public final class PlayerActivity extends Activity {
         video.setPlayer(player);
         player.addListener(new Player.Listener() {
             @Override
+            public void onCues(@NonNull CueGroup cueGroup) {
+                showCues(cueGroup);
+            }
+
+            @Override
+            public void onRenderedFirstFrame() {
+                lowerCurtain(true);
+            }
+
+            @Override
             public void onPlaybackStateChanged(int playbackState) {
                 buffering.show(playbackState == Player.STATE_BUFFERING);
+                if (playbackState == Player.STATE_READY) handler.postDelayed(liftCurtain, CURTAIN_WAIT_MS);
                 if (playbackState == Player.STATE_ENDED) ended();
             }
 
@@ -609,14 +725,35 @@ public final class PlayerActivity extends Activity {
         }
     }
 
-    /** White with a soft shadow in the launcher's typeface, rather than Android's boxed captions. */
+    /**
+     * Text subtitles in the launcher's typeface, in the look chosen in the subtitles menu, rather than
+     * Android's captions; PlayerView's own subtitles are hidden, since its cues come here (onCues).
+     */
     private void styleSubtitles() {
-        SubtitleView view = video.getSubtitleView();
-        if (view == null) return;
-        view.setStyle(new CaptionStyleCompat(Color.WHITE, Color.TRANSPARENT, Color.TRANSPARENT,
-                CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW, 0xE6000000, getResources().getFont(R.font.outfit_medium)));
-        view.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * 1.1f);
-        view.setApplyEmbeddedFontSizes(false);
+        SubtitleView own = video.getSubtitleView();
+        if (own != null) own.setVisibility(View.GONE);
+        subs.setStyle(prefs.getInt(PREF_SUBTITLE_STYLE, SubtitleText.SHADOW));
+    }
+
+    private void showCues(CueGroup group) {
+        android.text.SpannableStringBuilder text = new android.text.SpannableStringBuilder();
+        List<Cue> pictures = new ArrayList<>();
+        for (Cue cue : group.cues) {
+            if (cue.bitmap != null) {
+                pictures.add(cue);
+            } else if (cue.text != null && cue.text.length() > 0) {
+                if (text.length() > 0) text.append('\n');
+                text.append(cue.text);
+            }
+        }
+        subs.setCue(text);
+        pictureSubs.setCues(pictures);
+    }
+
+    private void chooseSubtitleStyle(int style) {
+        scheduleHide();
+        prefs.edit().putInt(PREF_SUBTITLE_STYLE, style).apply();
+        subs.setStyle(style);
     }
 
     private void fail(String detail) {
@@ -629,6 +766,7 @@ public final class PlayerActivity extends Activity {
         errorBody.setText(detail == null ? "" : detail);
         errorBody.setVisibility(detail == null || detail.isEmpty() ? View.GONE : View.VISIBLE);
         error.setVisibility(View.VISIBLE);
+        lowerCurtain(false);
         // The Jellyfin app, when there is one, may play what this cannot.
         View openApp = findViewById(R.id.playerOpenApp);
         openApp.setVisibility(Library.hasApp(this) ? View.VISIBLE : View.GONE);
@@ -654,6 +792,7 @@ public final class PlayerActivity extends Activity {
         Playback.Options o = firstOptions();
         o.maxBitrate = stream.maxBitrate;
         o.compatibleAudio |= stream.compatibleAudio;
+        raiseCurtain(n.itemId);
         open(n.itemId, o);
     }
 
@@ -759,6 +898,16 @@ public final class PlayerActivity extends Activity {
                     ? getString(R.string.player_burned_in) : null;
             m.add(GlassMenu.Item.option(t.title, detail, t.index == stream.subtitleIndex, () -> chooseSubtitle(t.index)));
         }
+        int style = prefs.getInt(PREF_SUBTITLE_STYLE, SubtitleText.SHADOW);
+        // Below the languages, past a line: how they look.
+        m.add(GlassMenu.Item.divider())
+                .add(GlassMenu.Item.heading(getString(R.string.player_subtitle_style)))
+                .add(GlassMenu.Item.option(getString(R.string.player_subtitle_shadow), null, style == SubtitleText.SHADOW,
+                        () -> chooseSubtitleStyle(SubtitleText.SHADOW)))
+                .add(GlassMenu.Item.option(getString(R.string.player_subtitle_glass), null, style == SubtitleText.GLASS,
+                        () -> chooseSubtitleStyle(SubtitleText.GLASS)))
+                .add(GlassMenu.Item.option(getString(R.string.player_subtitle_classic), null, style == SubtitleText.CLASSIC,
+                        () -> chooseSubtitleStyle(SubtitleText.CLASSIC)));
         showMenu(from, m);
     }
 
@@ -817,11 +966,14 @@ public final class PlayerActivity extends Activity {
         leveler.apply(player.getAudioSessionId(), on);
     }
 
+    private String speedLabel(float s) {
+        return s == 1f ? getString(R.string.player_speed_normal) : speedText(s) + "×";
+    }
+
     private void showSpeed(View from) {
         GlassMenu.Builder m = new GlassMenu.Builder().add(GlassMenu.Item.heading(getString(R.string.player_speed)));
         for (float s : SPEEDS) {
-            String label = s == 1f ? getString(R.string.player_speed_normal) : speedText(s) + "×";
-            m.add(GlassMenu.Item.option(label, null, s == speed, () -> chooseSpeed(s)));
+            m.add(GlassMenu.Item.option(speedLabel(s), null, s == speed, () -> chooseSpeed(s)));
         }
         showMenu(from, m);
     }
@@ -931,8 +1083,9 @@ public final class PlayerActivity extends Activity {
         }
         chrome.animate().alpha(show ? 1f : 0f).setDuration(FADE_MS).setInterpolator(ease).start();
         // Subtitles rise above the controls while they show.
-        SubtitleView subs = video.getSubtitleView();
-        if (subs != null) subs.setBottomPaddingFraction(show ? 0.3f : SubtitleView.DEFAULT_BOTTOM_PADDING_FRACTION);
+        pictureSubs.setBottomPaddingFraction(show ? 0.3f : SubtitleView.DEFAULT_BOTTOM_PADDING_FRACTION);
+        float lift = show ? -(video.getHeight() * 0.3f - getResources().getDimension(R.dimen.subtitle_bottom)) : 0f;
+        subs.animate().translationY(Math.min(0f, lift)).setDuration(FADE_MS).setInterpolator(ease).start();
         for (View v : new View[] {skip, upNext}) {
             if (v.getVisibility() == View.VISIBLE) {
                 v.animate().translationY(cornerLift()).setDuration(FADE_MS).setInterpolator(ease).start();
@@ -954,16 +1107,12 @@ public final class PlayerActivity extends Activity {
         if (player == null || stream == null) return;
         long duration = player.getDuration() != C.TIME_UNSET ? player.getDuration() : stream.durationMs;
         long position = scrubTo >= 0 ? scrubTo : player.getCurrentPosition();
-        // Where it is on the left; on the right how long is left and, quieter, when that will be.
+        // Where it is on the left; on the right how long is left and when that will be, all in one colour.
         time.setText(clock(position));
         long left = Math.max(0, duration - position);
-        String remaining = getString(R.string.player_remaining, clock(left));
-        android.text.SpannableString t = new android.text.SpannableString(remaining + "  ·  "
+        ends.setText(getString(R.string.player_remaining, clock(left)) + "  ·  "
                 + getString(R.string.player_ends_at, DateFormat.getTimeFormat(this)
                         .format(new Date(System.currentTimeMillis() + (long) (left / speed)))));
-        t.setSpan(new android.text.style.ForegroundColorSpan(getColor(R.color.text_tertiary)), remaining.length(),
-                t.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ends.setText(t);
         if (duration > 0) {
             int at = (int) (1000 * position / duration);
             seek.setProgress(at);
@@ -1147,6 +1296,8 @@ public final class PlayerActivity extends Activity {
 
     /** Reports where it got to and lets the player go; the stream stays, for opening again. */
     private void stopPlayer() {
+        subs.setCue(null);
+        pictureSubs.setCues(Collections.emptyList());
         handler.removeCallbacks(commitScrub);
         scrubTo = -1;
         preview.hide();

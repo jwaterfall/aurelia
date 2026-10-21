@@ -3,6 +3,7 @@ package app.aurelia.tv;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import app.aurelia.tv.jellyfin.Account;
@@ -85,11 +87,18 @@ public class MainActivity extends Activity {
     private GlassMenu menu;
     private RecyclerView cwRow, nuRow, pinnedRow, appsGrid;
     private View nuSection;
-    private TextView cwTitle, cwCaption, nuCaption, appsCaption;
+    private TextView cwTitle, cwCaption, nuCaption;
     private ContinueWatchingAdapter cwAdapter, nuAdapter;
     private AppTileAdapter pinnedAdapter, appsAdapter;
     private GlassSheet sheet;
     private Account account;
+    /** The framed hero at the top of Home. */
+    private HomeHero hero;
+    /** Recently added, under the hero; Continue Watching and Next Up are in the hero instead. */
+    private View recentSection, cwSection;
+    private RecyclerView recentRow;
+    private PosterAdapter recentAdapter;
+    private int recentFocus;
     private AccountPanel accountPanel;
     private final Account.Listener accountListener = this::onAccountChanged;
     private final PathInterpolator ease = new PathInterpolator(0.2f, 0f, 0f, 1f);
@@ -101,6 +110,8 @@ public class MainActivity extends Activity {
     private Library.HomeRows homeRows;
     /** Counts the requests for Home's rows, so an answer can be told from one asked for before a change. */
     private int homeRequest;
+    /** Counts Recently added's questions, so only the latest answer shows. */
+    private int recentRequest;
     /**
      * Cards taken off Home from their menu, by id, with the first request for Home's rows whose answer may show
      * them again: none while the server is still being told, then one asked for after it knew.
@@ -151,7 +162,7 @@ public class MainActivity extends Activity {
         updateProfile();
         loadApps();
         showPage(PAGE_HOME, false);
-        cwRow.post(() -> focusRow(cwRow, 0));
+        cwRow.post(this::focusHomeStart);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -170,7 +181,11 @@ public class MainActivity extends Activity {
     private void setUpTopBar() {
         topBar = findViewById(R.id.topBar);
         findViewById(R.id.avatar).setClipToOutline(true);
-        findViewById(R.id.btnProfile).setOnClickListener(v -> accountPanel.open());
+        // Signed in, a compact menu under the button; signing in keeps the panel, for its code and servers.
+        findViewById(R.id.btnProfile).setOnClickListener(v -> {
+            if (account.isSignedIn()) showProfileMenu(v);
+            else accountPanel.open();
+        });
 
         View settings = findViewById(R.id.btnSettings);
         settings.setOnClickListener(v -> open(new Intent(Settings.ACTION_SETTINGS)));
@@ -230,12 +245,58 @@ public class MainActivity extends Activity {
         nuCaption = nuHeader.findViewById(R.id.sectionCaption);
         nuAdapter = new ContinueWatchingAdapter(MEDIA_COLUMNS, gutter, mediaListener);
         setUpRow(nuRow = findViewById(R.id.nuRow), nuAdapter, gutter);
+        hero = new HomeHero(findViewById(R.id.heroSection), account, new HomeHero.Listener() {
+            @Override
+            public void onShown(String id, Drawable art) {
+                ambient.show(id, art);
+            }
+
+            @Override
+            public void onOpen(Catalog.Item item) {
+                if (item.isSeries()) ShowActivity.start(MainActivity.this, item.id);
+                else MovieActivity.start(MainActivity.this, item.id);
+            }
+
+            @Override
+            public void onPlay(Library.MediaItem item) {
+                PlayerActivity.start(MainActivity.this, item.id);
+            }
+
+            @Override
+            public void onOptions(Library.MediaItem item, View card) {
+                showMediaOptions(item, card);
+            }
+        });
+        hero.setAnimationsEnabled(animations);
+        cwSection = findViewById(R.id.cwSection);
+        recentSection = findViewById(R.id.recentSection);
+        ((TextView) findViewById(R.id.recentHeader).findViewById(R.id.sectionTitle)).setText(R.string.recently_added);
+        recentAdapter = new PosterAdapter(account, LibraryPage.COLUMNS, gutter, new PosterAdapter.Listener() {
+            @Override
+            public void onFocused(Catalog.Item item, Drawable art) {
+                ambient.show(item.id, art);
+            }
+
+            @Override
+            public void onClicked(Catalog.Item item) {
+                if (item.isSeries()) ShowActivity.start(MainActivity.this, item.id);
+                else MovieActivity.start(MainActivity.this, item.id);
+            }
+
+            @Override
+            public void onNearEnd() {
+            }
+        });
+        setUpRow(recentRow = findViewById(R.id.recentRow), recentAdapter, gutter);
         // The rows as they were last time, at once, while the server is asked again: placeholders only when
         // there is nothing kept (the first start, or another account).
         Library.HomeRows kept = Library.keptHomeRows(this, account);
         if (kept != null) showHomeRows(kept);
         ((app.aurelia.tv.ui.SectionScrollView) pageHome).setAlignTop(false);
         ((app.aurelia.tv.ui.SectionScrollView) pageHome).setAnimationsEnabled(animations);
+        // The row under the hero peeks in and fades out, so it reads as more below, not cut off.
+        ((app.aurelia.tv.ui.SectionScrollView) pageHome).setBottomFadeOnly(
+                getResources().getDimensionPixelSize(R.dimen.space_3xl) + getResources().getDimensionPixelSize(R.dimen.space_lg));
 
         View pinnedHeader = findViewById(R.id.pinnedHeader);
         ((TextView) pinnedHeader.findViewById(R.id.sectionTitle)).setText(R.string.pinned_apps);
@@ -254,6 +315,12 @@ public class MainActivity extends Activity {
 
     private void setUpLibraries() {
         menu = findViewById(R.id.menu);
+        menu.setAnimationsEnabled(animations);
+        // The hero holds still while a menu is open, so the menu's frost stays true to what is behind it.
+        menu.setOnOpenChanged(open -> {
+            if (open) hero.stop();
+            else hero.start();
+        });
         ViewGroup container = findViewById(R.id.pages);
         LibraryPage.Host host = new LibraryPage.Host() {
             @Override
@@ -314,9 +381,6 @@ public class MainActivity extends Activity {
     private void setUpApps() {
         int gutter = getResources().getDimensionPixelSize(R.dimen.gutter);
         pageApps = findViewById(R.id.pageApps);
-        View header = findViewById(R.id.appsHeader);
-        ((TextView) header.findViewById(R.id.sectionTitle)).setText(R.string.all_apps);
-        appsCaption = header.findViewById(R.id.sectionCaption);
         appsAdapter = new AppTileAdapter(APP_COLUMNS, gutter, appListener);
         appsGrid = findViewById(R.id.appsGrid);
         GridShelfLayoutManager layout = new GridShelfLayoutManager(this, APP_COLUMNS);
@@ -348,7 +412,6 @@ public class MainActivity extends Activity {
     private void loadApps() {
         allApps = InstalledApps.load(this, cfg.hiddenApps);
         showApps();
-        appsCaption.setText(getString(R.string.app_count, allApps.size()));
     }
 
     private void showApps() {
@@ -428,7 +491,7 @@ public class MainActivity extends Activity {
 
     /**
      * A card's menu. In progress: mark it watched, take it off Continue Watching (its place goes back to the start),
-     * play it from the start. Next up: mark it watched. An episode can also open its show.
+     * play it from the start. Next up: mark it watched. Either can open its page: an episode's show, or the film.
      */
     private void showMediaOptions(Library.MediaItem item, View card) {
         boolean resuming = homeRows != null && homeRows.isResuming(item.id);
@@ -448,9 +511,13 @@ public class MainActivity extends Activity {
             m.add(GlassMenu.Item.option(getString(R.string.menu_play_from_start), null, false,
                     () -> PlayerActivity.start(this, item.id, true)));
         }
+        // Its page, a shortcut past the library: an episode's show (open on the episode's season), or the film's own.
         if (!item.seriesId.isEmpty()) {
             m.add(GlassMenu.Item.option(getString(R.string.menu_go_to_show), null, false,
                     () -> ShowActivity.start(this, item.seriesId)));
+        } else {
+            m.add(GlassMenu.Item.option(getString(R.string.menu_go_to_movie), null, false,
+                    () -> MovieActivity.start(this, item.id)));
         }
         menu.show(card, m, findViewById(R.id.content));
     }
@@ -492,6 +559,83 @@ public class MainActivity extends Activity {
     }
 
     // ---- Jellyfin ------------------------------------------------------------------------------------
+
+    /**
+     * The profile button's menu while signed in: who and where (no picture: the button shows it), a waiting update
+     * (marked in the icon's blue, and showing its progress in its own row), the Jellyfin app, signing out, and this
+     * version.
+     */
+    private void showProfileMenu(View button) {
+        View header = getLayoutInflater().inflate(R.layout.view_profile_header, null, false);
+        ((TextView) header.findViewById(R.id.profileName)).setText(account.userName());
+        ((TextView) header.findViewById(R.id.profileServer))
+                .setText(account.serverName().isEmpty() ? account.server() : account.serverName());
+        GlassMenu.Builder m = new GlassMenu.Builder().add(GlassMenu.Item.view(header));
+        Updates.Release release = Updates.known(this);
+        if (release != null) {
+            m.add(GlassMenu.Item.live(getString(R.string.update_to, release.version), null, R.drawable.update_dot,
+                    (row, title, detail) -> startUpdate(release, row, title, detail)));
+        }
+        if (Library.hasApp(this)) {
+            m.add(GlassMenu.Item.option(getString(R.string.jellyfin_open_app), null, false, () -> Library.openApp(this)));
+        }
+        m.add(GlassMenu.Item.option(getString(R.string.jellyfin_sign_out), null, false, accountPanel::signOut));
+        m.add(GlassMenu.Item.divider());
+        // A footnote, not a heading: the app's icon and version, quiet and in ordinary case.
+        View about = getLayoutInflater().inflate(R.layout.view_menu_about, null, false);
+        ((TextView) about.findViewById(R.id.aboutVersion)).setText("Aurelia " + BuildConfig.VERSION_NAME);
+        View icon = about.findViewById(R.id.aboutIcon);
+        // Round, like the pills around it.
+        icon.setOutlineProvider(new android.view.ViewOutlineProvider() {
+            @Override
+            public void getOutline(View v, android.graphics.Outline outline) {
+                outline.setOval(0, 0, v.getWidth(), v.getHeight());
+            }
+        });
+        icon.setClipToOutline(true);
+        m.add(GlassMenu.Item.view(about));
+        menu.show(button, m, findViewById(R.id.content));
+    }
+
+    /** Downloads and installs {@code release}, saying how far it has got in the menu row that started it. */
+    /** An update is downloading. */
+    private boolean updating;
+
+    private void startUpdate(Updates.Release release, View row, TextView title, TextView detail) {
+        if (!Updates.canInstall(this)) {
+            detail.setText(R.string.update_allow);
+            detail.setVisibility(View.VISIBLE);
+            try {
+                startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName())));
+            } catch (ActivityNotFoundException e) {
+                // Android TV often has no such screen: the hint says how to allow it over adb.
+            }
+            return;
+        }
+        // Pressed again (or from the menu opened again) while it downloads: nothing more to do.
+        if (updating) return;
+        updating = true;
+        title.setText(R.string.update_downloading);
+        detail.setVisibility(View.GONE);
+        Api.async(() -> {
+            Updates.install(this, Updates.download(this, release));
+            return true;
+        }, new Api.Callback<Boolean>() {
+            @Override
+            public void onResult(Boolean ok) {
+                updating = false;
+                title.setText(R.string.update_installing);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                updating = false;
+                title.setText(getString(R.string.update_to, release.version));
+                detail.setText(R.string.update_failed);
+                detail.setVisibility(View.VISIBLE);
+            }
+        });
+    }
 
     /** The profile button: the signed-in user's picture, or their initial until it loads; a person icon when signed out. */
     private void updateProfile() {
@@ -535,6 +679,7 @@ public class MainActivity extends Activity {
         updateProfile();
         updateRow(cwAdapter::showLoading);
         refreshJellyfin();
+        loadRecent();
         movies.reset();
         shows.reset();
         LibraryPage shown = library(currentPage());
@@ -549,6 +694,7 @@ public class MainActivity extends Activity {
     private void refreshJellyfin() {
         if (!account.isSignedIn()) {
             homeRows = null;
+            hero.setWatching(Collections.emptyList(), Collections.emptyList());
             showNextUp(Collections.emptyList());
             cwTitle.setText(R.string.continue_watching);
             cwCaption.setText(null);
@@ -591,13 +737,17 @@ public class MainActivity extends Activity {
     /** Continue Watching and Next Up from {@code rows}: fresh from the server, or kept from last time. */
     private void showHomeRows(Library.HomeRows rows) {
         homeRows = rows;
-        // Nothing in progress: the next episodes take the first row.
-        boolean nextFirst = rows.resume.isEmpty() && !rows.nextUp.isEmpty();
-        List<Library.MediaItem> items = nextFirst ? rows.nextUp : rows.resume;
-        showNextUp(nextFirst ? Collections.emptyList() : rows.nextUp);
-        cwTitle.setText(nextFirst ? R.string.next_up : R.string.continue_watching);
+        boolean heroHadFocus = hero.card().hasFocus();
+        hero.setWatching(rows.resume, rows.nextUp);
+        if (heroHadFocus && !hero.isShowing()) focusHomeStart();
+        // One row for everything being watched, in progress first and then next up; the hero
+        // only picks from it.
+        List<Library.MediaItem> items = new ArrayList<>(rows.resume);
+        items.addAll(rows.nextUp);
+        showNextUp(Collections.emptyList());
+        cwTitle.setText(R.string.continue_watching);
+        cwCaption.setText(null);
         if (items.isEmpty()) {
-            cwCaption.setText(null);
             updateRow(() -> cwAdapter.showMessage(new ContinueWatchingAdapter.Message(R.drawable.ic_check,
                     getString(R.string.cw_empty_title), getString(R.string.cw_empty_body),
                     getString(R.string.cw_browse_movies), () -> {
@@ -606,10 +756,31 @@ public class MainActivity extends Activity {
                     })));
             return;
         }
-        cwCaption.setText(nextFirst
-                ? getResources().getQuantityString(R.plurals.next_up_shows, items.size(), items.size())
-                : getString(R.string.jellyfin_items, items.size()));
         updateRow(() -> cwAdapter.showItems(items, Library.auth(account)));
+    }
+
+    private void loadRecent() {
+        int request = ++recentRequest;
+        if (!account.isSignedIn()) {
+            recentAdapter.set(Collections.emptyList());
+            hero.setAdded(Collections.emptyList());
+            recentSection.setVisibility(View.GONE);
+            return;
+        }
+        Api.async(() -> Catalog.recentlyAdded(account, 20), new Api.Callback<List<Catalog.Item>>() {
+            @Override
+            public void onResult(List<Catalog.Item> items) {
+                // An answer for an account since signed out of, or overtaken by a newer question, is dropped.
+                if (request != recentRequest) return;
+                recentAdapter.set(items);
+                hero.setAdded(items);
+                recentSection.setVisibility(items.isEmpty() ? View.GONE : View.VISIBLE);
+            }
+
+            @Override
+            public void onError(Exception e) {
+            }
+        });
     }
 
     private void showNextUp(List<Library.MediaItem> items) {
@@ -755,10 +926,16 @@ public class MainActivity extends Activity {
         boolean right = keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
         switch (keyCode) {
             case KeyEvent.KEYCODE_DPAD_UP:
+                // Home is the hero, Continue watching, Next Up (when apart), Recently added, apps.
                 if (isIn(focus, topBar)) return true;
-                if (isIn(focus, cwRow)) return tabs.requestFocus();
+                if (focus == hero.card()) return tabs.requestFocus();
+                if (isIn(focus, cwRow)) return hero.isShowing() ? hero.card().requestFocus() : tabs.requestFocus();
                 if (isIn(focus, nuRow)) return focusRow(cwRow, cwFocus);
+                if (isIn(focus, recentRow)) {
+                    return nuSection.getVisibility() == View.VISIBLE ? focusRow(nuRow, nuFocus) : focusRow(cwRow, cwFocus);
+                }
                 if (isIn(focus, pinnedRow)) {
+                    if (recentSection.getVisibility() == View.VISIBLE) return focusRow(recentRow, recentFocus);
                     return nuSection.getVisibility() == View.VISIBLE ? focusRow(nuRow, nuFocus) : focusRow(cwRow, cwFocus);
                 }
                 if (isIn(focus, appsGrid)) {
@@ -772,13 +949,20 @@ public class MainActivity extends Activity {
                         library.focusIn();
                         return true;
                     }
+                    if (currentPage() == PAGE_HOME && hero.isShowing()) return hero.card().requestFocus();
                     return currentPage() == PAGE_HOME ? focusRow(cwRow, cwFocus) : focusRow(appsGrid, appsFocus);
                 }
+                if (focus == hero.card()) return focusRow(cwRow, cwFocus);
                 if (isIn(focus, cwRow)) {
-                    return nuSection.getVisibility() == View.VISIBLE ? focusRow(nuRow, nuFocus)
+                    if (nuSection.getVisibility() == View.VISIBLE) return focusRow(nuRow, nuFocus);
+                    return recentSection.getVisibility() == View.VISIBLE ? focusRow(recentRow, recentFocus)
                             : focusRow(pinnedRow, pinnedFocus);
                 }
-                if (isIn(focus, nuRow)) return focusRow(pinnedRow, pinnedFocus);
+                if (isIn(focus, nuRow)) {
+                    return recentSection.getVisibility() == View.VISIBLE ? focusRow(recentRow, recentFocus)
+                            : focusRow(pinnedRow, pinnedFocus);
+                }
+                if (isIn(focus, recentRow)) return focusRow(pinnedRow, pinnedFocus);
                 if (isIn(focus, pinnedRow)) return true;
                 if (isIn(focus, appsGrid)) {
                     int pos = positionIn(appsGrid, focus), last = appsAdapter.getItemCount() - 1;
@@ -789,7 +973,11 @@ public class MainActivity extends Activity {
                 return false;
             case KeyEvent.KEYCODE_DPAD_LEFT:
             case KeyEvent.KEYCODE_DPAD_RIGHT:
-                for (RecyclerView row : new RecyclerView[]{cwRow, nuRow, pinnedRow}) {
+                if (focus == hero.card()) {
+                    hero.step(right ? 1 : -1);
+                    return true;
+                }
+                for (RecyclerView row : new RecyclerView[]{recentRow, cwRow, nuRow, pinnedRow}) {
                     if (!isIn(focus, row)) continue;
                     int pos = positionIn(row, focus) + (right ? 1 : -1);
                     if (pos >= 0 && row.getAdapter() != null && pos < row.getAdapter().getItemCount()) focusRow(row, pos);
@@ -807,8 +995,15 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** Home's first stop: the hero, or the first card when there is nothing for it. */
+    private void focusHomeStart() {
+        if (hero.isShowing()) hero.card().requestFocus();
+        else focusRow(cwRow, 0);
+    }
+
     private void remember(View focus) {
-        if (isIn(focus, cwRow)) cwFocus = Math.max(0, positionIn(cwRow, focus));
+        if (isIn(focus, recentRow)) recentFocus = Math.max(0, positionIn(recentRow, focus));
+        else if (isIn(focus, cwRow)) cwFocus = Math.max(0, positionIn(cwRow, focus));
         else if (isIn(focus, nuRow)) nuFocus = Math.max(0, positionIn(nuRow, focus));
         else if (isIn(focus, pinnedRow)) pinnedFocus = Math.max(0, positionIn(pinnedRow, focus));
         else if (isIn(focus, appsGrid)) appsFocus = Math.max(0, positionIn(appsGrid, focus));
@@ -850,12 +1045,13 @@ public class MainActivity extends Activity {
     /** Home and Back both lead back to the start: the Home page, its first card, rows scrolled to the start. */
     private void goHome() {
         showPage(PAGE_HOME, animations);
-        cwFocus = nuFocus = pinnedFocus = 0;
+        cwFocus = nuFocus = pinnedFocus = recentFocus = 0;
+        recentRow.scrollToPosition(0);
         cwRow.scrollToPosition(0);
         nuRow.scrollToPosition(0);
         pinnedRow.scrollToPosition(0);
         pageHome.scrollTo(0, 0);
-        cwRow.post(() -> focusRow(cwRow, 0));
+        cwRow.post(this::focusHomeStart);
     }
 
     @Override
@@ -880,17 +1076,57 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         refreshJellyfin();
+        loadRecent();
         checkForUpdate();
         // Back from a film or show: what was watched or favourited there shows on its poster.
         LibraryPage shown = library(currentPage());
         if (shown != null) shown.refresh();
         wallpaperPlayer.start();
+        hero.start();
+    }
+
+    /** Away this long, and the libraries' filters were for another time: they reset (their sort stays). */
+    private static final long FILTERS_LAST_MS = 30 * 60 * 1000L;
+
+    /** True from opening one of Aurelia's own screens (a film, the player) until Home shows again. */
+    private boolean inAurelia;
+
+    @Override
+    public void startActivity(Intent intent, @Nullable Bundle options) {
+        ComponentName to = intent.getComponent();
+        inAurelia = to != null && getPackageName().equals(to.getPackageName());
+        super.startActivity(intent, options);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        inAurelia = false;
+        android.content.SharedPreferences prefs = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE);
+        long left = prefs.getLong("left_at", 0);
+        if (left > 0 && System.currentTimeMillis() - left > FILTERS_LAST_MS) {
+            movies.forgetFilters();
+            shows.forgetFilters();
+        }
+        prefs.edit().remove("left_at").apply();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Out of sight: another app, the screensaver, or the TV off, but not a film or the player opened from
+        // here. Kept on disk, so a restart counts too.
+        if (!inAurelia) {
+            getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE).edit()
+                    .putLong("left_at", System.currentTimeMillis()).apply();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         wallpaperPlayer.stop();
+        hero.stop();
     }
 
     /** Marks the profile button while a newer version waits, asking GitHub every few hours (update.Updates). */

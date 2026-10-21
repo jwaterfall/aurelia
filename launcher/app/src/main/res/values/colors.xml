@@ -30,6 +30,12 @@
     <!-- Card surfaces before their artwork arrives, and the hairline that keeps dark artwork off the backdrop. -->
     <color name="surface_card">#1AFFFFFF</color>
     <color name="card_hairline">#1FFFFFFF</color>
+    <!-- Between the buttons of one glass pill (ui.PillGroup). -->
+    <!-- Over the backdrop while the player opens. -->
+    <color name="curtain_scrim">#99000000</color>
+    <!-- Under glass subtitles' glass, so white text reads over a bright picture. -->
+    <color name="subtitle_glass_tint">#8C101218</color>
+    <color name="pill_hairline">#33FFFFFF</color>
     <!-- Inside the white focus ring, so the ring reads on white artwork too. -->
     <color name="focus_ring_inner">#59000000</color>
 
@@ -51,10 +57,16 @@
 
     <color name="backdrop_base">#FF05070D</color>
     <color name="avatar">#FF4F7BFF</color>
+    <!-- The jellyfish's blue from the icon, a touch brighter, for the few things that ask for attention
+         (an update waiting). -->
+    <color name="accent">#FF78B4F0</color>
     <color name="progress_track">#40FFFFFF</color>
     <color name="progress_buffered">#66FFFFFF</color>
-    <!-- Under a menu's glass over video: solid, so nothing behind shows through its options. -->
-    <color name="menu_tint">#FF15181F</color>
+    <!-- Over a menu's frosted snapshot of the screen, enough to keep its text clear on bright art; and
+         in its place where there is nothing to frost (over playing video). -->
+    <color name="menu_frost_tint">#59101218</color>
+    <color name="menu_solid">#E015181F</color>
+    <color name="icon_ring">#4DFFFFFF</color>
     <!-- ui.ScrollEdge: the band behind the top bar once a page scrolls under it, and its shadow halfway out. -->
     <color name="scroll_edge">#D90B0D14</color>
     <color name="scroll_edge_mid">#730B0D14</color>

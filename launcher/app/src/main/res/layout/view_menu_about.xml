@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The foot of the profile button's menu: the app's icon and version, quietly. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/space_md"
+    android:paddingTop="@dimen/space_xs"
+    android:paddingEnd="@dimen/space_md"
+    android:paddingBottom="@dimen/space_2xs">
+
+    <ImageView
+        android:id="@+id/aboutIcon"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:importantForAccessibility="no"
+        android:foreground="@drawable/icon_ring"
+        android:scaleType="centerCrop"
+        android:src="@mipmap/ic_launcher" />
+
+    <TextView
+        android:id="@+id/aboutVersion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_xs"
+        android:textAppearance="@style/TextAppearance.Launcher.Meta.Quiet" />
+</LinearLayout>

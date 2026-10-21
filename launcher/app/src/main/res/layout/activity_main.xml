@@ -89,11 +89,12 @@
                             android:importantForAccessibility="no" />
                     </FrameLayout>
 
-                    <!-- A newer version waits in the profile panel (update.Updates). -->
+                    <!-- A newer version waits in the profile panel (update.Updates). On the button's rim at the
+                         top right, so it never covers the picture. -->
                     <View
                         android:id="@+id/updateDot"
-                        android:layout_width="12dp"
-                        android:layout_height="12dp"
+                        android:layout_width="9dp"
+                        android:layout_height="9dp"
                         android:layout_gravity="top|end"
                         android:background="@drawable/update_dot"
                         android:visibility="gone" />
@@ -194,10 +195,9 @@
                     android:orientation="vertical"
                     android:paddingBottom="@dimen/space_3xl">
 
-                    <Space
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1" />
+                    <include
+                        android:id="@+id/heroSection"
+                        layout="@layout/view_home_hero" />
 
                     <LinearLayout
                         android:id="@+id/cwSection"
@@ -228,6 +228,22 @@
                             android:layout_height="wrap_content" />
                     </LinearLayout>
 
+                    <!-- Films and shows added last, above the apps. -->
+                    <LinearLayout
+                        android:id="@+id/recentSection"
+                        style="@style/Widget.Launcher.HomeSection"
+                        android:visibility="gone">
+
+                        <include
+                            android:id="@+id/recentHeader"
+                            layout="@layout/view_section_header" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/recentRow"
+                            style="@style/Widget.Launcher.Shelf"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
                     <LinearLayout
                         style="@style/Widget.Launcher.HomeSection"
                         android:paddingBottom="0dp">
@@ -253,13 +269,11 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
+                <!-- No heading: the tab names the page, as on Movies and TV Shows. The first row starts where their
+                     sort and filter buttons do. -->
                 <Space
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/space_xl" />
-
-                <include
-                    android:id="@+id/appsHeader"
-                    layout="@layout/view_section_header" />
+                    android:layout_height="@dimen/space_md" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/appsGrid"

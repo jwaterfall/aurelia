@@ -22,6 +22,8 @@
 
     <!-- Everything in the top bar is this tall. -->
     <dimen name="control_height">40dp</dimen>
+    <!-- A page's own controls (a library's sort and filters), a step under the tab bar. -->
+    <dimen name="chip_height">34dp</dimen>
     <dimen name="control_inset">4dp</dimen>
     <!-- The clock and date are a little taller than the bar they sit in; they overhang it this much each way. -->
     <dimen name="clock_overhang">-4dp</dimen>
@@ -42,6 +44,14 @@
     <dimen name="focus_ring">2dp</dimen>
     <dimen name="hairline">1dp</dimen>
     <dimen name="progress_height">3dp</dimen>
+    <!-- Home's framed hero. -->
+    <dimen name="hero_height">300dp</dimen>
+    <dimen name="hero_info_width">400dp</dimen>
+    <dimen name="hero_logo_width">240dp</dimen>
+    <dimen name="hero_logo_height">72dp</dimen>
+    <dimen name="hero_progress_width">160dp</dimen>
+    <dimen name="hero_dot">5dp</dimen>
+    <dimen name="hero_dot_on">18dp</dimen>
 
     <!-- Side panel (ui.GlassSheet). -->
     <dimen name="panel_width">420dp</dimen>
@@ -55,16 +65,30 @@
     <dimen name="menu_width">240dp</dimen>
     <dimen name="menu_row_height">32dp</dimen>
     <dimen name="menu_max_height">320dp</dimen>
-    <dimen name="menu_row_radius">8dp</dimen>
+    <!-- Rows are pills, like the tabs and buttons. -->
+    <dimen name="menu_row_radius">16dp</dimen>
     <!-- The rows' radius plus the card's padding, so the corners nest. -->
-    <dimen name="menu_radius">12dp</dimen>
+    <dimen name="menu_radius">22dp</dimen>
     <!-- The player: its round buttons, and the show's logo. -->
     <dimen name="player_button">38dp</dimen>
     <dimen name="player_icon_inset">9dp</dimen>
+    <!-- Play and pause, large in the middle; skipping back and on beside it, as tall as the pills. -->
+    <dimen name="player_play">56dp</dimen>
+    <dimen name="player_play_inset">16dp</dimen>
+    <dimen name="player_skip">46dp</dimen>
+    <dimen name="player_skip_inset">12dp</dimen>
     <dimen name="player_logo_height">56dp</dimen>
     <!-- ui.PulseIndicator, while a stream opens or buffers: its whole reach, the glass disc, and its lines. -->
-    <dimen name="pulse_size">72dp</dimen>
-    <dimen name="pulse_core">10dp</dimen>
+    <!-- Text subtitles: how far up from the bottom, and how wide before they wrap. -->
+    <dimen name="subtitle_bottom">36dp</dimen>
+    <dimen name="subtitle_width">760dp</dimen>
+    <dimen name="subtitle_glass_radius">18dp</dimen>
+    <!-- The player's opening screen. -->
+    <dimen name="curtain_logo_height">120dp</dimen>
+    <dimen name="curtain_logo_width">440dp</dimen>
+    <dimen name="curtain_line_width">160dp</dimen>
+    <dimen name="pulse_width">84dp</dimen>
+    <dimen name="pulse_height">30dp</dimen>
     <dimen name="pulse_line">1.5dp</dimen>
     <dimen name="player_logo_width">360dp</dimen>
     <!-- The frame previewed over the seek bar while scrubbing (16:9; other shapes keep this width). -->

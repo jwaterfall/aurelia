@@ -3,13 +3,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/menu_row_bg"
+    android:background="@drawable/menu_row_slide"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
     android:minHeight="@dimen/menu_row_height"
     android:orientation="horizontal"
-    android:paddingStart="@dimen/space_sm"
+    android:paddingStart="@dimen/space_md"
     android:paddingTop="2dp"
     android:paddingEnd="@dimen/space_xs"
     android:paddingBottom="2dp">
@@ -28,7 +28,7 @@
             android:duplicateParentState="true"
             android:ellipsize="end"
             android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.Launcher.Label" />
+            android:textAppearance="@style/TextAppearance.Launcher.Label.Menu" />
 
         <TextView
             android:id="@+id/rowSubtitle"

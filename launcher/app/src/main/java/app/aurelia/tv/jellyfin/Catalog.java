@@ -295,6 +295,15 @@ public final class Catalog {
      * Up to {@code limit} of {@code types} (Jellyfin's item types: "Movie", "Series", "Episode") whose names
      * match {@code term}, best matches first.
      */
+    /** The films and shows added last, newest first, for Home's Recently added row. */
+    public static List<Item> recentlyAdded(Account account, int limit) throws IOException {
+        JSONObject page = Api.getJson(account.server() + "/Users/" + account.userId()
+                + "/Items?recursive=true&includeItemTypes=Movie,Series&fields=" + FIELDS
+                + "&enableImageTypes=Primary,Backdrop,Logo,Thumb&imageTypeLimit=1"
+                + "&sortBy=DateCreated,SortName&sortOrder=Descending&limit=" + limit, Library.auth(account));
+        return items(page);
+    }
+
     public static List<Item> search(Account account, String term, String types, int limit) throws IOException {
         JSONObject page = Api.getJson(account.server() + "/Users/" + account.userId()
                 + "/Items?recursive=true&searchTerm=" + Uri.encode(term) + "&includeItemTypes=" + types

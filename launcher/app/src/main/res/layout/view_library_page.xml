@@ -27,26 +27,36 @@
 
         <TextView
             android:id="@+id/librarySort"
-            style="@style/Widget.Launcher.TextButton.Icon"
+            style="@style/Widget.Launcher.Chip.Icon"
             android:drawableStart="@drawable/ic_sort" />
 
         <TextView
             android:id="@+id/libraryFilter"
-            style="@style/Widget.Launcher.TextButton.Icon"
+            style="@style/Widget.Launcher.Chip.Icon"
             android:layout_marginStart="@dimen/control_gap"
             android:drawableStart="@drawable/ic_filter" />
 
         <TextView
             android:id="@+id/libraryGenre"
-            style="@style/Widget.Launcher.TextButton.Icon"
+            style="@style/Widget.Launcher.Chip.Icon"
             android:layout_marginStart="@dimen/control_gap"
             android:drawableStart="@drawable/ic_genre" />
 
-        <!-- What has focus: its name, then the facts. How many there are while nothing does. -->
+        <!-- While a filter is on: one press back to everything. -->
+        <TextView
+            android:id="@+id/libraryClear"
+            style="@style/Widget.Launcher.Chip"
+            android:layout_marginStart="@dimen/control_gap"
+            android:text="@string/filter_clear"
+            android:visibility="gone" />
+
+        <!-- What has focus: its name, then the facts. How many there are while nothing does. On the buttons' foot,
+             not their middle, so the gap down to the posters is the same under it as under them. -->
         <TextView
             android:id="@+id/libraryFocusName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
             android:layout_marginStart="@dimen/space_xl"
             android:layout_weight="1"
             android:ellipsize="end"
@@ -58,6 +68,7 @@
             android:id="@+id/libraryFocusFacts"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
             android:layout_marginStart="@dimen/space_sm"
             android:singleLine="true"
             android:textAppearance="@style/TextAppearance.Launcher.Meta" />
