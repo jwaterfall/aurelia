@@ -22,9 +22,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.gathin.tvhome.jellyfin.Account;
 import com.gathin.tvhome.jellyfin.Api;
+import com.gathin.tvhome.jellyfin.Catalog;
 import com.gathin.tvhome.jellyfin.Library;
 import com.gathin.tvhome.player.PlayerActivity;
 import com.gathin.tvhome.ui.AmbientBackdrop;
+import com.gathin.tvhome.ui.GlassMenu;
 import com.gathin.tvhome.ui.GlassSheet;
 import com.gathin.tvhome.ui.GridShelfLayoutManager;
 import com.gathin.tvhome.ui.GridSpacing;
@@ -34,8 +36,9 @@ import com.gathin.tvhome.ui.ShelfLayoutManager;
 import java.util.List;
 
 /**
- * The launcher: a top bar (profile, Settings, Search, the Home / Apps tabs, the clock) over two pages.
- * Home has the Jellyfin Continue Watching row and the pinned apps; Apps has every app on the same columns.
+ * The launcher: a top bar (profile, Settings, Search, the tabs, the clock) over four pages. Home has the Jellyfin
+ * Continue Watching row and the pinned apps; Movies and TV Shows are the Jellyfin libraries ({@link LibraryPage});
+ * Apps has every app on the same columns.
  *
  * Focus in the top bar moves the platform's way. Between rows and inside them this class moves it itself (see
  * {@link #routeKey}): one card at a time, and back to where it last was in each row.
@@ -47,7 +50,9 @@ public class MainActivity extends Activity {
     private static final int LAUNCHER_SETTINGS_REQUEST = 42;
 
     private static final int PAGE_HOME = 0;
-    private static final int PAGE_APPS = 1;
+    private static final int PAGE_MOVIES = 1;
+    private static final int PAGE_SHOWS = 2;
+    private static final int PAGE_APPS = 3;
     /** The launcher grid: Home's media row has three columns, app tiles five. */
     private static final int MEDIA_COLUMNS = 3;
     private static final int APP_COLUMNS = 5;
@@ -61,6 +66,10 @@ public class MainActivity extends Activity {
     private View topBar;
     private SegmentedControl tabs;
     private View pageHome, pageApps;
+    /** Every page, by index: Home, Movies, TV Shows, Apps. */
+    private View[] pages;
+    private LibraryPage movies, shows;
+    private GlassMenu menu;
     private RecyclerView cwRow, pinnedRow, appsGrid;
     private TextView cwCaption, appsCaption;
     private ContinueWatchingAdapter cwAdapter;
@@ -105,7 +114,9 @@ public class MainActivity extends Activity {
         accountPanel = new AccountPanel(this, sheet, findViewById(R.id.content));
         setUpTopBar();
         setUpHome();
+        setUpLibraries();
         setUpApps();
+        pages = new View[] {pageHome, movies.view(), shows.view(), pageApps};
         account.addListener(accountListener);
         updateProfile();
         loadApps();
@@ -194,6 +205,60 @@ public class MainActivity extends Activity {
         row.setAdapter(adapter);
     }
 
+    private void setUpLibraries() {
+        menu = findViewById(R.id.menu);
+        ViewGroup container = findViewById(R.id.pages);
+        LibraryPage.Host host = new LibraryPage.Host() {
+            @Override
+            public void onItemFocused(Catalog.Item item, Drawable art) {
+                ambient.show(item.id, art);
+            }
+
+            @Override
+            public void onNothingFocused() {
+                ambient.clear();
+            }
+
+            @Override
+            public void onOpen(Catalog.Item item) {
+                if (item.isSeries()) ShowActivity.start(MainActivity.this, item.id);
+                else MovieActivity.start(MainActivity.this, item.id);
+            }
+
+            @Override
+            public void onExitUp() {
+                tabs.requestFocus();
+            }
+
+            @Override
+            public void onSignIn() {
+                accountPanel.open();
+            }
+
+            @Override
+            public GlassMenu menu() {
+                return menu;
+            }
+
+            @Override
+            public ViewGroup background() {
+                return findViewById(R.id.content);
+            }
+        };
+        movies = new LibraryPage(this, container, Catalog.Kind.Movie, host);
+        shows = new LibraryPage(this, container, Catalog.Kind.Series, host);
+        movies.setAnimationsEnabled(animations);
+        shows.setAnimationsEnabled(animations);
+        // Apps stays last, over the libraries, as it was in the layout.
+        pageApps = findViewById(R.id.pageApps);
+        pageApps.bringToFront();
+    }
+
+    /** The library shown on {@code page}, or null for Home and Apps. */
+    private LibraryPage library(int page) {
+        return page == PAGE_MOVIES ? movies : page == PAGE_SHOWS ? shows : null;
+    }
+
     private void setUpApps() {
         int gutter = getResources().getDimensionPixelSize(R.dimen.gutter);
         pageApps = findViewById(R.id.pageApps);
@@ -273,6 +338,10 @@ public class MainActivity extends Activity {
         updateProfile();
         updateRow(cwAdapter::showLoading);
         refreshJellyfin();
+        movies.reset();
+        shows.reset();
+        LibraryPage shown = library(currentPage());
+        if (shown != null) shown.reload();
     }
 
     /**
@@ -333,23 +402,28 @@ public class MainActivity extends Activity {
 
     // ---- pages ---------------------------------------------------------------------------------------
 
-    /** Shows one page, sliding it up into place as the other fades away. */
+    /** Shows one page, sliding it up into place as the others fade away. A library loads the first time it shows. */
     private void showPage(int page, boolean animate) {
-        View in = page == PAGE_HOME ? pageHome : pageApps;
-        View out = page == PAGE_HOME ? pageApps : pageHome;
+        View in = pages[page];
         if (tabs.getSelectedIndex() != page) tabs.setSelectedIndex(page, false);
-        out.animate().cancel();
+        LibraryPage library = library(page);
+        if (library != null) library.showing();
         in.animate().cancel();
+        for (View out : pages) {
+            if (out == in) continue;
+            out.animate().cancel();
+            if (!animate) {
+                out.setVisibility(View.GONE);
+            } else if (out.getVisibility() == View.VISIBLE) {
+                out.animate().alpha(0f).setDuration(PAGE_OUT_MS).setInterpolator(ease)
+                        .withEndAction(() -> out.setVisibility(View.GONE)).start();
+            }
+        }
         if (!animate) {
-            out.setVisibility(View.GONE);
             in.setVisibility(View.VISIBLE);
             in.setAlpha(1f);
             in.setTranslationY(0f);
             return;
-        }
-        if (out.getVisibility() == View.VISIBLE) {
-            out.animate().alpha(0f).setDuration(PAGE_OUT_MS).setInterpolator(ease)
-                    .withEndAction(() -> out.setVisibility(View.GONE)).start();
         }
         if (in.getVisibility() != View.VISIBLE || in.getAlpha() < 1f) {
             in.setVisibility(View.VISIBLE);
@@ -381,7 +455,9 @@ public class MainActivity extends Activity {
      */
     private boolean routeKey(int keyCode) {
         View focus = getCurrentFocus();
-        if (focus == null || sheet.isShowing()) return false;
+        if (focus == null || sheet.isShowing() || menu.isShowing()) return false;
+        LibraryPage library = library(currentPage());
+        if (library != null && !isIn(focus, topBar)) return library.routeKey(keyCode, focus);
         boolean right = keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
         switch (keyCode) {
             case KeyEvent.KEYCODE_DPAD_UP:
@@ -395,6 +471,10 @@ public class MainActivity extends Activity {
                 return false;
             case KeyEvent.KEYCODE_DPAD_DOWN:
                 if (isIn(focus, topBar)) {
+                    if (library != null) {
+                        library.focusIn();
+                        return true;
+                    }
                     return currentPage() == PAGE_HOME ? focusRow(cwRow, cwFocus) : focusRow(appsGrid, appsFocus);
                 }
                 if (isIn(focus, cwRow)) return focusRow(pinnedRow, pinnedFocus);
@@ -478,6 +558,7 @@ public class MainActivity extends Activity {
     public void onBackPressed() {
         // A launcher never closes; Back steps back through a panel, and otherwise returns to the start.
         if (accountPanel.isOpen()) accountPanel.back();
+        else if (menu.isShowing()) menu.hide();
         else goHome();
     }
 
@@ -495,6 +576,9 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         refreshJellyfin();
+        // Back from a film or show: what was watched or favourited there shows on its poster.
+        LibraryPage shown = library(currentPage());
+        if (shown != null) shown.refresh();
         wallpaperPlayer.start();
     }
 

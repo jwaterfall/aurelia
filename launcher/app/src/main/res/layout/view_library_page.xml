@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A library page (Movies, TV Shows; LibraryPage): what has focus at the top (its logo or title, the facts, a few
+     lines about it), then sort and filter pills, then every poster on the launcher's columns. The posters
+     scroll up to just under the pills, where the page cuts them off. No faded edge: with the posters drawn
+     past the list's padding (so a focused one can lift), a fade would end at the padding, mid-poster. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:orientation="vertical"
+    android:visibility="gone">
+
+    <!-- Preview: a fixed height, so the page never moves as focus does. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/library_preview_height"
+        android:layout_marginTop="@dimen/space_md"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/screen_margin"
+        android:paddingEnd="@dimen/library_preview_end">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/library_logo_height">
+
+            <ImageView
+                android:id="@+id/previewLogo"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:adjustViewBounds="true"
+                android:importantForAccessibility="no"
+                android:maxWidth="@dimen/player_logo_width"
+                android:scaleType="fitStart" />
+
+            <TextView
+                android:id="@+id/previewTitle"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:ellipsize="end"
+                android:gravity="bottom"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.Launcher.PlayerTitle" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/previewFacts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Launcher.PlayerTime"
+            android:textColor="@color/text_secondary" />
+
+        <TextView
+            android:id="@+id/previewOverview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_2xs"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="@style/TextAppearance.Launcher.Body"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- Sort and filter, and how many there are. -->
+    <LinearLayout
+        android:id="@+id/libraryToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_sm"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/screen_margin"
+        android:paddingEnd="@dimen/screen_margin">
+
+        <TextView
+            android:id="@+id/librarySort"
+            style="@style/Widget.Launcher.ToolbarPill"
+            android:drawableStart="@drawable/ic_sort" />
+
+        <TextView
+            android:id="@+id/libraryFilter"
+            style="@style/Widget.Launcher.ToolbarPill"
+            android:layout_marginStart="@dimen/control_gap"
+            android:drawableStart="@drawable/ic_filter" />
+
+        <TextView
+            android:id="@+id/libraryGenre"
+            style="@style/Widget.Launcher.ToolbarPill"
+            android:layout_marginStart="@dimen/control_gap"
+            android:drawableStart="@drawable/ic_genre" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/libraryCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Launcher.Caption" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/libraryGrid"
+            style="@style/Widget.Launcher.Shelf"
+            android:layout_height="match_parent"
+            android:paddingTop="@dimen/space_md"
+            android:paddingBottom="@dimen/space_3xl" />
+
+        <!-- Instead of the posters: loading, signed out, nothing matching. -->
+        <LinearLayout
+            android:id="@+id/libraryMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/space_3xl"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/librarySpinner"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:indeterminateTint="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/libraryMessageText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.Launcher.Body" />
+
+            <TextView
+                android:id="@+id/libraryMessageAction"
+                style="@style/Widget.Launcher.PlayerButton"
+                android:layout_marginTop="@dimen/space_md" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

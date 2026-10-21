@@ -107,6 +107,11 @@ public final class Api {
         request("POST", url, auth, null);
     }
 
+    /** Undoes something, such as a favourite; any answer is not needed. */
+    public static void delete(String url, String auth) throws IOException {
+        request("DELETE", url, auth, null);
+    }
+
     public static Bitmap getImage(String url, String auth) throws IOException {
         HttpURLConnection conn = open("GET", url, auth);
         try {

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ShowActivity: a show's backdrop; at the top what it is and its main button (resume or play the next episode);
+     at the bottom its seasons as tabs, the episode with focus, and that season's episodes in a row. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backdrop_base"
+    android:clipChildren="false">
+
+    <ImageView
+        android:id="@+id/detailsBackdrop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/details_scrim" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="320dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/details_scrim_bottom" />
+
+    <LinearLayout
+        android:id="@+id/showContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/screen_margin_top">
+
+        <include
+            android:id="@+id/detailsHeader"
+            layout="@layout/view_details_header"
+            android:layout_width="@dimen/details_width"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_margin" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <HorizontalScrollView
+            android:id="@+id/seasonScroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:fillViewport="false"
+            android:overScrollMode="never"
+            android:paddingStart="@dimen/screen_margin"
+            android:paddingEnd="@dimen/screen_margin"
+            android:scrollbars="none">
+
+            <com.gathin.tvhome.ui.SegmentedControl
+                android:id="@+id/seasons"
+                style="@style/Widget.Launcher.TabBar"
+                android:layout_width="wrap_content" />
+        </HorizontalScrollView>
+
+        <!-- The episode with focus. -->
+        <TextView
+            android:id="@+id/episodeTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:ellipsize="end"
+            android:paddingStart="@dimen/screen_margin"
+            android:paddingEnd="@dimen/screen_margin"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Launcher.PlayerTime" />
+
+        <TextView
+            android:id="@+id/episodeOverview"
+            android:layout_width="@dimen/episode_overview_width"
+            android:layout_height="@dimen/episode_overview_height"
+            android:layout_marginTop="@dimen/space_2xs"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:paddingStart="@dimen/screen_margin"
+            android:textAppearance="@style/TextAppearance.Launcher.Body"
+            android:textSize="13sp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/episodes"
+            style="@style/Widget.Launcher.Shelf"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_xl" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/detailsSpinner"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_gravity="center"
+        android:indeterminateTint="@color/text_secondary" />
+</FrameLayout>

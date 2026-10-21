@@ -174,7 +174,7 @@ public final class Library {
     }
 
     /** "1h 4m", "49m", or empty under a minute. */
-    static String length(long ticks) {
+    public static String length(long ticks) {
         long minutes = ticks / 600_000_000L;
         if (minutes <= 0) return "";
         if (minutes < 60) return minutes + "m";

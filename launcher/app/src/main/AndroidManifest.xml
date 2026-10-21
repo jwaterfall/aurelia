@@ -65,7 +65,19 @@
             </intent-filter>
         </activity>
 
-        <!-- Jellyfin playback, opened from Continue Watching. -->
+        <!-- A film's page and a show's page, opened from Movies and TV Shows. -->
+        <activity
+            android:name=".MovieActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name=".ShowActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape" />
+
+        <!-- Jellyfin playback, opened from Continue Watching and the films' and shows' pages. -->
         <activity
             android:name=".player.PlayerActivity"
             android:exported="false"

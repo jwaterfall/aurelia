@@ -94,12 +94,27 @@
         <item name="android:textAppearance">@style/TextAppearance.Launcher.Control</item>
     </style>
 
+    <!-- A pill with an icon and its current value, above a library's posters (sort, filter, genre). -->
+    <style name="Widget.Launcher.ToolbarPill" parent="Widget.Launcher.PlayerButton">
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_lg</item>
+        <item name="android:drawablePadding">@dimen/space_xs</item>
+        <item name="android:drawableTint">@color/on_glass</item>
+    </style>
+
     <!-- The player's type, three steps: the title (when there is no logo), figures and the episode line (the
          clock is Clock, a step up, as on Home), and notes under them (the date, when it ends). -->
     <style name="TextAppearance.Launcher.PlayerTitle" parent="">
         <item name="android:textSize">26sp</item>
         <item name="android:fontFamily">@font/outfit_semibold</item>
         <item name="android:textColor">@color/text_primary</item>
+    </style>
+    <!-- A film's or show's name on its page, when it has no logo. -->
+    <style name="TextAppearance.Launcher.DetailsTitle" parent="">
+        <item name="android:textSize">36sp</item>
+        <item name="android:fontFamily">@font/outfit_semibold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:lineSpacingMultiplier">0.95</item>
     </style>
     <style name="TextAppearance.Launcher.PlayerTime" parent="">
         <item name="android:textSize">16sp</item>

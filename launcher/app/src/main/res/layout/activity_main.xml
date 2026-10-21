@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Home. Back to front: wallpaper, the ambient wash of the focused item, a scrim, then the top bar over two pages
-  (Home, Apps). Content sits between the screen_margin lines; the rows bleed past them so cards scroll off the
+  Home. Back to front: wallpaper, the ambient wash of the focused item, a scrim, then the top bar over four pages
+  (Home, Movies, TV Shows, Apps). Content sits between the screen_margin lines; the rows bleed past them so cards scroll off the
   screen edge. See values/styles.xml for the components.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -114,6 +114,14 @@
 
                 <TextView
                     style="@style/Widget.Launcher.Tab"
+                    android:text="@string/tab_movies" />
+
+                <TextView
+                    style="@style/Widget.Launcher.Tab"
+                    android:text="@string/tab_shows" />
+
+                <TextView
+                    style="@style/Widget.Launcher.Tab"
                     android:text="@string/tab_apps" />
             </com.gathin.tvhome.ui.SegmentedControl>
 
@@ -147,7 +155,9 @@
             </LinearLayout>
         </RelativeLayout>
 
+        <!-- The pages. Movies and TV Shows (LibraryPage) are added to these in code, between Home and Apps. -->
         <FrameLayout
+            android:id="@+id/pages"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -227,6 +237,12 @@
             </LinearLayout>
         </FrameLayout>
     </LinearLayout>
+
+    <!-- Menus of the library pages' sort and filter pills. -->
+    <com.gathin.tvhome.ui.GlassMenu
+        android:id="@+id/menu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <!-- Side panels (sign-in, account) open over everything else. -->
     <com.gathin.tvhome.ui.GlassSheet

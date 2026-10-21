@@ -71,6 +71,7 @@ import java.util.Locale;
 public final class PlayerActivity extends Activity {
 
     private static final String EXTRA_ITEM = "item";
+    private static final String EXTRA_FROM_START = "fromStart";
     private static final String TAG = "Player";
     private static final String PREFS = "player";
     private static final String PREF_LEVEL = "levelVolume";
@@ -143,7 +144,13 @@ public final class PlayerActivity extends Activity {
     private TextView errorBody;
 
     public static void start(Context context, String itemId) {
-        context.startActivity(new Intent(context, PlayerActivity.class).putExtra(EXTRA_ITEM, itemId));
+        start(context, itemId, false);
+    }
+
+    /** {@code fromStart}: from the beginning rather than where it was left off. */
+    public static void start(Context context, String itemId, boolean fromStart) {
+        context.startActivity(new Intent(context, PlayerActivity.class).putExtra(EXTRA_ITEM, itemId)
+                .putExtra(EXTRA_FROM_START, fromStart));
     }
 
     private final Runnable hideChrome = () -> showChrome(false);
@@ -221,7 +228,9 @@ public final class PlayerActivity extends Activity {
             finish();
             return;
         }
-        open(itemId, firstOptions());
+        Playback.Options first = firstOptions();
+        if (getIntent().getBooleanExtra(EXTRA_FROM_START, false)) first.startMs = 0;
+        open(itemId, first);
     }
 
     /** The show's logo in place of its title, once it arrives; the title stays when there is none. */

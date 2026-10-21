@@ -105,4 +105,62 @@
     <string name="player_zoom_stretch">Stretch</string>
     <string name="player_time">%1$s / %2$s</string>
     <string name="player_sound">Sound</string>
+    <!-- Libraries -->
+    <string name="tab_movies">Movies</string>
+    <string name="tab_shows">TV Shows</string>
+    <string name="library_sort_by">Sort by</string>
+    <string name="library_order">Order</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_date_added">Date added</string>
+    <string name="sort_released">Release date</string>
+    <string name="sort_rating">Rating</string>
+    <string name="sort_runtime">Runtime</string>
+    <string name="sort_random">Random</string>
+    <string name="order_az">A to Z</string>
+    <string name="order_za">Z to A</string>
+    <string name="order_newest">Newest first</string>
+    <string name="order_oldest">Oldest first</string>
+    <string name="order_highest">Highest first</string>
+    <string name="order_lowest">Lowest first</string>
+    <string name="order_shortest">Shortest first</string>
+    <string name="order_longest">Longest first</string>
+    <string name="library_show">Show</string>
+    <string name="filter_all">All</string>
+    <string name="filter_unwatched">Unwatched</string>
+    <string name="filter_watched">Watched</string>
+    <string name="filter_favourites">Favourites</string>
+    <string name="library_genre">Genre</string>
+    <string name="genre_all">All genres</string>
+    <plurals name="library_movies">
+        <item quantity="one">%d film</item>
+        <item quantity="other">%d films</item>
+    </plurals>
+    <plurals name="library_shows">
+        <item quantity="one">%d show</item>
+        <item quantity="other">%d shows</item>
+    </plurals>
+    <plurals name="seasons">
+        <item quantity="one">%d season</item>
+        <item quantity="other">%d seasons</item>
+    </plurals>
+    <string name="library_nothing">Nothing matches these filters.</string>
+    <string name="library_clear">Show everything</string>
+    <string name="library_signed_out">Connect Jellyfin to see your library here.</string>
+    <string name="library_none">There is no library like this on %1$s.</string>
+    <!-- A film's or show's page -->
+    <string name="details_play">Play</string>
+    <string name="details_resume">Resume</string>
+    <string name="details_start_over">Start over</string>
+    <string name="details_watched">Watched</string>
+    <string name="details_favourite">Favourite</string>
+    <string name="details_play_episode">Play %1$s</string>
+    <string name="details_resume_episode">Resume %1$s</string>
+    <string name="details_directed">Directed by %1$s</string>
+    <string name="details_starring">Starring %1$s</string>
+    <string name="details_left">%1$s left</string>
+    <string name="details_episode">E%1$d</string>
+    <string name="details_specials">Specials</string>
+    <string name="details_season">S%1$d</string>
+    <string name="details_failed">Couldn’t load this from %1$s.</string>
+    <string name="watched_mark" translatable="false">✓</string>
 </resources>

@@ -53,6 +53,20 @@
     <dimen name="player_group_gap">@dimen/space_md</dimen>
     <dimen name="player_logo_height">56dp</dimen>
     <dimen name="player_logo_width">360dp</dimen>
+    <!-- Library pages: the preview of what has focus (it stops short of the right edge, under the clock), and a
+         poster's badge. -->
+    <dimen name="library_preview_height">132dp</dimen>
+    <dimen name="library_preview_end">280dp</dimen>
+    <dimen name="library_logo_height">52dp</dimen>
+    <dimen name="poster_badge">20dp</dimen>
+    <!-- A film's or show's page: the column its text sits in, and its logo. -->
+    <dimen name="details_width">520dp</dimen>
+    <dimen name="details_logo_height">96dp</dimen>
+    <dimen name="details_logo_width">400dp</dimen>
+    <dimen name="show_logo_height">64dp</dimen>
+    <!-- Two lines about the episode with focus, kept so the row below never moves. -->
+    <dimen name="episode_overview_width">640dp</dimen>
+    <dimen name="episode_overview_height">36dp</dimen>
     <!-- Between stacked controls in a panel (rows, fields), whatever they are. -->
     <dimen name="control_stack_gap">@dimen/space_sm</dimen>
 

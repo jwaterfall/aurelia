@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A film's or show's poster in a library: its art (or its name, while there is none), a tick once watched or how
+     many episodes are left, and watch progress. Width is set by LibraryPage. -->
+<com.gathin.tvhome.ui.AspectRatioFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.Launcher.Card"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:aspectRatio="0.6667">
+
+    <TextView
+        android:id="@+id/posterName"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="4"
+        android:padding="@dimen/space_sm"
+        android:textAppearance="@style/TextAppearance.Launcher.Control"
+        android:textColor="@color/text_secondary" />
+
+    <ImageView
+        android:id="@+id/posterArt"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop" />
+
+    <TextView
+        android:id="@+id/posterBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/poster_badge"
+        android:layout_gravity="top|end"
+        android:layout_margin="@dimen/space_xs"
+        android:background="@drawable/poster_badge"
+        android:fontFeatureSettings="tnum"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:minWidth="@dimen/poster_badge"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:textColor="@color/on_focus"
+        android:textSize="11sp"
+        android:fontFamily="@font/outfit_semibold"
+        android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/posterProgress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/progress_height"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/space_xs"
+        android:layout_marginEnd="@dimen/space_xs"
+        android:layout_marginBottom="@dimen/space_xs"
+        android:max="100"
+        android:progressDrawable="@drawable/progress_bar"
+        android:visibility="gone" />
+</com.gathin.tvhome.ui.AspectRatioFrameLayout>

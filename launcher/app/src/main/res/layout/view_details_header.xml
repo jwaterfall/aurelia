@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What a film or show is (DetailsHeader): its logo or title, the facts, its genres, what it is about, the buttons
+     (play, start over, watched, favourite) and who made it. Parts that do not apply stay gone. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/details_width"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/detailsMark"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/details_logo_height">
+
+        <ImageView
+            android:id="@+id/detailsLogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:adjustViewBounds="true"
+            android:importantForAccessibility="no"
+            android:maxWidth="@dimen/details_logo_width"
+            android:maxHeight="@dimen/details_logo_height"
+            android:scaleType="fitStart" />
+
+        <TextView
+            android:id="@+id/detailsTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="@style/TextAppearance.Launcher.DetailsTitle" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/detailsFacts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_sm"
+        android:singleLine="true"
+        android:textAppearance="@style/TextAppearance.Launcher.PlayerTime"
+        android:textColor="@color/text_secondary" />
+
+    <TextView
+        android:id="@+id/detailsGenres"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_2xs"
+        android:singleLine="true"
+        android:textAppearance="@style/TextAppearance.Launcher.PlayerNote" />
+
+    <TextView
+        android:id="@+id/detailsOverview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_sm"
+        android:ellipsize="end"
+        android:maxLines="4"
+        android:textAppearance="@style/TextAppearance.Launcher.Body"
+        android:textColor="@color/text_primary"
+        android:textSize="15sp" />
+
+    <LinearLayout
+        android:id="@+id/detailsButtons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_lg"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/detailsPlay"
+            style="@style/Widget.Launcher.ToolbarPill"
+            android:drawableStart="@drawable/ic_play_small"
+            android:text="@string/details_play" />
+
+        <TextView
+            android:id="@+id/detailsStartOver"
+            style="@style/Widget.Launcher.ToolbarPill"
+            android:layout_marginStart="@dimen/control_gap"
+            android:drawableStart="@drawable/ic_restart"
+            android:text="@string/details_start_over"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/detailsWatched"
+            style="@style/Widget.Launcher.GlassButton.Icon"
+            android:layout_marginStart="@dimen/control_gap"
+            android:contentDescription="@string/details_watched"
+            android:src="@drawable/ic_watched" />
+
+        <ImageView
+            android:id="@+id/detailsFavourite"
+            style="@style/Widget.Launcher.GlassButton.Icon"
+            android:layout_marginStart="@dimen/control_gap"
+            android:contentDescription="@string/details_favourite"
+            android:src="@drawable/ic_heart_outline" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/detailsCredits"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_md"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textAppearance="@style/TextAppearance.Launcher.PlayerNote" />
+</LinearLayout>

@@ -20,8 +20,9 @@ import java.util.List;
 
 /**
  * A compact glass menu that rises from the button that opened it, for picking one of a few options without
- * leaving what is on screen: subtitles, audio, speed in the player. It sits just above the button, lined up with
- * it, and grows upwards, scrolling when its options are more than fit.
+ * leaving what is on screen: subtitles in the player, sorting a library. It sits just above the button, lined
+ * up with it, and grows upwards; or below it, growing down, when there is more room there (a button near the
+ * top of the screen). It scrolls when its options are more than fit.
  *
  * Put one over the whole screen (match_parent, late in the root). While it shows, nothing behind it takes
  * focus; choosing or Back closes it and focus returns to the button.
@@ -76,6 +77,8 @@ public class GlassMenu extends FrameLayout {
     private boolean open;
     /** Where {@link #place} put the card, as a translation; the open and close animations move relative to it. */
     private float placedY;
+    /** Opened below its button, so it grows down and animates from its top edge. */
+    private boolean below;
 
     public GlassMenu(Context context) {
         this(context, null);
@@ -147,10 +150,10 @@ public class GlassMenu extends FrameLayout {
                 card.removeOnLayoutChangeListener(this);
                 place();
                 card.setPivotX(Math.max(0f, Math.min(card.getWidth(), anchorCentre() - card.getX())));
-                card.setPivotY(card.getHeight());
+                card.setPivotY(below ? 0f : card.getHeight());
                 card.setScaleX(0.96f);
                 card.setScaleY(0.96f);
-                card.setTranslationY(placedY + gap);
+                card.setTranslationY(placedY + (below ? -gap : gap));
                 card.animate().alpha(1f).scaleX(1f).scaleY(1f).translationY(placedY).setDuration(IN_MS)
                         .setInterpolator(ease).start();
                 if (initial != null) initial.requestFocus();
@@ -159,12 +162,18 @@ public class GlassMenu extends FrameLayout {
         card.requestLayout();
     }
 
-    /** Just above the anchor, starting where it starts, kept on screen; no taller than {@code menu_max_height}. */
+    /**
+     * Just above the anchor (or below it, where there is more room), starting where it starts, kept on screen;
+     * no taller than {@code menu_max_height}.
+     */
     private void place() {
         int[] at = anchorPosition();
         int anchorLeft = at[0];
         int anchorTop = at[1];
-        int tallest = Math.min(maxHeight, anchorTop - gap - margin);
+        int above = anchorTop - gap - margin;
+        int under = getHeight() - (anchorTop + anchor.getHeight()) - gap - margin;
+        below = under > above;
+        int tallest = Math.min(maxHeight, below ? under : above);
         int height = card.getHeight();
         if (height > tallest) {
             ViewGroup.LayoutParams lp = scroll.getLayoutParams();
@@ -175,7 +184,8 @@ public class GlassMenu extends FrameLayout {
         float x = anchorLeft - card.getPaddingLeft();
         x = Math.max(margin, Math.min(x, getWidth() - margin - card.getWidth()));
         card.setX(x);
-        placedY = anchorTop - gap - height - card.getTop();
+        float y = below ? anchorTop + anchor.getHeight() + gap : anchorTop - gap - height;
+        placedY = y - card.getTop();
     }
 
     /** The anchor's top-left corner, in this view's coordinates. */
@@ -197,7 +207,7 @@ public class GlassMenu extends FrameLayout {
         if (behind != null) behind.setDescendantFocusability(behindFocusability);
         behind = null;
         if (anchor != null && anchor.isAttachedToWindow()) anchor.requestFocus();
-        card.animate().alpha(0f).translationY(placedY + gap / 2f).setDuration(OUT_MS).setInterpolator(ease)
+        card.animate().alpha(0f).translationY(placedY + (below ? -gap : gap) / 2f).setDuration(OUT_MS).setInterpolator(ease)
                 .withEndAction(() -> {
                     if (open) return;
                     setVisibility(GONE);

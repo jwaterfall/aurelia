@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MovieActivity: a film's backdrop, and over its darkened left side what it is, with Play focused. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backdrop_base"
+    android:clipChildren="false">
+
+    <ImageView
+        android:id="@+id/detailsBackdrop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/details_scrim" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/details_scrim_bottom" />
+
+    <include
+        android:id="@+id/detailsHeader"
+        layout="@layout/view_details_header"
+        android:layout_width="@dimen/details_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="@dimen/screen_margin"
+        android:layout_marginBottom="@dimen/space_3xl" />
+
+    <ProgressBar
+        android:id="@+id/detailsSpinner"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_gravity="center"
+        android:indeterminateTint="@color/text_secondary" />
+</FrameLayout>

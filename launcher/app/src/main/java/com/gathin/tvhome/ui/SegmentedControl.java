@@ -101,6 +101,25 @@ public class SegmentedControl extends LinearLayout {
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
+        wireTabs();
+    }
+
+    /** Replaces the tabs with ones labelled {@code labels} (layout/item_tab.xml), the first selected. */
+    public void setTabs(java.util.List<? extends CharSequence> labels, int select) {
+        removeAllViews();
+        android.view.LayoutInflater inflater = android.view.LayoutInflater.from(getContext());
+        for (CharSequence label : labels) {
+            TextView tab = (TextView) inflater.inflate(R.layout.item_tab, this, false);
+            tab.setText(label);
+            addView(tab);
+        }
+        selected = Math.max(0, Math.min(select, labels.size() - 1));
+        laidOut = false;
+        wireTabs();
+        requestLayout();
+    }
+
+    private void wireTabs() {
         for (int i = 0; i < getChildCount(); i++) {
             final int index = i;
             View tab = getChildAt(i);

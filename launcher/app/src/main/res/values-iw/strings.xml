@@ -104,4 +104,64 @@
     <string name="player_zoom_stretch">מתיחה</string>
     <string name="player_time">%1$s / %2$s</string>
     <string name="player_sound">צליל</string>
+    <!-- Libraries -->
+    <string name="tab_movies">סרטים</string>
+    <string name="tab_shows">סדרות</string>
+    <string name="library_sort_by">מיון לפי</string>
+    <string name="library_order">סדר</string>
+    <string name="sort_name">שם</string>
+    <string name="sort_date_added">תאריך הוספה</string>
+    <string name="sort_released">תאריך יציאה</string>
+    <string name="sort_rating">דירוג</string>
+    <string name="sort_runtime">אורך</string>
+    <string name="sort_random">אקראי</string>
+    <string name="order_az">א עד ת</string>
+    <string name="order_za">ת עד א</string>
+    <string name="order_newest">החדשים קודם</string>
+    <string name="order_oldest">הישנים קודם</string>
+    <string name="order_highest">הגבוה קודם</string>
+    <string name="order_lowest">הנמוך קודם</string>
+    <string name="order_shortest">הקצרים קודם</string>
+    <string name="order_longest">הארוכים קודם</string>
+    <string name="library_show">הצגה</string>
+    <string name="filter_all">הכול</string>
+    <string name="filter_unwatched">שלא נצפו</string>
+    <string name="filter_watched">שנצפו</string>
+    <string name="filter_favourites">מועדפים</string>
+    <string name="library_genre">ז׳אנר</string>
+    <string name="genre_all">כל הז׳אנרים</string>
+    <plurals name="library_movies">
+        <item quantity="one">סרט אחד</item>
+        <item quantity="two">שני סרטים</item>
+        <item quantity="other">%d סרטים</item>
+    </plurals>
+    <plurals name="library_shows">
+        <item quantity="one">סדרה אחת</item>
+        <item quantity="two">שתי סדרות</item>
+        <item quantity="other">%d סדרות</item>
+    </plurals>
+    <plurals name="seasons">
+        <item quantity="one">עונה אחת</item>
+        <item quantity="two">שתי עונות</item>
+        <item quantity="other">%d עונות</item>
+    </plurals>
+    <string name="library_nothing">אין כאן כלום שמתאים לסינון.</string>
+    <string name="library_clear">הצגת הכול</string>
+    <string name="library_signed_out">חברו את Jellyfin כדי לראות כאן את הספרייה.</string>
+    <string name="library_none">אין ספרייה כזו ב-%1$s.</string>
+    <!-- A film's or show's page -->
+    <string name="details_play">ניגון</string>
+    <string name="details_resume">המשך</string>
+    <string name="details_start_over">מההתחלה</string>
+    <string name="details_watched">נצפה</string>
+    <string name="details_favourite">מועדף</string>
+    <string name="details_play_episode">ניגון %1$s</string>
+    <string name="details_resume_episode">המשך %1$s</string>
+    <string name="details_directed">בימוי: %1$s</string>
+    <string name="details_starring">בכיכובם של %1$s</string>
+    <string name="details_left">נותרו %1$s</string>
+    <string name="details_episode">פ%1$d</string>
+    <string name="details_specials">מיוחדים</string>
+    <string name="details_season">ע%1$d</string>
+    <string name="details_failed">לא ניתן לטעון את זה מ-%1$s.</string>
 </resources>
