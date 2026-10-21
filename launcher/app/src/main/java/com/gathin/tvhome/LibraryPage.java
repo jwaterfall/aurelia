@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.gathin.tvhome.jellyfin.Account;
@@ -52,7 +53,8 @@ final class LibraryPage {
     private static final String PREFS = "library";
     /** A fast run across the posters updates the preview once it settles. */
     private static final long PREVIEW_SETTLE_MS = 120;
-    private static final int LOGO_PX = 104;
+    private static final int LOGO_PX = 112;
+    private static final long BAR_MS = 200;
 
     private final Activity activity;
     private final Account account;
@@ -64,6 +66,10 @@ final class LibraryPage {
 
     private final View root;
     private final View toolbar;
+    private final android.graphics.drawable.Drawable barSurface;
+    private final View barShadow;
+    /** The bar's band is showing: posters are scrolled under it. */
+    private boolean barRaised;
     private final RecyclerView grid;
     private final PosterAdapter adapter;
     private final ImageView logo;
@@ -98,6 +104,9 @@ final class LibraryPage {
         root = LayoutInflater.from(activity).inflate(R.layout.view_library_page, container, false);
         container.addView(root);
         toolbar = root.findViewById(R.id.libraryToolbar);
+        barSurface = toolbar.getBackground().mutate();
+        barSurface.setAlpha(0);
+        barShadow = root.findViewById(R.id.libraryBarShadow);
         grid = root.findViewById(R.id.libraryGrid);
         logo = root.findViewById(R.id.previewLogo);
         title = root.findViewById(R.id.previewTitle);
@@ -136,6 +145,12 @@ final class LibraryPage {
         grid.addItemDecoration(new GridSpacing(COLUMNS, gutter));
         grid.setItemAnimator(null);
         grid.setAdapter(adapter);
+        grid.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView list, int dx, int dy) {
+                raiseBar(list.computeVerticalScrollOffset() > 0);
+            }
+        });
 
         readQuery();
         sortPill.setOnClickListener(this::showSort);
@@ -275,6 +290,17 @@ final class LibraryPage {
         messageAction.setOnClickListener(onAction == null ? null : v -> onAction.run());
         if (hadFocus && !root.hasFocus()) focusIn();
         clearPreview();
+    }
+
+    /** The band behind the pills, and its shadow, fade in while posters are scrolled under them. */
+    private void raiseBar(boolean raised) {
+        if (raised == barRaised) return;
+        barRaised = raised;
+        barShadow.animate().alpha(raised ? 1f : 0f).setDuration(BAR_MS).start();
+        android.animation.ValueAnimator a = android.animation.ValueAnimator.ofInt(barSurface.getAlpha(), raised ? 255 : 0);
+        a.setDuration(BAR_MS);
+        a.addUpdateListener(an -> barSurface.setAlpha((int) an.getAnimatedValue()));
+        a.start();
     }
 
     // ---- the preview ---------------------------------------------------------------------------------

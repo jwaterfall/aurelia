@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Behind a library's pills once its posters scroll under them: dark glass across the screen, fading in from its
+     top so it never cuts across the page, and solid at its bottom edge, with a hairline where they pass beneath. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#000B0D14"
+                android:centerColor="@color/library_bar"
+                android:centerY="0.4"
+                android:endColor="@color/library_bar" />
+        </shape>
+    </item>
+    <item android:gravity="bottom" android:height="@dimen/hairline">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/glass_rim_top" />
+        </shape>
+    </item>
+</layer-list>

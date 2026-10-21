@@ -55,9 +55,11 @@
     <dimen name="player_logo_width">360dp</dimen>
     <!-- Library pages: the preview of what has focus (it stops short of the right edge, under the clock), and a
          poster's badge. -->
-    <dimen name="library_preview_height">132dp</dimen>
+    <dimen name="library_preview_height">64dp</dimen>
     <dimen name="library_preview_end">280dp</dimen>
-    <dimen name="library_logo_height">52dp</dimen>
+    <dimen name="library_logo_height">56dp</dimen>
+    <dimen name="library_mark_width">200dp</dimen>
+    <dimen name="library_bar_shadow">24dp</dimen>
     <dimen name="poster_badge">20dp</dimen>
     <!-- A film's or show's page: the column its text sits in, and its logo. -->
     <dimen name="details_width">520dp</dimen>

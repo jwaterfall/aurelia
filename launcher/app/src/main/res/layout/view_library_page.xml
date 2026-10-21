@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A library page (Movies, TV Shows; LibraryPage): what has focus at the top (its logo or title, the facts, a few
-     lines about it), then sort and filter pills, then every poster on the launcher's columns. The posters
-     scroll up to just under the pills, where the page cuts them off. No faded edge: with the posters drawn
-     past the list's padding (so a focused one can lift), a fade would end at the padding, mid-poster. -->
+<!-- A library page (Movies, TV Shows; LibraryPage): what has focus in a strip at the top (its logo or title, the
+     facts, a couple of lines about it), then sort and filter pills, then every poster on the launcher's columns,
+     scrolling up under the pills' bar. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,70 +10,86 @@
     android:orientation="vertical"
     android:visibility="gone">
 
-    <!-- Preview: a fixed height, so the page never moves as focus does. -->
+    <!-- Preview, one strip at a fixed height so the page never moves as focus does: the logo (or the name) in
+         a slot of its own on the left, so the facts and the lines about it always start in the same place. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/library_preview_height"
-        android:layout_marginTop="@dimen/space_md"
-        android:orientation="vertical"
+        android:layout_marginTop="@dimen/space_lg"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingStart="@dimen/screen_margin"
         android:paddingEnd="@dimen/library_preview_end">
 
         <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/library_logo_height">
+            android:layout_width="@dimen/library_mark_width"
+            android:layout_height="match_parent">
 
             <ImageView
                 android:id="@+id/previewLogo"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start"
                 android:adjustViewBounds="true"
                 android:importantForAccessibility="no"
-                android:maxWidth="@dimen/player_logo_width"
+                android:maxWidth="@dimen/library_mark_width"
+                android:maxHeight="@dimen/library_logo_height"
                 android:scaleType="fitStart" />
 
             <TextView
                 android:id="@+id/previewTitle"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
                 android:ellipsize="end"
-                android:gravity="bottom"
-                android:singleLine="true"
-                android:textAppearance="@style/TextAppearance.Launcher.PlayerTitle" />
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.Launcher.PlayerTitle"
+                android:textSize="22sp" />
         </FrameLayout>
 
-        <TextView
-            android:id="@+id/previewFacts"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xs"
-            android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.Launcher.PlayerTime"
-            android:textColor="@color/text_secondary" />
+            android:layout_marginStart="@dimen/space_lg"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/previewOverview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_2xs"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:textAppearance="@style/TextAppearance.Launcher.Body"
-            android:textSize="14sp" />
+            <TextView
+                android:id="@+id/previewFacts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.Launcher.PlayerTime"
+                android:textColor="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/previewOverview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2xs"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.Launcher.Body"
+                android:textSize="14sp" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Sort and filter, and how many there are. -->
+    <!-- Sort and filter, and how many there are. Once the posters scroll, its band of glass (the background,
+         clear until then) fades in, with an edge and a shadow, for them to slide under. -->
     <LinearLayout
         android:id="@+id/libraryToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_sm"
+        android:background="@drawable/library_bar_surface"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="@dimen/screen_margin"
-        android:paddingEnd="@dimen/screen_margin">
+        android:paddingTop="@dimen/space_sm"
+        android:paddingEnd="@dimen/screen_margin"
+        android:paddingBottom="@dimen/space_sm">
 
         <TextView
             android:id="@+id/librarySort"
@@ -116,6 +131,14 @@
             android:layout_height="match_parent"
             android:paddingTop="@dimen/space_md"
             android:paddingBottom="@dimen/space_3xl" />
+
+        <!-- The bar's shadow on the posters, with the band. -->
+        <View
+            android:id="@+id/libraryBarShadow"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/library_bar_shadow"
+            android:alpha="0"
+            android:background="@drawable/library_bar_shadow" />
 
         <!-- Instead of the posters: loading, signed out, nothing matching. -->
         <LinearLayout

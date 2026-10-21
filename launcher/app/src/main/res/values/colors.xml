@@ -36,4 +36,6 @@
     <color name="progress_buffered">#66FFFFFF</color>
     <!-- Under a menu's glass over video: solid, so nothing behind shows through its options. -->
     <color name="menu_tint">#FF15181F</color>
+    <!-- A library's pill bar once its posters scroll under it. -->
+    <color name="library_bar">#D90B0D14</color>
 </resources>
