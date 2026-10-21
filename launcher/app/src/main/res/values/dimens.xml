@@ -41,9 +41,17 @@
     <dimen name="panel_margin">@dimen/space_lg</dimen>
     <dimen name="row_height">52dp</dimen>
     <!-- A GlassMenu over the player. -->
-    <dimen name="menu_width">300dp</dimen>
-    <!-- The round buttons under the player's seek bar. -->
-    <dimen name="player_button">44dp</dimen>
+    <dimen name="menu_width">240dp</dimen>
+    <dimen name="menu_row_height">32dp</dimen>
+    <dimen name="menu_max_height">320dp</dimen>
+    <dimen name="menu_row_radius">8dp</dimen>
+    <!-- The rows' radius plus the card's padding, so the corners nest. -->
+    <dimen name="menu_radius">12dp</dimen>
+    <!-- The player: its small round buttons, the show's logo, and the user's picture by the clock. -->
+    <dimen name="player_button">36dp</dimen>
+    <dimen name="player_logo_height">56dp</dimen>
+    <dimen name="player_logo_width">360dp</dimen>
+    <dimen name="player_avatar">32dp</dimen>
     <!-- Between stacked controls in a panel (rows, fields), whatever they are. -->
     <dimen name="control_stack_gap">@dimen/space_sm</dimen>
 

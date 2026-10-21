@@ -5,12 +5,12 @@
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/glass_video_tint" />
-            <corners android:radius="@dimen/radius_card" />
+            <corners android:radius="@dimen/menu_radius" />
         </shape>
     </item>
     <item>
         <com.gathin.tvhome.ui.GlassDrawable xmlns:app="http://schemas.android.com/apk/res-auto"
             app:glassPanel="true"
-            app:glassRadius="@dimen/radius_card" />
+            app:glassRadius="@dimen/menu_radius" />
     </item>
 </layer-list>

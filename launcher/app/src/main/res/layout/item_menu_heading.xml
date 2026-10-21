@@ -3,8 +3,8 @@
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingStart="@dimen/space_md"
-    android:paddingTop="@dimen/space_sm"
-    android:paddingEnd="@dimen/space_md"
+    android:paddingStart="@dimen/space_sm"
+    android:paddingTop="@dimen/space_xs"
+    android:paddingEnd="@dimen/space_sm"
     android:paddingBottom="@dimen/space_2xs"
     android:textAppearance="@style/TextAppearance.Launcher.Overline" />

@@ -94,11 +94,12 @@
         <item name="android:textAppearance">@style/TextAppearance.Launcher.Control</item>
     </style>
 
-    <!-- A round icon button under the player's seek bar. -->
+    <!-- A small icon button under the player's seek bar: just the icon, in a white circle with focus. -->
     <style name="Widget.Launcher.PlayerIcon" parent="Widget.Launcher.GlassButton.Icon">
         <item name="android:layout_width">@dimen/player_button</item>
         <item name="android:layout_height">@dimen/player_button</item>
-        <item name="android:padding">11dp</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:background">@drawable/player_icon_bg</item>
     </style>
 
     <!-- Tab bar (ui.SegmentedControl) and its tabs. The control draws the indicator and colours the tab text. -->

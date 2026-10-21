@@ -87,9 +87,11 @@ public final class Playback {
         public final boolean compatibleAudio;
         public final List<Track> audio;
         public final List<Track> subtitles;
-        /** Chapters (start in ms, and name), for finding the intro when the server has no segments. */
-        final List<Long> chapterStarts;
-        final List<String> chapterNames;
+        /** The show's or film's logo, empty when it has none. */
+        public final String logoUrl;
+        /** Chapters: where each starts (ms), and its name. */
+        public final List<Long> chapterStarts;
+        public final List<String> chapterNames;
         /** What is playing now; the player changes them as the user chooses. */
         public int audioIndex;
         public int subtitleIndex;
@@ -97,7 +99,7 @@ public final class Playback {
         Stream(String itemId, String type, String seriesId, String title, String subtitle, long startMs,
                long durationMs, String url, Method method, String reasons, String mediaSourceId, String playSessionId,
                int sourceBitrate, Options options, List<Track> audio, List<Track> subtitles, int audioIndex,
-               int subtitleIndex, List<Long> chapterStarts, List<String> chapterNames) {
+               int subtitleIndex, String logoUrl, List<Long> chapterStarts, List<String> chapterNames) {
             this.itemId = itemId;
             this.type = type;
             this.seriesId = seriesId;
@@ -117,6 +119,7 @@ public final class Playback {
             this.subtitles = subtitles;
             this.audioIndex = audioIndex;
             this.subtitleIndex = subtitleIndex;
+            this.logoUrl = logoUrl;
             this.chapterStarts = chapterStarts;
             this.chapterNames = chapterNames;
         }
@@ -249,7 +252,7 @@ public final class Playback {
             return new Stream(itemId, item.optString("Type", ""), item.optString("SeriesId", ""), title(item),
                     subtitle(item), startTicks / TICKS_PER_MS, item.optLong("RunTimeTicks", 0) / TICKS_PER_MS, url,
                     method, reasons, sourceId, session, source.optInt("Bitrate", 0), options, audio, subtitles,
-                    audioIndex, subtitleIndex, chapterStarts, chapterNames);
+                    audioIndex, subtitleIndex, logoUrl(server, item), chapterStarts, chapterNames);
         } catch (JSONException e) {
             throw new IOException("Unexpected answer from the server", e);
         }
@@ -273,17 +276,45 @@ public final class Playback {
             JSONObject s = streams.optJSONObject(i);
             if (s == null) continue;
             String type = s.optString("Type");
-            String title = s.optString("DisplayTitle", s.optString("Title", ""));
             if ("Audio".equals(type)) {
-                audio.add(new Track(s.optInt("Index", -1), title, s.optString("Language", ""),
+                audio.add(new Track(s.optInt("Index", -1), audioName(s), s.optString("Language", ""),
                         s.optString("Codec", ""), "", s.optBoolean("IsExternal", false), ""));
             } else if ("Subtitle".equals(type)) {
                 String path = s.optString("DeliveryUrl", "");
-                subtitles.add(new Track(s.optInt("Index", -1), title, s.optString("Language", ""),
+                subtitles.add(new Track(s.optInt("Index", -1), subtitleName(s), s.optString("Language", ""),
                         subtitleFormat(s, path), s.optString("DeliveryMethod", ""), s.optBoolean("IsExternal", false),
                         path.isEmpty() ? "" : server + path));
             }
         }
+    }
+
+    /**
+     * A subtitle track as a person would name it: its own title when it has one ("English SDH"), or else its
+     * language, marked when it is forced (only the foreign parts).
+     */
+    static String subtitleName(JSONObject s) {
+        String name = s.optString("Title", "").trim();
+        if (name.isEmpty()) name = languageName(s);
+        if (s.optBoolean("IsForced", false) && !name.toLowerCase(Locale.ROOT).contains("forced")) name += " (Forced)";
+        return name;
+    }
+
+    /** An audio track: its language, and the channels when there are more than two ("English · 5.1"). */
+    static String audioName(JSONObject s) {
+        String name = s.optString("Title", "").trim();
+        if (name.isEmpty()) name = languageName(s);
+        String layout = s.optString("ChannelLayout", "");
+        int channels = s.optInt("Channels", 0);
+        if (layout.isEmpty() && channels > 2) layout = (channels - 1) + ".1";
+        if (layout.matches("\\d\\.\\d.*") && !name.contains(layout)) name += " · " + layout.replaceAll("\\(.*", "");
+        return name;
+    }
+
+    private static String languageName(JSONObject s) {
+        String code = s.optString("Language", "");
+        if (code.isEmpty() || code.equals("und")) return s.optString("DisplayTitle", "Unknown");
+        String name = new Locale(code).getDisplayLanguage();
+        return name.isEmpty() || name.equals(code) ? code : name;
     }
 
     /** The format a subtitle arrives in: the delivery file's extension when it is converted for sending. */
@@ -292,6 +323,19 @@ public final class Playback {
         String format = last == null || !last.contains(".") ? s.optString("Codec", "")
                 : last.substring(last.lastIndexOf('.') + 1);
         return format.toLowerCase(Locale.ROOT);
+    }
+
+    /** An episode shows its series' logo; a film its own. */
+    private static String logoUrl(String server, JSONObject item) {
+        String id = item.optString("ParentLogoItemId", "");
+        String tag = item.optString("ParentLogoImageTag", "");
+        if (id.isEmpty()) {
+            JSONObject tags = item.optJSONObject("ImageTags");
+            tag = tags != null ? tags.optString("Logo", "") : "";
+            id = tag.isEmpty() ? "" : item.optString("Id", "");
+        }
+        if (id.isEmpty()) return "";
+        return server + "/Items/" + id + "/Images/Logo?maxHeight=112&quality=90" + (tag.isEmpty() ? "" : "&tag=" + tag);
     }
 
     private static String title(JSONObject item) {

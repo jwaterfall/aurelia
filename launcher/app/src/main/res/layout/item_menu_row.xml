@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- An option in a GlassMenu: a pill that turns white with focus, with a tick on the chosen one. -->
+<!-- An option in a GlassMenu: one compact line, white with focus, with a tick on the chosen one. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/glass_row"
+    android:background="@drawable/menu_row_bg"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
-    android:minHeight="@dimen/control_height"
+    android:minHeight="@dimen/menu_row_height"
     android:orientation="horizontal"
-    android:paddingStart="@dimen/space_md"
-    android:paddingTop="@dimen/space_2xs"
-    android:paddingEnd="@dimen/space_sm"
-    android:paddingBottom="@dimen/space_2xs"
-    android:stateListAnimator="@animator/row_lift">
+    android:paddingStart="@dimen/space_sm"
+    android:paddingTop="2dp"
+    android:paddingEnd="@dimen/space_xs"
+    android:paddingBottom="2dp">
 
     <LinearLayout
         android:layout_width="0dp"
@@ -29,7 +28,8 @@
             android:duplicateParentState="true"
             android:ellipsize="end"
             android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.Launcher.Control" />
+            android:textAppearance="@style/TextAppearance.Launcher.Control"
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/rowSubtitle"
@@ -39,13 +39,14 @@
             android:ellipsize="end"
             android:singleLine="true"
             android:textAppearance="@style/TextAppearance.Launcher.RowSubtitle"
+            android:textSize="11sp"
             android:visibility="gone" />
     </LinearLayout>
 
     <ImageView
         android:id="@+id/rowCheck"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
         android:layout_marginStart="@dimen/space_xs"
         android:duplicateParentState="true"
         android:importantForAccessibility="no"

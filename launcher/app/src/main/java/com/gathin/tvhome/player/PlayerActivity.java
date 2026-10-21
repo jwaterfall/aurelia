@@ -34,6 +34,7 @@ import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlaybackException;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
+import androidx.media3.ui.AspectRatioFrameLayout;
 import androidx.media3.ui.CaptionStyleCompat;
 import androidx.media3.ui.PlayerView;
 import androidx.media3.ui.SubtitleView;
@@ -124,17 +125,16 @@ public final class PlayerActivity extends Activity {
     private View controls;
     private View track;
     private ProgressBar buffering;
-    private TextView tag;
     private TextView title;
     private TextView subtitle;
     private TextView ends;
-    private TextView elapsed;
-    private TextView remaining;
+    private TextView time;
+    private ImageView logo;
+    private ImageView avatar;
     private ProgressBar seek;
     private View thumb;
     private ImageView playButton;
     private View nextButton;
-    private TextView buttonLabel;
     private TextView skip;
     private View upNext;
     private TextView upNextDetail;
@@ -179,17 +179,17 @@ public final class PlayerActivity extends Activity {
         controls = findViewById(R.id.controls);
         track = findViewById(R.id.playerTrack);
         buffering = findViewById(R.id.buffering);
-        tag = findViewById(R.id.playerTag);
         title = findViewById(R.id.playerTitle);
         subtitle = findViewById(R.id.playerSubtitle);
         ends = findViewById(R.id.playerEnds);
-        elapsed = findViewById(R.id.playerElapsed);
-        remaining = findViewById(R.id.playerRemaining);
+        time = findViewById(R.id.playerTime);
+        logo = findViewById(R.id.playerLogo);
+        avatar = findViewById(R.id.playerAvatar);
+        avatar.setClipToOutline(true);
         seek = findViewById(R.id.playerSeek);
         thumb = findViewById(R.id.playerThumb);
         playButton = findViewById(R.id.buttonPlay);
         nextButton = findViewById(R.id.buttonNext);
-        buttonLabel = findViewById(R.id.playerButtonLabel);
         skip = findViewById(R.id.playerSkip);
         upNext = findViewById(R.id.playerUpNext);
         upNextDetail = findViewById(R.id.upNextDetail);
@@ -209,11 +209,8 @@ public final class PlayerActivity extends Activity {
         findViewById(R.id.buttonAudio).setOnClickListener(this::showAudio);
         findViewById(R.id.buttonSpeed).setOnClickListener(this::showSpeed);
         findViewById(R.id.buttonQuality).setOnClickListener(this::showQuality);
-        ViewGroup buttons = findViewById(R.id.playerButtons);
-        for (int i = 0; i < buttons.getChildCount(); i++) {
-            View b = buttons.getChildAt(i);
-            if (b.isFocusable()) b.setOnFocusChangeListener((v, focused) -> labelButton(v, focused));
-        }
+        findViewById(R.id.buttonChapters).setOnClickListener(this::showChapters);
+        findViewById(R.id.buttonZoom).setOnClickListener(this::showZoom);
         skip.setOnClickListener(v -> skipSegment());
         upNext.setOnClickListener(v -> playNext());
         findViewById(R.id.playerOpenApp).setOnClickListener(v -> {
@@ -227,7 +224,45 @@ public final class PlayerActivity extends Activity {
             finish();
             return;
         }
+        loadAvatar();
         open(itemId, firstOptions());
+    }
+
+    private void loadAvatar() {
+        Api.async(() -> Library.avatar(account), new Api.Callback<android.graphics.Bitmap>() {
+            @Override
+            public void onResult(android.graphics.Bitmap picture) {
+                if (picture == null) return;
+                avatar.setPadding(0, 0, 0, 0);
+                avatar.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                avatar.setImageBitmap(picture);
+            }
+
+            @Override
+            public void onError(Exception e) {
+            }
+        });
+    }
+
+    /** The show's logo in place of its title, once it arrives; the title stays when there is none. */
+    private void loadLogo(Playback.Stream s) {
+        logo.setVisibility(View.GONE);
+        title.setVisibility(View.VISIBLE);
+        if (s.logoUrl.isEmpty()) return;
+        String auth = Library.auth(account);
+        Api.async(() -> Api.getImage(s.logoUrl, auth), new Api.Callback<android.graphics.Bitmap>() {
+            @Override
+            public void onResult(android.graphics.Bitmap picture) {
+                if (picture == null || stream == null || !stream.itemId.equals(s.itemId)) return;
+                logo.setImageBitmap(picture);
+                logo.setVisibility(View.VISIBLE);
+                title.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onError(Exception e) {
+            }
+        });
     }
 
     /** Levelling needs audio the TV decodes, so with it on, Dolby and DTS are converted from the start. */
@@ -290,12 +325,13 @@ public final class PlayerActivity extends Activity {
             upNextDismissed = false;
             hideCorner();
             loadExtras(s);
+            loadLogo(s);
         }
-        tag.setText(methodLabel(s));
         title.setText(s.title);
         subtitle.setText(s.subtitle);
         subtitle.setVisibility(s.subtitle.isEmpty() ? View.GONE : View.VISIBLE);
         findViewById(R.id.buttonSubtitles).setVisibility(s.subtitles.isEmpty() ? View.GONE : View.VISIBLE);
+        findViewById(R.id.buttonChapters).setVisibility(s.chapterStarts.size() > 1 ? View.VISIBLE : View.GONE);
 
         DefaultHttpDataSource.Factory http = new DefaultHttpDataSource.Factory()
                 .setUserAgent("TvHome/" + BuildConfig.VERSION_NAME)
@@ -447,16 +483,6 @@ public final class PlayerActivity extends Activity {
                 && ((ExoPlaybackException) e).type == ExoPlaybackException.TYPE_RENDERER
                 && ((ExoPlaybackException) e).rendererFormat != null
                 && MimeTypes.isAudio(((ExoPlaybackException) e).rendererFormat.sampleMimeType);
-    }
-
-    private String methodLabel(Playback.Stream s) {
-        switch (s.method) {
-            case DirectPlay: return getString(R.string.player_direct_play);
-            case DirectStream: return getString(R.string.player_direct_stream);
-            default:
-                String t = getString(R.string.player_transcode);
-                return s.reasons.isEmpty() ? t : t + " • " + s.reasons;
-        }
     }
 
     private static String subtitleMime(String format) {
@@ -704,13 +730,13 @@ public final class PlayerActivity extends Activity {
         if (stream == null) return;
         GlassMenu.Builder m = new GlassMenu.Builder()
                 .add(GlassMenu.Item.heading(getString(R.string.player_quality)))
-                .add(GlassMenu.Item.option(getString(R.string.player_original), getString(R.string.player_original_detail),
+                .add(GlassMenu.Item.option(getString(R.string.player_original), null,
                         stream.maxBitrate >= DeviceProfile.MAX_BITRATE, () -> chooseQuality(DeviceProfile.MAX_BITRATE)));
         for (int mbps : BITRATES_MBPS) {
             int bps = mbps * 1_000_000;
             if (stream.sourceBitrate > 0 && bps >= stream.sourceBitrate) continue;
-            m.add(GlassMenu.Item.option(getString(R.string.player_quality_value, String.valueOf(mbps)),
-                    resolutionFor(mbps), bps == stream.maxBitrate, () -> chooseQuality(bps)));
+            m.add(GlassMenu.Item.option(getString(R.string.player_quality_value, resolutionFor(mbps), String.valueOf(mbps)),
+                    null, bps == stream.maxBitrate, () -> chooseQuality(bps)));
         }
         showMenu(from, m);
     }
@@ -729,31 +755,57 @@ public final class PlayerActivity extends Activity {
         reopen(o -> o.maxBitrate = bps);
     }
 
-    /** The focused button's name, centred under it. */
-    private void labelButton(View button, boolean focused) {
-        if (!focused) {
-            buttonLabel.animate().alpha(0f).setDuration(FADE_MS / 2).start();
-            return;
+    private void showChapters(View from) {
+        if (stream == null || player == null) return;
+        long pos = player.getCurrentPosition();
+        int current = 0;
+        for (int i = 0; i < stream.chapterStarts.size(); i++) if (stream.chapterStarts.get(i) <= pos) current = i;
+        GlassMenu.Builder m = new GlassMenu.Builder().add(GlassMenu.Item.heading(getString(R.string.player_chapters)));
+        for (int i = 0; i < stream.chapterStarts.size(); i++) {
+            long start = stream.chapterStarts.get(i);
+            String name = stream.chapterNames.get(i);
+            m.add(GlassMenu.Item.option(name.isEmpty() ? clock(start) : name, clock(start), i == current, () -> {
+                scheduleHide();
+                player.seekTo(start);
+            }));
         }
-        buttonLabel.setText(button.getContentDescription());
-        buttonLabel.post(() -> {
-            View row = (View) button.getParent();
-            float centre = row.getLeft() + button.getLeft() + button.getWidth() / 2f;
-            float x = centre - buttonLabel.getWidth() / 2f - buttonLabel.getLeft();
-            float max = row.getRight() - buttonLabel.getWidth() - buttonLabel.getLeft();
-            buttonLabel.setTranslationX(Math.max(row.getLeft() - buttonLabel.getLeft(), Math.min(x, max)));
-            buttonLabel.animate().alpha(1f).setDuration(FADE_MS).start();
-        });
+        showMenu(from, m);
+    }
+
+    private static final int[] ZOOMS = {AspectRatioFrameLayout.RESIZE_MODE_FIT, AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
+            AspectRatioFrameLayout.RESIZE_MODE_FILL};
+    private static final int[] ZOOM_NAMES = {R.string.player_zoom_fit, R.string.player_zoom_crop,
+            R.string.player_zoom_stretch};
+
+    private void showZoom(View from) {
+        GlassMenu.Builder m = new GlassMenu.Builder().add(GlassMenu.Item.heading(getString(R.string.player_zoom)));
+        for (int i = 0; i < ZOOMS.length; i++) {
+            int mode = ZOOMS[i];
+            m.add(GlassMenu.Item.option(getString(ZOOM_NAMES[i]), null, video.getResizeMode() == mode, () -> {
+                scheduleHide();
+                video.setResizeMode(mode);
+            }));
+        }
+        showMenu(from, m);
     }
 
     // ---- controls --------------------------------------------------------------------------------------
 
     private void showChrome(boolean show) {
+        showChrome(show, playButton);
+    }
+
+    /**
+     * Shows or hides the controls. Coming into view, {@code focus} takes focus: play/pause, so OK pauses rather
+     * than pressing whatever had focus last time, or the seek bar when scrubbing brought them up.
+     */
+    private void showChrome(boolean show, View focus) {
         handler.removeCallbacks(hideChrome);
+        boolean appearing = show && !chromeShown;
         chromeShown = show;
         if (show) {
             updateTimes();
-            if (!chrome.hasFocus() && !menu.isShowing()) track.requestFocus();
+            if (appearing && !menu.isShowing()) focus.requestFocus();
         } else if (chrome.hasFocus()) {
             // Nothing visible keeps focus; a skip button in the corner takes it if one is showing.
             if (skip.getVisibility() == View.VISIBLE) skip.requestFocus();
@@ -784,9 +836,8 @@ public final class PlayerActivity extends Activity {
         if (player == null || stream == null) return;
         long duration = player.getDuration() != C.TIME_UNSET ? player.getDuration() : stream.durationMs;
         long position = scrubTo >= 0 ? scrubTo : player.getCurrentPosition();
-        elapsed.setText(clock(position));
+        time.setText(getString(R.string.player_time, clock(position), clock(Math.max(0, duration))));
         long left = Math.max(0, duration - position);
-        remaining.setText(getString(R.string.player_remaining, clock(left)));
         ends.setText(getString(R.string.player_ends_at, DateFormat.getTimeFormat(this)
                 .format(new Date(System.currentTimeMillis() + (long) (left / speed)))));
         if (duration > 0) {
@@ -864,7 +915,7 @@ public final class PlayerActivity extends Activity {
             case KeyEvent.KEYCODE_MEDIA_REWIND:
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
                 if (down) {
-                    showChrome(true);
+                    showChrome(true, track);
                     scrub((key == KeyEvent.KEYCODE_MEDIA_REWIND ? -1 : 1) * scrubStep(event.getRepeatCount()));
                 }
                 return true;
@@ -883,7 +934,7 @@ public final class PlayerActivity extends Activity {
                 case KeyEvent.KEYCODE_DPAD_LEFT:
                 case KeyEvent.KEYCODE_DPAD_RIGHT:
                     if (down) {
-                        showChrome(true);
+                        showChrome(true, track);
                         scrub((key == KeyEvent.KEYCODE_DPAD_LEFT ? -1 : 1) * scrubStep(event.getRepeatCount()));
                     }
                     return true;
