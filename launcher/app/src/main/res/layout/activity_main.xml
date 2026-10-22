@@ -28,11 +28,6 @@
         android:layout_height="match_parent"
         android:background="@drawable/backdrop_scrim" />
 
-    <!-- Behind the top bar once a page scrolls under it (ui.ScrollEdge). -->
-    <include
-        android:id="@+id/edgeBand"
-        layout="@layout/view_scroll_edge_band" />
-
     <LinearLayout
         android:id="@+id/content"
         android:layout_width="match_parent"
@@ -185,6 +180,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:fillViewport="true"
+                android:clipToPadding="false"
                 android:paddingTop="@dimen/space_md">
 
                 <LinearLayout
@@ -277,8 +273,9 @@
                 </LinearLayout>
             </app.aurelia.tv.ui.SectionScrollView>
 
-            <!-- Apps: every app, five to a row on the same columns as the Home row. Rows scroll up under the scroll
-                 edge; the page clips them at the grid's own top, below the header. -->
+            <!-- Apps: every app, five to a row on the same columns as the Home row. No heading: the tab names the
+                 page, as on Movies and TV Shows, and the first row starts where their sort and filter buttons do.
+                 The rows run to the edges of the screen, fading out where more continue (page_fade). -->
             <LinearLayout
                 android:id="@+id/pageApps"
                 android:layout_width="match_parent"
@@ -286,27 +283,18 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
-                <!-- No heading: the tab names the page, as on Movies and TV Shows. The first row starts where their
-                     sort and filter buttons do. -->
-                <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/space_md" />
-
-                <androidx.recyclerview.widget.RecyclerView
+                <app.aurelia.tv.ui.PageGrid
                     android:id="@+id/appsGrid"
                     style="@style/Widget.Launcher.Shelf"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:paddingTop="@dimen/space_sm"
-                    android:paddingBottom="@dimen/space_3xl" />
+                    android:fadingEdgeLength="@dimen/page_fade"
+                    android:paddingTop="@dimen/apps_top"
+                    android:paddingBottom="@dimen/space_3xl"
+                    android:requiresFadingEdge="vertical" />
             </LinearLayout>
         </FrameLayout>
     </LinearLayout>
-
-    <!-- The scroll edge's shadow, over the page under it. -->
-    <include
-        android:id="@+id/edgeShadow"
-        layout="@layout/view_scroll_edge_shadow" />
 
     <!-- Menus of the library pages' sort and filter pills. -->
     <app.aurelia.tv.ui.GlassMenu

@@ -72,6 +72,11 @@
     <!-- The player: its round buttons, and the show's logo. -->
     <dimen name="player_button">38dp</dimen>
     <dimen name="player_icon_inset">9dp</dimen>
+    <!-- The player's gradients behind its title and its controls: tall, so they ease out well above the buttons and
+         take the letterbox bars into them (player_scrim.xml eases in two halves). -->
+    <dimen name="player_scrim_top">240dp</dimen>
+    <dimen name="player_scrim">440dp</dimen>
+    <dimen name="player_scrim_half">220dp</dimen>
     <!-- Play and pause, large in the middle; skipping back and on beside it, as tall as the pills. -->
     <dimen name="player_play">56dp</dimen>
     <dimen name="player_play_inset">16dp</dimen>
@@ -122,6 +127,13 @@
 
     <!-- A placeholder for a line of text: about the height of its letters. -->
     <dimen name="placeholder_line">10dp</dimen>
+    <!-- A placeholder as tall as a line of Meta text (13sp), standing in for one. -->
+    <dimen name="placeholder_meta">17dp</dimen>
+    <!-- How far a page's content fades out where it runs on past the top or the bottom of the screen: the same at
+         both, wherever it continues. -->
+    <dimen name="page_fade">72dp</dimen>
+    <!-- Above Apps' first row: where the libraries' sort and filter buttons start (space_md), and the gap to the row. -->
+    <dimen name="apps_top">28dp</dimen>
 
     <!-- The screensaver: a slide's logo, and how far its scrims reach in from the top and the foot. -->
     <dimen name="dream_logo_height">88dp</dimen>

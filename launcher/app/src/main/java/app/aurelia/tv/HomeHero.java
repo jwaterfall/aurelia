@@ -43,6 +43,8 @@ final class HomeHero {
         void onPlay(Library.MediaItem item);
         void onOpen(Catalog.Item item);
         void onOptions(Library.MediaItem item, View hero);
+        /** OK held on a Recently added slide: the film's or show's own menu, as on its poster. */
+        void onItemOptions(Catalog.Item item, View hero);
     }
 
     /** One slide: something being watched ({@code media}), or something new ({@code item}). */
@@ -137,8 +139,11 @@ final class HomeHero {
             else if (details.containsKey(s.id)) listener.onOpen(details.get(s.id));
         });
         card.setOnLongClickListener(v -> {
-            if (slides.isEmpty() || slides.get(at).media == null) return false;
-            listener.onOptions(slides.get(at).media, card);
+            if (slides.isEmpty()) return false;
+            Slide s = slides.get(at);
+            if (s.media != null) listener.onOptions(s.media, card);
+            else if (details.containsKey(s.id)) listener.onItemOptions(details.get(s.id), card);
+            else return false;
             return true;
         });
         card.setOnFocusChangeListener((v, focused) -> {
@@ -201,6 +206,12 @@ final class HomeHero {
         this.added = new ArrayList<>(added);
         for (Catalog.Item i : added) details.put(i.id, i);
         rebuild();
+    }
+
+    /** {@code item} as it now is (marked watched or a favourite): its slide's facts are drawn again if it shows. */
+    void updateItem(Catalog.Item item) {
+        details.put(item.id, item);
+        if (!slides.isEmpty() && slides.get(at).id.equals(item.id)) bind(slides.get(at));
     }
 
     /** Watched, new, watched, new, new: it opens on what is most likely wanted next. The one showing stays. */

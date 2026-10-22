@@ -250,6 +250,10 @@ public final class PlayerActivity extends Activity {
         menu = findViewById(R.id.playerMenu);
         // Video draws on its own surface, which a snapshot cannot frost: its menus sit on a dark fill.
         menu.setFrostBehind(false);
+        menu.setOnBack(() -> {
+            menu.hide();
+            scheduleHide();
+        });
         error = findViewById(R.id.playerError);
         errorBody = findViewById(R.id.playerErrorBody);
 

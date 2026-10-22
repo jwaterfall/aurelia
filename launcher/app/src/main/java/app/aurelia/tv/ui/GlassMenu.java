@@ -21,8 +21,9 @@ import java.util.List;
 /**
  * A compact glass menu that rises from the button that opened it, for picking one of a few options without
  * leaving what is on screen: subtitles in the player, sorting a library. It sits just above the button, lined
- * up with it, and grows upwards; or below it, growing down, when there is more room there (a button near the
- * top of the screen). It scrolls when its options are more than fit.
+ * up with it, and grows upwards; or below it, growing down, where it fits there instead (a button near the top
+ * of the screen). Where it fits on neither side (a card nearly the height of the screen), it opens over the card,
+ * just inside its top corner. Taller than menu_max_height, it scrolls, fading out where more options continue.
  *
  * Put one over the whole screen (match_parent, late in the root). While it shows, nothing behind it takes
  * focus; choosing or Back closes it and focus returns to the button.
@@ -129,6 +130,9 @@ public class GlassMenu extends FrameLayout {
     private final int margin;
     private final int maxHeight;
     private ViewGroup behind;
+    private ViewGroup defaultBackground;
+    /** What Back does while it shows; closing it unless told otherwise (a menu of steps goes back a step). */
+    private Runnable onBack;
     private int behindFocusability;
     private View anchor;
     private boolean open;
@@ -189,6 +193,47 @@ public class GlassMenu extends FrameLayout {
     /** Open, and opened from {@code button}. */
     public boolean isShowingFrom(View button) {
         return open && anchor == button;
+    }
+
+    /**
+     * The screen's menu, for something that has none of its own to hand (a poster's hold menu): the one in the
+     * layout (R.id.menu), or else one put over the whole screen now, with the screen's own layout behind it.
+     */
+    public static GlassMenu of(View any) {
+        ViewGroup content = any.getRootView().findViewById(android.R.id.content);
+        GlassMenu menu = content.findViewById(R.id.menu);
+        if (menu != null) return menu;
+        menu = new GlassMenu(any.getContext());
+        menu.setId(R.id.menu);
+        menu.defaultBackground = (ViewGroup) content.getChildAt(0);
+        content.addView(menu, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        return menu;
+    }
+
+    public void setOnBack(@Nullable Runnable action) {
+        onBack = action;
+    }
+
+    /** Back closes it (or does {@link #setOnBack}'s), on any screen, before the screen itself hears of it. */
+    @Override
+    public boolean dispatchKeyEvent(android.view.KeyEvent event) {
+        if (open && event.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK) {
+            if (event.getAction() == android.view.KeyEvent.ACTION_UP) {
+                if (onBack != null) onBack.run();
+                else hide();
+            }
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    /** What cannot take focus while it shows, when the caller does not say (see {@link #of}). */
+    public void setDefaultBackground(ViewGroup background) {
+        defaultBackground = background;
+    }
+
+    public ViewGroup defaultBackground() {
+        return defaultBackground;
     }
 
     public boolean isShowing() {
@@ -384,23 +429,29 @@ public class GlassMenu extends FrameLayout {
         int[] at = anchorPosition();
         int anchorLeft = at[0];
         int anchorTop = at[1];
+        // How tall it would be with every option showing, and how tall it may be: menu_max_height, or the screen.
+        int content = scroll.getChildAt(0).getHeight();
+        int natural = card.getHeight() - scroll.getHeight() + content;
+        int want = Math.min(Math.min(maxHeight, natural), getHeight() - 2 * margin);
         int above = anchorTop - gap - margin;
         int under = getHeight() - (anchorTop + anchor.getHeight()) - gap - margin;
-        below = under > above;
-        int tallest = Math.min(maxHeight, below ? under : above);
-        int height = card.getHeight();
-        if (height > tallest) {
-            ViewGroup.LayoutParams lp = scroll.getLayoutParams();
-            lp.height = tallest - (height - scroll.getHeight());
+        // Beside its button where it fits whole, below first; never squeezed into a gap too small for it (a big card's
+        // menu, the hero's), but over the button instead, just inside its top corner, all of it showing.
+        boolean over = under < want && above < want;
+        below = over || under >= want;
+        int scrollHeight = natural > want ? want - (natural - content) : ViewGroup.LayoutParams.WRAP_CONTENT;
+        ViewGroup.LayoutParams lp = scroll.getLayoutParams();
+        if (lp.height != scrollHeight) {
+            lp.height = scrollHeight;
             scroll.setLayoutParams(lp);
-            height = tallest;
         }
-        float x = anchorLeft - card.getPaddingLeft();
+        float x = over ? anchorLeft + gap : anchorLeft - card.getPaddingLeft();
         x = Math.max(margin, Math.min(x, getWidth() - margin - card.getWidth()));
         card.setX(x);
-        float y = below ? anchorTop + anchor.getHeight() + gap : anchorTop - gap - height;
+        float y = over ? Math.max(margin, Math.min(anchorTop + gap, getHeight() - margin - want))
+                : below ? anchorTop + anchor.getHeight() + gap : anchorTop - gap - want;
         placedY = y - card.getTop();
-        frost(x, y, height);
+        frost(x, y, want);
     }
 
     /** The snapshot's piece under the card (at x, y, height tall), or a dark fill when there is none. */

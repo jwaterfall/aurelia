@@ -31,7 +31,6 @@ public class SectionScrollView extends ScrollView {
 
     private final PathInterpolator ease = new PathInterpolator(0.25f, 0f, 0f, 1f);
     private boolean alignTop = true;
-    private boolean bottomFadeOnly;
     private boolean animate = true;
     private ValueAnimator glide;
     private int target = -1;
@@ -52,16 +51,29 @@ public class SectionScrollView extends ScrollView {
         animate = enabled;
     }
 
-    /** Fade the content out at the foot only, where the next row peeks in; the top stays crisp. */
-    public void setBottomFadeOnly(int length) {
-        bottomFadeOnly = true;
+    /**
+     * Fade the content out over {@code length} wherever it runs on past an edge: at the foot, where the next row
+     * peeks in, and at the top once rows have scrolled away above. The same at both.
+     */
+    public void setEdgeFade(int length) {
         setVerticalFadingEdgeEnabled(true);
         setFadingEdgeLength(length);
     }
 
+    // The fades at its own top and foot, where the screen cuts it, not inside its padding (as PageGrid).
     @Override
-    protected float getTopFadingEdgeStrength() {
-        return bottomFadeOnly ? 0f : super.getTopFadingEdgeStrength();
+    protected boolean isPaddingOffsetRequired() {
+        return !getClipToPadding();
+    }
+
+    @Override
+    protected int getTopPaddingOffset() {
+        return -getPaddingTop();
+    }
+
+    @Override
+    protected int getBottomPaddingOffset() {
+        return getPaddingBottom();
     }
 
     /** false: scroll only as far as needed to show the whole section with focus. */
