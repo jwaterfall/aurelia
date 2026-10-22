@@ -195,6 +195,8 @@
     <string name="search_episodes">פרקים</string>
     <string name="recently_added">נוספו לאחרונה</string>
     <string name="search_recent">חיפושים אחרונים</string>
+    <string name="search_clear_all">ניקוי הכול</string>
+    <string name="search_clear_confirm">לחיצה נוספת לניקוי</string>
     <string name="search_nothing">אין תוצאות עבור „%1$s”</string>
     <string name="details_season">עונה %1$d</string>
     <string name="details_failed">לא ניתן לטעון את זה מ-%1$s.</string>

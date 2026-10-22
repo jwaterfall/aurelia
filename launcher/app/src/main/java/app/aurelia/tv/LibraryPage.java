@@ -15,11 +15,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import app.aurelia.tv.jellyfin.Account;
 import app.aurelia.tv.jellyfin.Api;
 import app.aurelia.tv.jellyfin.Catalog;
+import app.aurelia.tv.ui.Collapse;
 import app.aurelia.tv.ui.GlassMenu;
 import app.aurelia.tv.ui.GridShelfLayoutManager;
 import app.aurelia.tv.ui.GridSpacing;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -45,7 +45,6 @@ final class LibraryPage {
         /** What the menus block focus to while open. */
         ViewGroup background();
         /** The posters have scrolled away from the top, or back to it. */
-        void onScrolled(boolean scrolled);
     }
 
     static final int COLUMNS = 7;
@@ -62,7 +61,7 @@ final class LibraryPage {
 
     private final View root;
     private final View toolbar;
-    private final View content;
+    private final View countGhost;
     private final RecyclerView grid;
     private final PosterAdapter adapter;
     private final TextView focusName;
@@ -94,7 +93,7 @@ final class LibraryPage {
         root = LayoutInflater.from(activity).inflate(R.layout.view_library_page, container, false);
         container.addView(root);
         toolbar = root.findViewById(R.id.libraryToolbar);
-        content = root.findViewById(R.id.libraryContent);
+        countGhost = root.findViewById(R.id.libraryCountGhost);
         grid = root.findViewById(R.id.libraryGrid);
         focusName = root.findViewById(R.id.libraryFocusName);
         focusFacts = root.findViewById(R.id.libraryFocusFacts);
@@ -121,12 +120,6 @@ final class LibraryPage {
             }
 
             @Override
-            public boolean onLongClicked(Catalog.Item item, View poster) {
-                showOptions(item, poster);
-                return true;
-            }
-
-            @Override
             public void onNearEnd() {
                 loadMore();
             }
@@ -136,12 +129,6 @@ final class LibraryPage {
         grid.addItemDecoration(new GridSpacing(COLUMNS, gutter));
         grid.setItemAnimator(null);
         grid.setAdapter(adapter);
-        grid.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(@NonNull RecyclerView list, int dx, int dy) {
-                host.onScrolled(scrolled());
-            }
-        });
 
         readQuery();
         sortPill.setOnClickListener(this::showSort);
@@ -162,13 +149,18 @@ final class LibraryPage {
         return root;
     }
 
-    /** Where the posters are cut off as they scroll: the top of their area, under the bar. */
-    View content() {
-        return content;
+    /** Whether {@code focus} is at the page's top: its buttons, its message, or the first row of posters. */
+    boolean atTop(View focus) {
+        View item = grid.findContainingItemView(focus);
+        return item == null || grid.getChildAdapterPosition(item) < COLUMNS;
     }
 
-    boolean scrolled() {
-        return grid.computeVerticalScrollOffset() > 0;
+    /**
+     * The sort and filter buttons (with the count) in place, or slid away above the posters once focus goes past
+     * their first row, so the posters have the screen.
+     */
+    void setHeaderShown(boolean shown, boolean animate) {
+        Collapse.show(toolbar, shown, animate, false);
     }
 
     /** The page is coming into view: the first time, the library loads. */
@@ -223,6 +215,7 @@ final class LibraryPage {
         }
         if (adapter.size() == 0) showLoading();
         loading = true;
+        if (!grid.hasFocus()) describe(null);
         Api.async(() -> {
             if (libraryId == null) libraryId = Catalog.library(account, kind);
             if (genres.isEmpty() && !libraryId.isEmpty()) genres = Catalog.genres(account, libraryId, kind);
@@ -321,6 +314,9 @@ final class LibraryPage {
 
     /** At the bar's far end: {@code item}'s name and facts, or how many there are when null. */
     private void describe(Catalog.Item item) {
+        // Loading with no count yet: its placeholder instead, which gives way to it once.
+        boolean waiting = item == null && count == null && loading;
+        countGhost.setVisibility(waiting ? View.VISIBLE : View.GONE);
         if (item == null) {
             focusName.setText(null);
             focusFacts.setText(count);
@@ -505,44 +501,6 @@ final class LibraryPage {
     // ---- a poster's quick options ----------------------------------------------------------------------
 
     /** OK held on a poster: watched and favourite, as they are now. */
-    private void showOptions(Catalog.Item item, View poster) {
-        GlassMenu.Builder m = new GlassMenu.Builder()
-                .add(GlassMenu.Item.heading(item.name))
-                .add(GlassMenu.Item.option(get(item.played ? R.string.menu_mark_unwatched : R.string.menu_mark_watched),
-                        null, false, () -> mark(item, item.withUserData(!item.played, item.favourite))))
-                .add(GlassMenu.Item.option(get(item.favourite ? R.string.menu_remove_favourite : R.string.menu_add_favourite),
-                        null, false, () -> mark(item, item.withUserData(item.played, !item.favourite))));
-        host.menu().show(poster, m, host.background());
-    }
-
-    /**
-     * Shows {@code after}'s marks on the poster at once and tells the server. The poster then takes the server's
-     * own copy (a show's count of episodes left), or goes back to {@code before} if the server said no.
-     */
-    private void mark(Catalog.Item before, Catalog.Item after) {
-        adapter.update(after);
-        boolean played = after.played != before.played;
-        Api.async(() -> {
-            if (played) Catalog.setPlayed(account, after.id, after.played);
-            else Catalog.setFavourite(account, after.id, after.favourite);
-            try {
-                return Catalog.item(account, after.id);
-            } catch (IOException e) {
-                return after;   // the mark is made; only the fresh copy is missing
-            }
-        },new Api.Callback<Catalog.Item>() {
-            @Override
-            public void onResult(Catalog.Item fresh) {
-                adapter.update(fresh);
-            }
-
-            @Override
-            public void onError(Exception e) {
-                adapter.update(before);
-            }
-        });
-    }
-
     // ---- focus ---------------------------------------------------------------------------------------
 
     /** Coming down into the page: the poster that had focus, or the pills when there are none. */

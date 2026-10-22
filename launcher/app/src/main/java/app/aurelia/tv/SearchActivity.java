@@ -49,6 +49,8 @@ public final class SearchActivity extends Activity {
     private static final String PREFS = "search";
     private static final String KEY_RECENT = "recent";
     private static final int RECENT = 6;
+    /** How long "Clear all" waits for its second press. */
+    private static final long CLEAR_ARMED_MS = 4000;
     /** Typing pauses this long before a search goes out. */
     private static final long TYPING_MS = 300;
     private static final int LIMIT = 24;
@@ -286,6 +288,27 @@ public final class SearchActivity extends Activity {
             });
             recentRow.addView(chip);
         }
+        // Last in the row: forget them all, on a second press (the first asks for it, and stops asking after a
+        // moment, or as focus leaves). Focus goes back to the field, as the row goes with them.
+        if (list.isEmpty()) return;
+        TextView clear = (TextView) inflater.inflate(R.layout.item_search_clear, recentRow, false);
+        Runnable disarm = () -> clear.setText(R.string.search_clear_all);
+        clear.setOnClickListener(v -> {
+            if (!getString(R.string.search_clear_confirm).contentEquals(clear.getText())) {
+                clear.setText(R.string.search_clear_confirm);
+                clear.removeCallbacks(disarm);
+                clear.postDelayed(disarm, CLEAR_ARMED_MS);
+                return;
+            }
+            clear.removeCallbacks(disarm);
+            prefs.edit().remove(KEY_RECENT).apply();
+            field.requestFocus();
+            showRecent();
+        });
+        clear.setOnFocusChangeListener((v, has) -> {
+            if (!has) disarm.run();
+        });
+        recentRow.addView(clear);
     }
 
     // ---- focus ---------------------------------------------------------------------------------------

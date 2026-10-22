@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ui.GlassMenu: a compact glass card of options, which GlassMenu places just above the button that opened it.
      Behind its glass, a blurred copy of the screen under it (menuFrost). Its rows never grow with focus, so the
-     scroller can clip to its own edges without cutting anything off. -->
+     scroller can clip to its own edges without cutting anything off. When there are more options than fit, they
+     fade out at the edge they continue past. -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
     <FrameLayout
@@ -28,7 +29,9 @@
                 android:id="@+id/menuScroll"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:fadingEdgeLength="@dimen/space_xl"
                 android:overScrollMode="never"
+                android:requiresFadingEdge="vertical"
                 android:scrollbars="none">
 
                 <!-- The white behind the option with focus, under the rows; it slides between them. -->

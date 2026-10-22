@@ -192,6 +192,8 @@
     <string name="search_hint">Movies, shows, episodes and apps</string>
     <string name="search_episodes">Episodes</string>
     <string name="search_recent">Recent searches</string>
+    <string name="search_clear_all">Clear all</string>
+    <string name="search_clear_confirm">Press again to clear</string>
     <string name="recently_added">Recently added</string>
     <string name="search_nothing">Nothing matches “%1$s”</string>
     <string name="details_season">Season %1$d</string>

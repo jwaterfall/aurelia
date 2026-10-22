@@ -106,13 +106,13 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="180dp"
+            android:layout_height="@dimen/player_scrim_top"
             android:layout_gravity="top"
             android:background="@drawable/player_scrim_top" />
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="240dp"
+            android:layout_height="@dimen/player_scrim"
             android:layout_gravity="bottom"
             android:background="@drawable/player_scrim" />
 

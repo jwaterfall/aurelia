@@ -32,11 +32,11 @@ import app.aurelia.tv.jellyfin.Catalog;
 import app.aurelia.tv.jellyfin.Library;
 import app.aurelia.tv.player.PlayerActivity;
 import app.aurelia.tv.ui.AmbientBackdrop;
+import app.aurelia.tv.ui.Collapse;
 import app.aurelia.tv.ui.GlassMenu;
 import app.aurelia.tv.ui.GridShelfLayoutManager;
 import app.aurelia.tv.ui.GridSpacing;
 import app.aurelia.tv.ui.ImageDisk;
-import app.aurelia.tv.ui.ScrollEdge;
 import app.aurelia.tv.ui.SegmentedControl;
 import app.aurelia.tv.ui.ShelfLayoutManager;
 import app.aurelia.tv.update.Updates;
@@ -79,7 +79,6 @@ public class MainActivity extends Activity {
     private View topBar;
     private SegmentedControl tabs;
     private View pageHome, pageApps;
-    private ScrollEdge edge;
     /** Every page, by index: Home, Movies, TV Shows, Apps. */
     private View[] pages;
     private LibraryPage movies, shows;
@@ -157,7 +156,6 @@ public class MainActivity extends Activity {
         setUpLibraries();
         setUpApps();
         pages = new View[] {pageHome, movies.view(), shows.view(), pageApps};
-        setUpEdge();
         account.addListener(accountListener);
         updateProfile();
         loadApps();
@@ -203,6 +201,8 @@ public class MainActivity extends Activity {
             // Focus in the top bar: the backdrop goes back to the wallpaper.
             if (isIn(now, topBar)) ambient.clear();
             remember(now);
+            // A menu over the page leaves the bar as it was.
+            if (!isIn(now, menu)) updateBar(now, animations);
         });
     }
 
@@ -263,6 +263,11 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public void onItemOptions(Catalog.Item item, View card) {
+                ItemOptions.show(account, item, card, MainActivity.this::itemChanged);
+            }
+
+            @Override
             public void onOptions(Library.MediaItem item, View card) {
                 showMediaOptions(item, card);
             }
@@ -286,6 +291,11 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public void onChanged(Catalog.Item item) {
+                hero.updateItem(item);
+            }
+
+            @Override
             public void onNearEnd() {
             }
         });
@@ -298,9 +308,10 @@ public class MainActivity extends Activity {
         if (kept != null) showHomeRows(kept, false);
         ((app.aurelia.tv.ui.SectionScrollView) pageHome).setAlignTop(false);
         ((app.aurelia.tv.ui.SectionScrollView) pageHome).setAnimationsEnabled(animations);
-        // The row under the hero peeks in and fades out, so it reads as more below, not cut off.
-        ((app.aurelia.tv.ui.SectionScrollView) pageHome).setBottomFadeOnly(
-                getResources().getDimensionPixelSize(R.dimen.space_3xl) + getResources().getDimensionPixelSize(R.dimen.space_lg));
+        // Rows run to the edges of the screen and fade out where more continue past one, above as below: the
+        // row under the hero peeks in, so it reads as more to come, not cut off.
+        ((app.aurelia.tv.ui.SectionScrollView) pageHome).setEdgeFade(
+                getResources().getDimensionPixelSize(R.dimen.page_fade));
 
         View pinnedHeader = findViewById(R.id.pinnedHeader);
         ((TextView) pinnedHeader.findViewById(R.id.sectionTitle)).setText(R.string.pinned_apps);
@@ -320,6 +331,12 @@ public class MainActivity extends Activity {
     private void setUpLibraries() {
         menu = findViewById(R.id.menu);
         menu.setAnimationsEnabled(animations);
+        menu.setDefaultBackground(findViewById(R.id.content));
+        // Back in signing in goes back a step; in any other menu it closes it.
+        menu.setOnBack(() -> {
+            if (accountMenu.isOpen()) accountMenu.back();
+            else menu.hide();
+        });
         // The hero holds still while a menu is open, so the menu's frost stays true to what is behind it.
         menu.setOnOpenChanged(open -> {
             if (open) hero.stop();
@@ -361,11 +378,6 @@ public class MainActivity extends Activity {
             @Override
             public ViewGroup background() {
                 return findViewById(R.id.content);
-            }
-
-            @Override
-            public void onScrolled(boolean scrolled) {
-                updateEdge(true);
             }
         };
         movies = new LibraryPage(this, container, Catalog.Kind.Movie, host);
@@ -801,6 +813,12 @@ public class MainActivity extends Activity {
         updateRow(() -> cwAdapter.showItems(items, Library.auth(account)));
     }
 
+    /** A film or show marked from its menu on Home: its poster in Recently added, and the hero, as it now is. */
+    private void itemChanged(Catalog.Item item) {
+        recentAdapter.update(item);
+        hero.updateItem(item);
+    }
+
     private void loadRecent() {
         int request = ++recentRequest;
         if (!account.isSignedIn()) {
@@ -850,20 +868,29 @@ public class MainActivity extends Activity {
         });
     }
 
-    // ---- the scroll edge ------------------------------------------------------------------------------
+    // ---- the top bar ---------------------------------------------------------------------------------
 
-    /** The band and shadow the pages scroll under (ui.ScrollEdge), kept to the page showing. */
-    private void setUpEdge() {
-        edge = new ScrollEdge(findViewById(R.id.edgeBand), findViewById(R.id.edgeShadow));
-        ((ScrollView) pageHome).setOnScrollChangeListener((v, x, y, ox, oy) -> updateEdge(true));
-        appsGrid.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(@NonNull RecyclerView list, int dx, int dy) {
-                updateEdge(true);
-            }
-        });
-        View root = findViewById(R.id.root);
-        root.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> updateEdge(false));
+    /**
+     * The top bar (and a library's buttons under it) while focus is at the top of the page: on the hero or the
+     * first row. Past that they slide away and the page has the screen; coming back up brings them back. Decided by
+     * focus rather than by scrolling: the room they give back would scroll the page to its top again.
+     */
+    private void updateBar(View focus, boolean animate) {
+        boolean top = isIn(focus, topBar) || pageAtTop(focus);
+        Collapse.show(topBar, top, animate, true);
+        LibraryPage library = library(currentPage());
+        if (library != null) library.setHeaderShown(top, animate);
+    }
+
+    private boolean pageAtTop(View focus) {
+        LibraryPage library = library(currentPage());
+        if (library != null) return library.atTop(focus);
+        if (currentPage() == PAGE_APPS) {
+            return !isIn(focus, appsGrid) || positionIn(appsGrid, focus) < APP_COLUMNS;
+        }
+        if (hero.isShowing()) return focus == hero.card();
+        if (homeMessageArea.getVisibility() == View.VISIBLE) return true;
+        return isIn(focus, cwRow);
     }
 
     /** Page {@code page} back at its top, focus to go to its first card. */
@@ -883,26 +910,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** Draws the edge where the page showing cuts its content off, raised if that page is scrolled. */
-    private void updateEdge(boolean animate) {
-        if (edge == null || pages == null) return;
-        View root = findViewById(R.id.root);
-        int page = currentPage();
-        LibraryPage library = library(page);
-        boolean scrolled;
-        if (library != null) {
-            edge.setEdge(library.content(), root, false);
-            scrolled = library.scrolled();
-        } else if (page == PAGE_APPS) {
-            edge.setEdge(appsGrid, root, false);
-            scrolled = appsGrid.computeVerticalScrollOffset() > 0;
-        } else {
-            edge.setEdge(pageHome, root, true);
-            scrolled = pageHome.getScrollY() > 0;
-        }
-        edge.setRaised(scrolled, animate);
-    }
-
     // ---- pages ---------------------------------------------------------------------------------------
 
     /** Shows one page, sliding it up into place as the others fade away. A library loads the first time it shows. */
@@ -913,8 +920,9 @@ public class MainActivity extends Activity {
         // A page switched to starts afresh, at its top and its first card, rather than wherever it was left.
         if (in.getVisibility() != View.VISIBLE) toTop(page);
         if (library != null) library.showing();
-        edge.setRaised(false, false);
-        in.post(() -> updateEdge(animate));
+        // A page comes in from the tabs, at its top: the bar shows.
+        Collapse.show(topBar, true, false, true);
+        if (library != null) library.setHeaderShown(true, false);
         in.animate().cancel();
         for (View out : pages) {
             if (out == in) continue;

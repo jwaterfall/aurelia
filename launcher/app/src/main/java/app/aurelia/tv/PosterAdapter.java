@@ -32,9 +32,8 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         /** {@code art} is the poster, or null while it is still loading. */
         void onFocused(Catalog.Item item, Drawable art);
         void onClicked(Catalog.Item item);
-        /** OK held on a poster. True when it opened something, so the press does not also open the poster. */
-        default boolean onLongClicked(Catalog.Item item, View poster) {
-            return false;
+        /** Marked from its hold menu (watched, a favourite): {@code item} as it now is, already on its poster. */
+        default void onChanged(Catalog.Item item) {
         }
         /** Focus is within a few rows of the last poster fetched. */
         void onNearEnd();
@@ -168,7 +167,14 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         h.progress.setVisibility(item.inProgress() ? View.VISIBLE : View.GONE);
         h.progress.setProgress(item.progressPercent());
         h.itemView.setOnClickListener(v -> listener.onClicked(item));
-        h.itemView.setOnLongClickListener(v -> listener.onLongClicked(item, v));
+        // Every poster, wherever it is, has the same menu on a held OK.
+        h.itemView.setOnLongClickListener(v -> {
+            ItemOptions.show(account, item, v, changed -> {
+                update(changed);
+                listener.onChanged(changed);
+            });
+            return true;
+        });
         h.itemView.setOnFocusChangeListener((v, focused) -> {
             if (!focused) return;
             listener.onFocused(item, h.art.getDrawable());

@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Under the player's controls: clear at the top, dark at the bottom, so the title and times read over any frame. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <gradient
-        android:angle="270"
-        android:startColor="#00000000"
-        android:centerColor="#8005070D"
-        android:centerY="0.55"
-        android:endColor="#E605070D" />
-</shape>
+<!-- Under the player's controls: clear at the top, eased (two gradients, the lower one steeper) down to pure black
+     at the foot, the black of letterboxing, so the bar under a widescreen picture melts into it rather than showing
+     its edge just under the buttons. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:bottom="@dimen/player_scrim_half">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#00000000"
+                android:centerColor="#26000000"
+                android:endColor="#80000000" />
+        </shape>
+    </item>
+    <item android:top="@dimen/player_scrim_half">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#80000000"
+                android:centerColor="#D9000000"
+                android:endColor="#FA000000" />
+        </shape>
+    </item>
+</layer-list>

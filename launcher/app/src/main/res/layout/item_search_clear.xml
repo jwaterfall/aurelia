@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- After the recent searches (SearchActivity): forgets them all. A chip, smaller than the searches and with a bin,
+     so it never reads as one more search to run; its first press only asks for a second. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.Launcher.Chip.Icon"
+    android:layout_gravity="center_vertical"
+    android:layout_marginStart="@dimen/space_xs"
+    android:drawableStart="@drawable/ic_delete"
+    android:text="@string/search_clear_all" />

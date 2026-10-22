@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- A library page (Movies, TV Shows; LibraryPage): sort and filter buttons, with the name and facts of whichever
-     poster has focus at the bar's far end, then every poster on the launcher's columns, scrolling up under the
-     bar and Home's scroll edge (ui.ScrollEdge, which MainActivity draws to the bar's foot). While the first page
-     loads, placeholder posters stand in their places. -->
+     poster has focus at the bar's far end, then every poster on the launcher's columns. Past the first row the
+     buttons slide away with Home's top bar (ui.Collapse), and the posters have the screen. While the first page
+     loads, placeholder posters (and the count's) stand in their places. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -72,6 +72,14 @@
             android:layout_marginStart="@dimen/space_sm"
             android:singleLine="true"
             android:textAppearance="@style/TextAppearance.Launcher.Meta" />
+
+        <!-- In the count's place until it is known, as the posters have theirs: as tall as its line of text. -->
+        <app.aurelia.tv.ui.Placeholder
+            android:id="@+id/libraryCountGhost"
+            android:layout_width="80dp"
+            android:layout_height="@dimen/placeholder_meta"
+            android:layout_gravity="bottom"
+            android:visibility="gone" />
     </LinearLayout>
 
     <FrameLayout
@@ -80,12 +88,14 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <androidx.recyclerview.widget.RecyclerView
+        <app.aurelia.tv.ui.PageGrid
             android:id="@+id/libraryGrid"
             style="@style/Widget.Launcher.Shelf"
             android:layout_height="match_parent"
+            android:fadingEdgeLength="@dimen/page_fade"
             android:paddingTop="@dimen/space_md"
-            android:paddingBottom="@dimen/space_3xl" />
+            android:paddingBottom="@dimen/space_3xl"
+            android:requiresFadingEdge="vertical" />
 
         <!-- Instead of the posters (signed out, unreachable, nothing matching): the shared empty state, in the
              middle of the page, a little above centre. -->
