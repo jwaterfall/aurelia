@@ -48,7 +48,7 @@ public final class Images {
         }
         view.setImageDrawable(null);
         view.setAlpha(0f);
-        Api.async(() -> ImageDisk.get(url, auth), new Api.Callback<Bitmap>() {
+        Api.image(() -> ImageDisk.get(url, auth), new Api.Callback<Bitmap>() {
             @Override
             public void onResult(Bitmap bmp) {
                 if (bmp == null) {

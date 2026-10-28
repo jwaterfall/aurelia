@@ -38,8 +38,10 @@ public class GridShelfLayoutManager extends GridLayoutManager {
                                                  @NonNull Rect rect, boolean immediate, boolean focusedChildVisible) {
         int top = getPaddingTop();
         int bottom = getHeight() - getPaddingBottom();
+        // The first row takes the room above it along (PageTop), so the page goes back to its very top.
+        int childTop = getPosition(child) < getSpanCount() ? getDecoratedTop(child) : child.getTop();
         int dy = 0;
-        if (child.getTop() < top) dy = child.getTop() - top;
+        if (childTop < top) dy = childTop - top;
         else if (child.getBottom() > bottom) dy = child.getBottom() - bottom;
         if (dy == 0) return false;
         if (immediate || !animate) parent.scrollBy(0, dy);

@@ -26,7 +26,11 @@ public class GridSpacing extends RecyclerView.ItemDecoration {
 
     /** Width of one column of {@code list}, inside its padding. */
     public static int itemWidth(@NonNull View list, int columns, int gutter) {
-        int content = list.getMeasuredWidth() - list.getPaddingLeft() - list.getPaddingRight();
+        return itemWidth(list.getMeasuredWidth() - list.getPaddingLeft() - list.getPaddingRight(), columns, gutter);
+    }
+
+    /** Width of one column of a list {@code content} wide inside its padding (one not yet measured). */
+    public static int itemWidth(int content, int columns, int gutter) {
         return Math.max(0, (content - (columns - 1) * gutter) / columns);
     }
 

@@ -105,6 +105,8 @@
     <dimen name="poster_badge">20dp</dimen>
     <!-- A film's or show's page: the column its text sits in, and its logo. -->
     <dimen name="details_width">520dp</dimen>
+    <!-- Room around that column for its focused button to grow into while the page fades in (DetailsHeader). -->
+    <dimen name="details_room">16dp</dimen>
     <dimen name="details_logo_height">96dp</dimen>
     <dimen name="details_logo_width">400dp</dimen>
     <dimen name="show_logo_height">64dp</dimen>

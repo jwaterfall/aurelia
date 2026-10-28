@@ -1,15 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- A library page (Movies, TV Shows; LibraryPage): sort and filter buttons, with the name and facts of whichever
-     poster has focus at the bar's far end, then every poster on the launcher's columns. Past the first row the
-     buttons slide away with Home's top bar (ui.Collapse), and the posters have the screen. While the first page
-     loads, placeholder posters (and the count's) stand in their places. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     poster has focus at the bar's far end, then every poster on the launcher's columns. The buttons sit over the
+     top of the grid, below Home's top bar, in room the grid leaves above its first row (ui.PageTop), and scroll
+     away with the posters as the bar does. While the first page loads, placeholder posters (and the count's)
+     stand in their places. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:orientation="vertical"
     android:visibility="gone">
+
+    <FrameLayout
+        android:id="@+id/libraryContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <app.aurelia.tv.ui.PageGrid
+            android:id="@+id/libraryGrid"
+            style="@style/Widget.Launcher.Shelf"
+            android:layout_height="match_parent"
+            android:fadingEdgeLength="@dimen/page_fade"
+            android:paddingTop="@dimen/space_md"
+            android:paddingBottom="@dimen/space_3xl"
+            android:requiresFadingEdge="vertical" />
+
+        <!-- Instead of the posters (signed out, unreachable, nothing matching): the shared empty state, in the
+             middle of the page, a little above centre. -->
+        <include
+            android:id="@+id/libraryMessage"
+            layout="@layout/view_empty_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="@dimen/space_3xl"
+            android:visibility="gone" />
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/libraryToolbar"
@@ -81,31 +107,4 @@
             android:layout_gravity="bottom"
             android:visibility="gone" />
     </LinearLayout>
-
-    <FrameLayout
-        android:id="@+id/libraryContent"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <app.aurelia.tv.ui.PageGrid
-            android:id="@+id/libraryGrid"
-            style="@style/Widget.Launcher.Shelf"
-            android:layout_height="match_parent"
-            android:fadingEdgeLength="@dimen/page_fade"
-            android:paddingTop="@dimen/space_md"
-            android:paddingBottom="@dimen/space_3xl"
-            android:requiresFadingEdge="vertical" />
-
-        <!-- Instead of the posters (signed out, unreachable, nothing matching): the shared empty state, in the
-             middle of the page, a little above centre. -->
-        <include
-            android:id="@+id/libraryMessage"
-            layout="@layout/view_empty_state"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginBottom="@dimen/space_3xl"
-            android:visibility="gone" />
-    </FrameLayout>
-</LinearLayout>
+</FrameLayout>

@@ -184,6 +184,7 @@
     <string name="person_producer">Producer</string>
     <string name="details_cast">Cast and crew</string>
     <string name="details_more_like_this">More like this</string>
+    <string name="hero_more_info">More info</string>
     <string name="person_born">Born %1$s</string>
     <plurals name="person_in_library">
         <item quantity="one">%d in your library</item>

@@ -41,6 +41,8 @@ public final class Api {
     private static final int TIMEOUT_MS = 5000;
     private static final String CLIENT = "Aurelia";
     private static final ExecutorService io = Executors.newFixedThreadPool(4);
+    /** Artwork apart from the rest, so a screen of posters never holds up the answers a screen is built from. */
+    private static final ExecutorService images = Executors.newFixedThreadPool(3);
     private static Handler main;
 
     private Api() { }
@@ -53,7 +55,16 @@ public final class Api {
 
     /** Runs {@code work} in the background and hands its result, or its failure, to {@code callback} on the main thread. */
     public static <T> void async(Callable<T> work, Callback<T> callback) {
-        io.execute(() -> {
+        run(io, work, callback);
+    }
+
+    /** As {@link #async}, for fetching artwork: on threads of its own. */
+    public static <T> void image(Callable<T> work, Callback<T> callback) {
+        run(images, work, callback);
+    }
+
+    private static <T> void run(ExecutorService pool, Callable<T> work, Callback<T> callback) {
+        pool.execute(() -> {
             try {
                 T value = work.call();
                 main().post(() -> callback.onResult(value));
@@ -129,6 +140,27 @@ public final class Api {
         }
     }
 
+    /** The answer's bytes as they came: artwork to keep on disk without decoding and encoding it again. */
+    public static byte[] getBytes(String url, String auth) throws IOException {
+        HttpURLConnection conn = open("GET", url, auth);
+        try {
+            check(conn, url);
+            try (InputStream in = conn.getInputStream()) {
+                return readAll(in).toByteArray();
+            }
+        } finally {
+            conn.disconnect();
+        }
+    }
+
+    private static ByteArrayOutputStream readAll(InputStream in) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int n;
+        while ((n = in.read(buffer)) != -1) out.write(buffer, 0, n);
+        return out;
+    }
+
     private static String request(String method, String url, String auth, JSONObject body) throws IOException {
         return request(method, url, auth, body, TIMEOUT_MS);
     }
@@ -149,11 +181,7 @@ public final class Api {
             }
             check(conn, url);
             try (InputStream in = conn.getInputStream()) {
-                ByteArrayOutputStream text = new ByteArrayOutputStream();
-                byte[] buffer = new byte[8192];
-                int n;
-                while ((n = in.read(buffer)) != -1) text.write(buffer, 0, n);
-                return text.toString("UTF-8");
+                return readAll(in).toString("UTF-8");
             }
         } finally {
             conn.disconnect();

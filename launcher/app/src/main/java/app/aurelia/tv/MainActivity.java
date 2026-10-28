@@ -32,11 +32,11 @@ import app.aurelia.tv.jellyfin.Catalog;
 import app.aurelia.tv.jellyfin.Library;
 import app.aurelia.tv.player.PlayerActivity;
 import app.aurelia.tv.ui.AmbientBackdrop;
-import app.aurelia.tv.ui.Collapse;
 import app.aurelia.tv.ui.GlassMenu;
 import app.aurelia.tv.ui.GridShelfLayoutManager;
 import app.aurelia.tv.ui.GridSpacing;
 import app.aurelia.tv.ui.ImageDisk;
+import app.aurelia.tv.ui.PageTop;
 import app.aurelia.tv.ui.SegmentedControl;
 import app.aurelia.tv.ui.ShelfLayoutManager;
 import app.aurelia.tv.update.Updates;
@@ -77,6 +77,8 @@ public class MainActivity extends Activity {
     private WallpaperPlayer wallpaperPlayer;
     private AmbientBackdrop ambient;
     private View topBar;
+    /** The room at each page's top for the bar over it: the bar's height and its margin above. */
+    private int barSpace;
     private SegmentedControl tabs;
     private View pageHome, pageApps;
     /** Every page, by index: Home, Movies, TV Shows, Apps. */
@@ -146,6 +148,10 @@ public class MainActivity extends Activity {
         if (cfg.wallpaperEnabled && !cfg.wallpapers.isEmpty()) findViewById(R.id.wallpaper).setVisibility(View.GONE);
         ambient = findViewById(R.id.ambient);
         ambient.setAnimationsEnabled(animations);
+        // The bundled wallpaper, the wash and the scrim in one pass (a theme's rotating wallpapers stay layers).
+        if (findViewById(R.id.wallpaper).getVisibility() == View.VISIBLE) {
+            ambient.drawBehind(findViewById(R.id.wallpaper), findViewById(R.id.scrim));
+        }
 
         account = Account.get(this);
         ImageDisk.init(this);
@@ -161,6 +167,7 @@ public class MainActivity extends Activity {
         loadApps();
         showPage(PAGE_HOME, false);
         cwRow.post(this::focusHomeStart);
+        prewarmLibraries();
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -178,6 +185,8 @@ public class MainActivity extends Activity {
 
     private void setUpTopBar() {
         topBar = findViewById(R.id.topBar);
+        barSpace = getResources().getDimensionPixelSize(R.dimen.screen_margin_top)
+                + getResources().getDimensionPixelSize(R.dimen.control_height);
         findViewById(R.id.avatar).setClipToOutline(true);
         // A compact menu under the button: the account signed in, or signing in.
         findViewById(R.id.btnProfile).setOnClickListener(v -> {
@@ -201,14 +210,16 @@ public class MainActivity extends Activity {
             // Focus in the top bar: the backdrop goes back to the wallpaper.
             if (isIn(now, topBar)) ambient.clear();
             remember(now);
-            // A menu over the page leaves the bar as it was.
-            if (!isIn(now, menu)) updateBar(now, animations);
+            // Focus in the bar, by whatever way it came, takes the page back to its top, where the bar is whole.
+            if (isIn(now, topBar)) scrollPageToTop();
         });
     }
 
     private void setUpHome() {
         int gutter = getResources().getDimensionPixelSize(R.dimen.gutter);
         pageHome = findViewById(R.id.pageHome);
+        findViewById(R.id.homeTop).getLayoutParams().height = barSpace;
+        pageHome.setOnScrollChangeListener((v, x, y, ox, oy) -> placeBar());
 
         View cwHeader = findViewById(R.id.cwHeader);
         ((TextView) cwHeader.findViewById(R.id.sectionTitle)).setText(R.string.continue_watching);
@@ -379,14 +390,33 @@ public class MainActivity extends Activity {
             public ViewGroup background() {
                 return findViewById(R.id.content);
             }
+
+            @Override
+            public void onScrolled() {
+                placeBar();
+            }
         };
-        movies = new LibraryPage(this, container, Catalog.Kind.Movie, host);
-        shows = new LibraryPage(this, container, Catalog.Kind.Series, host);
+        movies = new LibraryPage(this, container, Catalog.Kind.Movie, barSpace, host);
+        shows = new LibraryPage(this, container, Catalog.Kind.Series, barSpace, host);
         movies.setAnimationsEnabled(animations);
         shows.setAnimationsEnabled(animations);
         // Apps stays last, over the libraries, as it was in the layout.
         pageApps = findViewById(R.id.pageApps);
         pageApps.bringToFront();
+    }
+
+    /** How long after Home opens, or the account changes, the libraries get ready behind it. */
+    private static final long PREWARM_MS = 4000;
+    private final Runnable prewarm = () -> {
+        movies.prewarm();
+        shows.prewarm();
+    };
+
+    /** Movies and TV Shows made ready behind Home once it has settled, so the first switch to either is quick. */
+    private void prewarmLibraries() {
+        View pagesView = findViewById(R.id.pages);
+        pagesView.removeCallbacks(prewarm);
+        pagesView.postDelayed(prewarm, PREWARM_MS);
     }
 
     /** The library shown on {@code page}, or null for Home and Apps. */
@@ -403,6 +433,13 @@ public class MainActivity extends Activity {
         layout.setAnimationsEnabled(animations);
         appsGrid.setLayoutManager(layout);
         appsGrid.addItemDecoration(new GridSpacing(APP_COLUMNS, gutter));
+        appsGrid.addItemDecoration(new PageTop(APP_COLUMNS, barSpace));
+        appsGrid.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView list, int dx, int dy) {
+                placeBar();
+            }
+        });
         appsGrid.setItemAnimator(null);
         appsGrid.setAdapter(appsAdapter);
     }
@@ -731,6 +768,7 @@ public class MainActivity extends Activity {
         shows.reset();
         LibraryPage shown = library(currentPage());
         if (shown != null) shown.reload();
+        prewarmLibraries();
     }
 
     /**
@@ -881,19 +919,14 @@ public class MainActivity extends Activity {
     // ---- the top bar ---------------------------------------------------------------------------------
 
     /**
-     * The top bar (and a library's buttons under it) while focus is at the top of the page: on the hero or the
-     * first row. Past that they slide away and the page has the screen; coming back up brings them back. Decided by
-     * focus rather than by scrolling: the room they give back would scroll the page to its top again.
+     * The bar where the page showing puts it: moved up as far as the page has scrolled, so it goes as if it were
+     * part of the page, and comes back as the page returns to its top.
      */
-    private void updateBar(View focus, boolean animate) {
-        boolean inBar = isIn(focus, topBar);
-        boolean top = inBar || pageAtTop(focus);
-        // The bar belongs at the top of the page: focus in it, by whatever way it came, takes the page back there,
-        // so the bar never shows over a page left scrolled part way down.
-        if (inBar) scrollPageToTop();
-        Collapse.show(topBar, top, animate, true);
+    private void placeBar() {
         LibraryPage library = library(currentPage());
-        if (library != null) library.setHeaderShown(top, animate);
+        int scrolled = library != null ? library.scrolled()
+                : currentPage() == PAGE_APPS ? PageTop.scrolled(appsGrid) : pageHome.getScrollY();
+        topBar.setTranslationY(-Math.min(scrolled, barSpace));
     }
 
     private void scrollPageToTop() {
@@ -901,17 +934,6 @@ public class MainActivity extends Activity {
         if (library != null) library.scrollToTop();
         else if (currentPage() == PAGE_APPS) appsGrid.smoothScrollToPosition(0);
         else ((app.aurelia.tv.ui.SectionScrollView) pageHome).glideTo(0);
-    }
-
-    private boolean pageAtTop(View focus) {
-        LibraryPage library = library(currentPage());
-        if (library != null) return library.atTop(focus);
-        if (currentPage() == PAGE_APPS) {
-            return !isIn(focus, appsGrid) || positionIn(appsGrid, focus) < APP_COLUMNS;
-        }
-        if (hero.isShowing()) return focus == hero.card();
-        if (homeMessageArea.getVisibility() == View.VISIBLE) return true;
-        return isIn(focus, cwRow);
     }
 
     /** Page {@code page} back at its top, focus to go to its first card. */
@@ -941,9 +963,7 @@ public class MainActivity extends Activity {
         // A page switched to starts afresh, at its top and its first card, rather than wherever it was left.
         if (in.getVisibility() != View.VISIBLE) toTop(page);
         if (library != null) library.showing();
-        // A page comes in from the tabs, at its top: the bar shows.
-        Collapse.show(topBar, true, false, true);
-        if (library != null) library.setHeaderShown(true, false);
+        placeBar();
         in.animate().cancel();
         for (View out : pages) {
             if (out == in) continue;

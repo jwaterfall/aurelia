@@ -1,8 +1,6 @@
 package app.aurelia.tv;
 
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,10 +12,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import app.aurelia.tv.jellyfin.Api;
 import app.aurelia.tv.jellyfin.Library;
 import app.aurelia.tv.ui.GridSpacing;
-import app.aurelia.tv.ui.ImageDisk;
+import app.aurelia.tv.ui.Images;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,15 +60,6 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private static final int TYPE_CARD = 0;
     private static final int TYPE_MESSAGE = 1;
     private static final int PLACEHOLDERS = 3;
-    private static final long FADE_MS = 280;
-    private static final LruCache<String, Bitmap> cache = new LruCache<String, Bitmap>(
-            (int) (Runtime.getRuntime().maxMemory() / 1024 / 8)) {
-        @Override
-        protected int sizeOf(String key, Bitmap bitmap) {
-            return bitmap.getByteCount() / 1024;
-        }
-    };
-
     private final int columns;
     private final int gutter;
     private final Listener listener;
@@ -223,30 +211,9 @@ final class ContinueWatchingAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private void loadImage(CardHolder h, Library.MediaItem item) {
         String url = item.imageUrl;
         if (url == null || url.isEmpty()) return;
-        Bitmap cached = cache.get(url);
-        if (cached != null) {
-            h.backdrop.setImageBitmap(cached);
-            h.backdrop.setAlpha(1f);
-            return;
-        }
-        h.backdrop.setTag(url);
-        h.backdrop.setAlpha(0f);
-        String auth = imageAuth;
-        Api.async(() -> ImageDisk.get(url, auth), new Api.Callback<Bitmap>() {
-            @Override
-            public void onResult(Bitmap bmp) {
-                if (bmp == null) return;
-                cache.put(url, bmp);
-                if (!url.equals(h.backdrop.getTag())) return;   // recycled for another item meanwhile
-                h.backdrop.setImageBitmap(bmp);
-                h.backdrop.animate().alpha(1f).setDuration(FADE_MS).start();
-                // Artwork that arrives while its card has focus still reaches the ambient backdrop.
-                if (h.itemView.hasFocus()) listener.onItemFocused(item, h.backdrop.getDrawable());
-            }
-
-            @Override
-            public void onError(Exception e) {
-            }
+        Images.load(h.backdrop, url, imageAuth, bitmap -> {
+            // Artwork that arrives while its card has focus still reaches the ambient backdrop.
+            if (h.itemView.hasFocus()) listener.onItemFocused(item, h.backdrop.getDrawable());
         });
     }
 
