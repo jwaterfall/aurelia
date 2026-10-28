@@ -2,6 +2,7 @@ package app.aurelia.tv;
 
 import android.app.Activity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -56,6 +57,22 @@ final class DetailsHeader {
         favourite = root.findViewById(R.id.detailsFavourite);
         watched.setOnClickListener(v -> setWatched(!isWatched));
         favourite.setOnClickListener(v -> setFavourite(!isFavourite));
+        makeRoom(root);
+    }
+
+    /**
+     * Widens the header past its column on both sides by details_room, padded back in so nothing in it moves. The
+     * page fades it in with Play already focused, grown and lifted, and while a view fades, Android cuts off a
+     * lifted child at the view's edges: Play's left end, which sits on that edge, was cut until the fade ended.
+     */
+    private static void makeRoom(View root) {
+        int room = root.getResources().getDimensionPixelSize(R.dimen.details_room);
+        ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) root.getLayoutParams();
+        lp.width += 2 * room;
+        lp.setMarginStart(lp.getMarginStart() - room);
+        root.setLayoutParams(lp);
+        root.setPaddingRelative(root.getPaddingStart() + room, root.getPaddingTop(), root.getPaddingEnd() + room,
+                root.getPaddingBottom());
     }
 
     /**

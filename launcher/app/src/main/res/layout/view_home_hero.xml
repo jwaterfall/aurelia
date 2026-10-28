@@ -41,6 +41,9 @@
             android:id="@+id/heroInfo"
             android:layout_width="@dimen/hero_info_width"
             android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:duplicateParentState="true"
             android:gravity="center_vertical"
             android:orientation="vertical"
             android:paddingStart="@dimen/space_2xl">
@@ -90,6 +93,18 @@
                 android:layout_marginTop="@dimen/space_md"
                 android:max="100"
                 android:progressDrawable="@drawable/progress_bar" />
+
+            <!-- What OK does on this slide: Resume or Play straight away, or More info on its page. Not a button
+                 of its own: it takes the card's state, so it turns white while the card has focus. -->
+            <TextView
+                android:id="@+id/heroAction"
+                style="@style/Widget.Launcher.TextButton.Icon"
+                android:layout_marginTop="@dimen/space_md"
+                android:clickable="false"
+                android:duplicateParentState="true"
+                android:focusable="false"
+                android:importantForAccessibility="no"
+                android:stateListAnimator="@null" />
         </LinearLayout>
 
         <app.aurelia.tv.ui.HeroDots

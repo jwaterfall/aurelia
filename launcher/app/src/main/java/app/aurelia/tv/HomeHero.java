@@ -82,6 +82,8 @@ final class HomeHero {
     private final TextView meta;
     private final TextView overview;
     private final ProgressBar progress;
+    /** What OK does on the slide showing. */
+    private final TextView action;
     private final HeroDots dots;
     private final Account account;
     private final Listener listener;
@@ -126,6 +128,7 @@ final class HomeHero {
         meta = section.findViewById(R.id.heroMeta);
         overview = section.findViewById(R.id.heroOverview);
         progress = section.findViewById(R.id.heroProgress);
+        action = section.findViewById(R.id.heroAction);
         dots = section.findViewById(R.id.heroDots);
         skeleton = section.findViewById(R.id.heroSkeleton);
         slide = card.getResources().getDimension(R.dimen.space_xl);
@@ -310,6 +313,11 @@ final class HomeHero {
             progress.setVisibility(View.GONE);
         }
         meta.setText(line.isEmpty() ? kind : kind + " · " + line);
+        // Something being watched plays at once; something new opens its page first.
+        action.setText(s.media == null ? R.string.hero_more_info
+                : s.resuming ? R.string.details_resume : R.string.details_play);
+        action.setCompoundDrawablesRelativeWithIntrinsicBounds(s.media == null ? 0 : R.drawable.ic_play_small,
+                0, 0, 0);
         overview.setText(d != null ? d.overview : null);
         String logoUrl = d != null ? Catalog.logo(account, d, 160) : "";
         // Cleared first, so the last one's logo cannot arrive late over this one.
@@ -356,11 +364,11 @@ final class HomeHero {
                 maybeReveal();
                 return;
             }
-            if (fade && animate) {
-                art.animate().cancel();
-                art.setAlpha(0f);
-                art.animate().alpha(1f).setDuration(ART_MS).setInterpolator(ease).start();
-            }
+            art.animate().cancel();
+            if (fade && animate) art.setAlpha(0f);
+            // Once the new art is in, the last one behind it goes: it would be drawn, unseen, on every frame.
+            art.animate().alpha(1f).setDuration(animate ? ART_MS : 0).setInterpolator(ease)
+                    .withEndAction(() -> artBack.setImageDrawable(null)).start();
             shown();
         });
     }
@@ -422,9 +430,12 @@ final class HomeHero {
         String auth = Library.auth(account);
         for (String url : new String[] {Catalog.backdrop(account, item, 1280), Catalog.logo(account, item, 160)}) {
             if (url.isEmpty()) continue;
-            Api.async(() -> ImageDisk.get(url, auth), new Api.Callback<Bitmap>() {
+            Api.image(() -> {
+                ImageDisk.prefetch(url, auth);
+                return null;
+            }, new Api.Callback<Void>() {
                 @Override
-                public void onResult(Bitmap bitmap) {
+                public void onResult(Void done) {
                 }
 
                 @Override

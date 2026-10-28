@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Home. Back to front: wallpaper, the ambient wash of the focused item, a scrim, then the top bar over four pages
-  (Home, Movies, TV Shows, Apps). Content sits between the screen_margin lines; the rows bleed past them so cards scroll off the
-  screen edge. See values/styles.xml for the components.
+  Home. Back to front: wallpaper, the ambient wash of the focused item, a scrim, then four pages (Home, Movies,
+  TV Shows, Apps) with the top bar over them. Each page starts with room for the bar, and the bar moves up with the
+  page as it scrolls (MainActivity.placeBar), so it scrolls away as if it were part of the page. Content sits
+  between the screen_margin lines; the rows bleed past them so cards scroll off the screen edge. See
+  values/styles.xml for the components.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root"
@@ -24,24 +26,24 @@
         android:layout_height="match_parent" />
 
     <View
+        android:id="@+id/scrim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/backdrop_scrim" />
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipChildren="false"
-        android:clipToPadding="false"
-        android:orientation="vertical"
-        android:paddingTop="@dimen/screen_margin_top">
+        android:clipToPadding="false">
 
         <!-- Top bar: profile, Settings and Search | tabs | clock -->
         <RelativeLayout
             android:id="@+id/topBar"
             android:layout_width="match_parent"
             android:layout_height="@dimen/control_height"
+            android:layout_marginTop="@dimen/screen_margin_top"
             android:clipChildren="false"
             android:clipToPadding="false"
             android:paddingStart="@dimen/screen_margin"
@@ -168,8 +170,7 @@
         <FrameLayout
             android:id="@+id/pages"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="match_parent"
             android:clipChildren="false"
             android:clipToPadding="false">
 
@@ -190,6 +191,12 @@
                     android:clipToPadding="false"
                     android:orientation="vertical"
                     android:paddingBottom="@dimen/space_3xl">
+
+                    <!-- The top bar's room, sized in code: the bar sits over it and scrolls away with it. -->
+                    <Space
+                        android:id="@+id/homeTop"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp" />
 
                     <include
                         android:id="@+id/heroSection"
@@ -294,7 +301,7 @@
                     android:requiresFadingEdge="vertical" />
             </LinearLayout>
         </FrameLayout>
-    </LinearLayout>
+    </FrameLayout>
 
     <!-- Menus of the library pages' sort and filter pills. -->
     <app.aurelia.tv.ui.GlassMenu

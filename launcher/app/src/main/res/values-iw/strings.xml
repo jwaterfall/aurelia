@@ -185,6 +185,7 @@
     <string name="person_producer">מפיק</string>
     <string name="details_cast">שחקנים וצוות</string>
     <string name="details_more_like_this">עוד בסגנון</string>
+    <string name="hero_more_info">מידע נוסף</string>
     <string name="person_born">נולד/ה ב־%1$s</string>
     <plurals name="person_in_library">
         <item quantity="one">פריט אחד בספרייה שלך</item>

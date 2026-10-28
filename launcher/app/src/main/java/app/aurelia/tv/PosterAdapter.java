@@ -13,9 +13,11 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import app.aurelia.tv.jellyfin.Account;
+import app.aurelia.tv.jellyfin.Api;
 import app.aurelia.tv.jellyfin.Catalog;
 import app.aurelia.tv.jellyfin.Library;
 import app.aurelia.tv.ui.GridSpacing;
+import app.aurelia.tv.ui.ImageDisk;
 import app.aurelia.tv.ui.Images;
 
 import java.util.ArrayList;
@@ -54,6 +56,8 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     private final Listener listener;
     private final List<Catalog.Item> items = new ArrayList<>();
     private int placeholders;
+    /** A poster's width for posters made before the grid is measured ({@link #prewarm}); 0 until then. */
+    private int itemWidth;
 
     PosterAdapter(Account account, int columns, int gutter, Listener listener) {
         this.account = account;
@@ -127,8 +131,49 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         boolean poster = viewType == TYPE_POSTER;
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(poster ? R.layout.item_poster : R.layout.item_poster_placeholder, parent, false);
-        v.getLayoutParams().width = GridSpacing.itemWidth(parent, columns, gutter);
+        int width = GridSpacing.itemWidth(parent, columns, gutter);
+        v.getLayoutParams().width = width > 0 ? width : itemWidth;
         return poster ? new Holder(v) : new RecyclerView.ViewHolder(v) { };
+    }
+
+    /**
+     * Makes {@code count} posters {@code width} wide for {@code grid} ahead of time, while it is hidden, one per
+     * message: frames come first, so making them never holds one up, and showing the grid later only fills them
+     * in. Stops early once the grid shows (it makes its own then).
+     */
+    void prewarm(RecyclerView grid, int width, int count) {
+        itemWidth = width;
+        RecyclerView.RecycledViewPool pool = grid.getRecycledViewPool();
+        pool.setMaxRecycledViews(TYPE_POSTER, count);
+        grid.post(new Runnable() {
+            @Override
+            public void run() {
+                if (grid.isShown() || pool.getRecycledViewCount(TYPE_POSTER) >= count) return;
+                pool.putRecycledView(createViewHolder(grid, TYPE_POSTER));
+                grid.post(this);
+            }
+        });
+    }
+
+    /** The first {@code count} posters' art onto the disk, undecoded, so they show at once when the grid does. */
+    void prefetchArt(int count) {
+        String auth = Library.auth(account);
+        for (int i = 0; i < Math.min(count, items.size()); i++) {
+            String url = Catalog.poster(account, items.get(i), POSTER_PX);
+            if (url.isEmpty()) continue;
+            Api.image(() -> {
+                ImageDisk.prefetch(url, auth);
+                return null;
+            }, new Api.Callback<Void>() {
+                @Override
+                public void onResult(Void done) {
+                }
+
+                @Override
+                public void onError(Exception e) {
+                }
+            });
+        }
     }
 
     @Override
@@ -143,7 +188,8 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         Holder h = (Holder) holder;
         Catalog.Item item = items.get(position);
         h.name.setText(item.name);
-        h.name.setVisibility(View.INVISIBLE);
+        // Gone, not invisible: laid out for every poster, its four lines of text cost more than the poster.
+        h.name.setVisibility(View.GONE);
         h.loading.setVisibility(View.VISIBLE);
         h.itemView.setContentDescription(item.name);
         Images.load(h.art, Catalog.poster(account, item, POSTER_PX), Library.auth(account), new Images.Loaded() {

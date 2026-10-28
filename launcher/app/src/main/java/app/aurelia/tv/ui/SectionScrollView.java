@@ -22,8 +22,8 @@ import androidx.annotation.Nullable;
  * comes to rest exactly at the top, at the foot, or on a section's line.
  *
  * Give it some top padding: it clips what scrolls away to its padding (a scroller with none is not clipped to
- * its own bounds when its parent lets children draw outside theirs, as the launcher's pages do, so cards can
- * lift).
+ * its own bounds when its parent lets children draw outside theirs, so cards can lift). Home's, which does not
+ * clip to its padding, relies on its parent clipping it to its bounds instead.
  */
 public class SectionScrollView extends ScrollView {
 
@@ -88,15 +88,27 @@ public class SectionScrollView extends ScrollView {
         if (section == null) return;
         int viewport = getHeight() - getPaddingTop() - getPaddingBottom();
         int from = target >= 0 ? target : getScrollY();
+        // The first section takes along whatever leads the page above it (room for Home's top bar).
+        int top = leadsPage(section) ? 0 : section.getTop();
         if (alignTop) {
             // Already wholly on screen (the rows under a film, side by side at the foot): stay put.
-            if (section.getTop() >= from && section.getBottom() <= from + viewport) return;
-            glideTo(section.getTop());
+            if (top >= from && section.getBottom() <= from + viewport) return;
+            glideTo(top);
             return;
         }
         int bottom = section.getBottom() + getChildAt(0).getPaddingBottom();
-        if (section.getTop() < from) glideTo(section.getTop());
+        if (top < from) glideTo(top);
         else if (bottom > from + viewport) glideTo(bottom - viewport);
+    }
+
+    /** Nothing above {@code section} can take focus: it is the page's first section. */
+    private boolean leadsPage(View section) {
+        ViewGroup column = (ViewGroup) getChildAt(0);
+        for (int i = 0; i < column.indexOfChild(section); i++) {
+            View v = column.getChildAt(i);
+            if (v.getVisibility() == VISIBLE && v.hasFocusable()) return false;
+        }
+        return true;
     }
 
     /** Scrolls to {@code y}, held between the top and the foot, on the rows' curve. */

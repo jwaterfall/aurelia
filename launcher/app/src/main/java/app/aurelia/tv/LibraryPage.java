@@ -2,6 +2,7 @@ package app.aurelia.tv;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.os.SystemClock;
 import android.graphics.drawable.Drawable;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -15,10 +16,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import app.aurelia.tv.jellyfin.Account;
 import app.aurelia.tv.jellyfin.Api;
 import app.aurelia.tv.jellyfin.Catalog;
-import app.aurelia.tv.ui.Collapse;
 import app.aurelia.tv.ui.GlassMenu;
 import app.aurelia.tv.ui.GridShelfLayoutManager;
 import app.aurelia.tv.ui.GridSpacing;
+import app.aurelia.tv.ui.PageTop;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,13 +45,18 @@ final class LibraryPage {
         GlassMenu menu();
         /** What the menus block focus to while open. */
         ViewGroup background();
-        /** The posters have scrolled away from the top, or back to it. */
+        /** The posters have scrolled: the top bar over the page moves with them. */
+        void onScrolled();
     }
 
     static final int COLUMNS = 7;
     private static final String PREFS = "library";
     /** Placeholder rows while the first page loads: enough to fill the screen. */
     private static final int LOADING_ROWS = 3;
+    /** Posters made and their art fetched ahead of time: the rows a grid first lays out, a screen and a half. */
+    private static final int WARM_POSTERS = 7 * COLUMNS;
+    /** A page got ready longer ago than this is fetched again when it first shows. */
+    private static final long STALE_MS = 5 * 60 * 1000L;
 
     private final Activity activity;
     private final Account account;
@@ -83,16 +89,23 @@ final class LibraryPage {
     private int generation;
     private int focus;
     private boolean loadedOnce;
+    /** When the posters showing were fetched (uptime), to tell a page got ready long before it showed. */
+    private long loadedAt;
+    /** What the page sits in, whose width the grid will have. */
+    private final ViewGroup container;
 
-    LibraryPage(Activity activity, ViewGroup container, Catalog.Kind kind, Host host) {
+    /** {@code barSpace}: the room at the page's top for Home's top bar over it, which the buttons go below. */
+    LibraryPage(Activity activity, ViewGroup container, Catalog.Kind kind, int barSpace, Host host) {
         this.activity = activity;
         this.account = Account.get(activity);
         this.kind = kind;
         this.host = host;
         prefs = activity.getSharedPreferences(PREFS, Activity.MODE_PRIVATE);
+        this.container = container;
         root = LayoutInflater.from(activity).inflate(R.layout.view_library_page, container, false);
         container.addView(root);
         toolbar = root.findViewById(R.id.libraryToolbar);
+        ((ViewGroup.MarginLayoutParams) toolbar.getLayoutParams()).topMargin += barSpace;
         countGhost = root.findViewById(R.id.libraryCountGhost);
         grid = root.findViewById(R.id.libraryGrid);
         focusName = root.findViewById(R.id.libraryFocusName);
@@ -127,6 +140,23 @@ final class LibraryPage {
         GridShelfLayoutManager layout = new GridShelfLayoutManager(activity, COLUMNS);
         grid.setLayoutManager(layout);
         grid.addItemDecoration(new GridSpacing(COLUMNS, gutter));
+        // The first row starts below the buttons (and the bar above them), and the message is centred under them.
+        PageTop top = new PageTop(COLUMNS, 0);
+        grid.addItemDecoration(top);
+        toolbar.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+            top.setRoom(grid, b);
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) message.getLayoutParams();
+            if (lp.topMargin != b) {
+                lp.topMargin = b;
+                message.setLayoutParams(lp);
+            }
+        });
+        grid.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView list, int dx, int dy) {
+                placeToolbar();
+            }
+        });
         grid.setItemAnimator(null);
         grid.setAdapter(adapter);
 
@@ -139,6 +169,8 @@ final class LibraryPage {
                 if (!focused) return;
                 host.onNothingFocused();
                 describe(null);
+                // The buttons are part of the page's top: focus in them brings it back, as the bar does.
+                scrollToTop();
             });
         }
         updatePills();
@@ -149,26 +181,41 @@ final class LibraryPage {
         return root;
     }
 
-    /** Whether {@code focus} is at the page's top: its buttons, its message, or the first row of posters. */
-    boolean atTop(View focus) {
-        View item = grid.findContainingItemView(focus);
-        return item == null || grid.getChildAdapterPosition(item) < COLUMNS;
+    /** How far the posters have scrolled from the top of the page; 0 while there are none to scroll. */
+    int scrolled() {
+        return grid.getVisibility() == View.VISIBLE ? PageTop.scrolled(grid) : 0;
+    }
+
+    /** The buttons moved up with the posters as they scroll, out of the way once past them, and the bar with them. */
+    private void placeToolbar() {
+        toolbar.setTranslationY(-Math.min(scrolled(), toolbar.getBottom()));
+        host.onScrolled();
     }
 
     /**
-     * The sort and filter buttons (with the count) in place, or slid away above the posters once focus goes past
-     * their first row, so the posters have the screen.
+     * The page is coming into view: the first time, the library loads; got ready long ago ({@link #prewarm}), it
+     * is fetched again, the posters it has staying up meanwhile.
      */
-    void setHeaderShown(boolean shown, boolean animate) {
-        Collapse.show(toolbar, shown, animate, false);
-    }
-
-    /** The page is coming into view: the first time, the library loads. */
     void showing() {
         if (!loadedOnce) {
             loadedOnce = true;
             reload();
+        } else if (loadedAt > 0 && SystemClock.uptimeMillis() - loadedAt > STALE_MS) {
+            reload();
         }
+    }
+
+    /**
+     * Gets the page ready while it is hidden and Home has nothing to do, so the first switch to it builds and
+     * fetches nothing: its first page of the library, the first posters' art on disk, and views for a screen of
+     * posters, made one at a time. Once; signed in only.
+     */
+    void prewarm() {
+        if (loadedOnce || root.isShown() || !account.isSignedIn() || container.getWidth() == 0) return;
+        showing();
+        int content = container.getWidth() - grid.getPaddingLeft() - grid.getPaddingRight();
+        int gutter = activity.getResources().getDimensionPixelSize(R.dimen.gutter);
+        adapter.prewarm(grid, GridSpacing.itemWidth(content, COLUMNS, gutter), WARM_POSTERS);
     }
 
     /** Fetches again, keeping the place, if it has loaded before (back from a film's page, say). */
@@ -194,6 +241,7 @@ final class LibraryPage {
         libraryId = null;
         genres = Collections.emptyList();
         loadedOnce = false;
+        loadedAt = 0;
         focus = 0;
         adapter.set(Collections.emptyList());
         count = null;
@@ -223,13 +271,13 @@ final class LibraryPage {
         if (!grid.hasFocus()) describe(null);
         Api.async(() -> {
             if (libraryId == null) libraryId = Catalog.library(account, kind);
-            if (genres.isEmpty() && !libraryId.isEmpty()) genres = Catalog.genres(account, libraryId, kind);
             return libraryId.isEmpty() ? null : Catalog.items(account, libraryId, kind, query, 0, Catalog.PAGE);
         }, new Api.Callback<Catalog.Page>() {
             @Override
             public void onResult(Catalog.Page page) {
                 if (mine != generation) return;
                 loading = false;
+                loadGenres();
                 if (page == null) {
                     String server = account.serverName().isEmpty() ? account.server() : account.serverName();
                     showMessage(R.drawable.ic_search, activity.getString(R.string.library_empty_title),
@@ -238,7 +286,10 @@ final class LibraryPage {
                 }
                 boolean hadFocus = grid.hasFocus();
                 total = page.total;
+                loadedAt = SystemClock.uptimeMillis();
                 adapter.set(page.items);
+                // Fetched ahead of showing: the art too, so the posters are there the moment the page is.
+                if (!root.isShown()) adapter.prefetchArt(WARM_POSTERS);
                 count = activity.getResources().getQuantityString(
                         kind == Catalog.Kind.Movie ? R.plurals.library_movies : R.plurals.library_shows, total, total);
                 if (!grid.hasFocus()) describe(null);
@@ -264,6 +315,22 @@ final class LibraryPage {
                 showMessage(R.drawable.ic_offline, activity.getString(R.string.cw_offline_title, server),
                         activity.getString(R.string.cw_offline_body), activity.getString(R.string.jellyfin_try_again),
                         LibraryPage.this::reload, false);
+            }
+        });
+    }
+
+    /** The genres for the genre menu, once: after the posters, which need them not and should not wait. */
+    private void loadGenres() {
+        if (!genres.isEmpty() || libraryId == null || libraryId.isEmpty()) return;
+        String id = libraryId;
+        Api.async(() -> Catalog.genres(account, id, kind), new Api.Callback<List<String>>() {
+            @Override
+            public void onResult(List<String> found) {
+                if (id.equals(libraryId)) genres = found;
+            }
+
+            @Override
+            public void onError(Exception e) {
             }
         });
     }
@@ -310,6 +377,7 @@ final class LibraryPage {
         grid.setVisibility(View.INVISIBLE);
         toolbar.setVisibility(filters ? View.VISIBLE : View.INVISIBLE);
         message.setVisibility(View.VISIBLE);
+        placeToolbar();
         empty.show(icon, title, body, action, onAction);
         if (hadFocus && !root.hasFocus()) focusIn();
         describe(null);

@@ -44,15 +44,38 @@ public final class ImageDisk {
         if (file != null && file.isFile()) {
             Bitmap kept = BitmapFactory.decodeFile(file.getPath());
             if (kept != null) {
-                // Recently used: kept longest.
-                //noinspection ResultOfMethodCallIgnored
-                file.setLastModified(System.currentTimeMillis());
+                touch(file);
                 return kept;
             }
         }
-        Bitmap bitmap = Api.getImage(url, auth);
-        if (bitmap != null && file != null) keep(file, bitmap);
+        byte[] bytes = Api.getBytes(url, auth);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        if (bitmap != null && file != null) keep(file, bytes);
         return bitmap;
+    }
+
+    /**
+     * {@code url}'s picture onto the disk ahead of when it is needed, without decoding it: only its header is read,
+     * to be sure it is a picture. Does nothing for one that cannot be kept (untagged) or is kept already. Blocks.
+     */
+    public static void prefetch(String url, String auth) throws IOException {
+        File file = file(url);
+        if (file == null) return;
+        if (file.isFile()) {
+            touch(file);
+            return;
+        }
+        byte[] bytes = Api.getBytes(url, auth);
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.length, bounds);
+        if (bounds.outWidth > 0) keep(file, bytes);
+    }
+
+    /** Recently used: kept longest. */
+    private static void touch(File file) {
+        //noinspection ResultOfMethodCallIgnored
+        file.setLastModified(System.currentTimeMillis());
     }
 
     private static File file(String url) {
@@ -61,11 +84,11 @@ public final class ImageDisk {
         return new File(d, hash(url));
     }
 
-    private static void keep(File file, Bitmap bitmap) {
+    /** The bytes the server sent, as they are: encoding the decoded picture again would cost far more. */
+    private static void keep(File file, byte[] bytes) {
         File part = new File(file.getPath() + ".part");
         try (OutputStream out = new FileOutputStream(part)) {
-            // Logos are transparent; everything else is a photo.
-            bitmap.compress(bitmap.hasAlpha() ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG, 88, out);
+            out.write(bytes);
         } catch (IOException e) {
             //noinspection ResultOfMethodCallIgnored
             part.delete();

@@ -2,7 +2,4 @@
 <resources>
     <!-- ui.Placeholder: set on a placeholder once its reveal has begun. -->
     <item name="revealing" type="id" />
-    <!-- ui.Collapse: a bar's own top margin, and its slide under way. -->
-    <item name="collapseMargin" type="id" />
-    <item name="collapseAnimator" type="id" />
 </resources>
