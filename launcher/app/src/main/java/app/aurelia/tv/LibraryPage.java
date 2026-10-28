@@ -176,6 +176,11 @@ final class LibraryPage {
         if (loadedOnce) reload();
     }
 
+    /** Scrolled back to the top, the poster to return to kept (focus going up to the tabs). */
+    void scrollToTop() {
+        grid.smoothScrollToPosition(0);
+    }
+
     /** Back to the first poster, scrolled to the top (switching to this page from another). */
     void toTop() {
         focus = 0;

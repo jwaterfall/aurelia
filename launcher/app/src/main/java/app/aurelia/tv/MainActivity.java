@@ -832,9 +832,11 @@ public class MainActivity extends Activity {
             public void onResult(List<Catalog.Item> items) {
                 // An answer for an account since signed out of, or overtaken by a newer question, is dropped.
                 if (request != recentRequest) return;
-                recentAdapter.set(items);
+                changeRow(recentRow, () -> recentFocus, () -> {
+                    recentAdapter.set(items);
+                    recentSection.setVisibility(items.isEmpty() ? View.GONE : View.VISIBLE);
+                }, MainActivity.this::focusHomeStart);
                 hero.setAdded(items);
-                recentSection.setVisibility(items.isEmpty() ? View.GONE : View.VISIBLE);
             }
 
             @Override
@@ -844,27 +846,35 @@ public class MainActivity extends Activity {
     }
 
     private void showNextUp(List<Library.MediaItem> items) {
-        boolean hadFocus = nuRow.hasFocus();
         nuCaption.setText(items.isEmpty() ? null
                 : getResources().getQuantityString(R.plurals.next_up_shows, items.size(), items.size()));
-        if (items.isEmpty()) {
-            nuSection.setVisibility(View.GONE);
-            if (hadFocus) focusRow(cwRow, cwFocus);
-            return;
-        }
-        nuAdapter.showItems(items, Library.auth(account));
-        nuSection.setVisibility(View.VISIBLE);
-        if (hadFocus) nuRow.post(() -> {
-            if (!nuRow.hasFocus() && !menu.isShowing()) focusRow(nuRow, Math.min(nuFocus, items.size() - 1));
-        });
+        changeRow(nuRow, () -> nuFocus, () -> {
+            if (!items.isEmpty()) nuAdapter.showItems(items, Library.auth(account));
+            nuSection.setVisibility(items.isEmpty() ? View.GONE : View.VISIBLE);
+        }, () -> focusRow(cwRow, cwFocus));
     }
 
-    /** Changes Continue Watching; if that rebuilds the card that had focus, focus goes back into the row. */
+    /** Changes Continue Watching. */
     private void updateRow(Runnable change) {
-        boolean hadFocus = cwRow.hasFocus();
+        changeRow(cwRow, () -> cwFocus, change, this::focusHomeStart);
+    }
+
+    /**
+     * Changes a row on Home, for every row the same way. The rows' cards keep their ids, so a card still there keeps
+     * focus by itself; only when the card with focus is gone (marked watched) does focus go to the row's card at
+     * the place it was, or with the row gone, to {@code elsewhere}.
+     */
+    private void changeRow(RecyclerView row, java.util.function.IntSupplier place, Runnable change, Runnable elsewhere) {
+        boolean hadFocus = row.hasFocus();
         change.run();
-        if (hadFocus) cwRow.post(() -> {
-            if (!cwRow.hasFocus() && !menu.isShowing()) focusRow(cwRow, cwFocus);
+        if (!hadFocus) return;
+        row.post(() -> {
+            if (row.hasFocus() || menu.isShowing()) return;
+            if (row.isShown() && row.getAdapter() != null && row.getAdapter().getItemCount() > 0) {
+                focusRow(row, place.getAsInt());
+            } else {
+                elsewhere.run();
+            }
         });
     }
 
@@ -876,10 +886,21 @@ public class MainActivity extends Activity {
      * focus rather than by scrolling: the room they give back would scroll the page to its top again.
      */
     private void updateBar(View focus, boolean animate) {
-        boolean top = isIn(focus, topBar) || pageAtTop(focus);
+        boolean inBar = isIn(focus, topBar);
+        boolean top = inBar || pageAtTop(focus);
+        // The bar belongs at the top of the page: focus in it, by whatever way it came, takes the page back there,
+        // so the bar never shows over a page left scrolled part way down.
+        if (inBar) scrollPageToTop();
         Collapse.show(topBar, top, animate, true);
         LibraryPage library = library(currentPage());
         if (library != null) library.setHeaderShown(top, animate);
+    }
+
+    private void scrollPageToTop() {
+        LibraryPage library = library(currentPage());
+        if (library != null) library.scrollToTop();
+        else if (currentPage() == PAGE_APPS) appsGrid.smoothScrollToPosition(0);
+        else ((app.aurelia.tv.ui.SectionScrollView) pageHome).glideTo(0);
     }
 
     private boolean pageAtTop(View focus) {

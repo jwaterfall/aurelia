@@ -60,6 +60,7 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         this.columns = columns;
         this.gutter = gutter;
         this.listener = listener;
+        setHasStableIds(true);
     }
 
     void set(List<Catalog.Item> fresh) {
@@ -67,6 +68,15 @@ final class PosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         items.addAll(fresh);
         placeholders = 0;
         notifyDataSetChanged();
+    }
+
+    /**
+     * Each poster's own id (placeholders their place), so that asked for again (coming back to a screen) the same
+     * film keeps its poster, and the poster with focus keeps it.
+     */
+    @Override
+    public long getItemId(int position) {
+        return items.isEmpty() ? -1 - position : items.get(position).id.hashCode();
     }
 
     /** Nothing yet, and {@code rows} rows of placeholders in its place. */
